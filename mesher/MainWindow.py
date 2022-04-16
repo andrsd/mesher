@@ -111,7 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.vtk_interactor.SetInteractorStyle(MesherInteractorStyle2D(self))
 
-        bkgnd = [0.95, 0.95, 0.95]
+        bkgnd = [0.9098039216, 0.92578125, 0.9450980392]
         self.vtk_renderer.SetGradientBackground(True)
         self.vtk_renderer.SetBackground(bkgnd)
         self.vtk_renderer.SetBackground2(bkgnd)
@@ -344,8 +344,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def setSegmentProperties(self, actor):
         property = actor.GetProperty()
         property.EdgeVisibilityOn()
-        property.SetLineWidth(4.0)
-        property.SetColor([0.75, 0, 0])
+        property.SetLineWidth(3.0)
+        property.SetColor([0, 0, 0])
         property.SetOpacity(1)
         property.SetAmbient(1)
         property.SetDiffuse(0)
