@@ -1,0 +1,22 @@
+*.pyc
+*.egg-info/
+*.so
+*.dSYM
+
+# py2app
+.eggs/*
+venv/*
+icon.icns
+dist/*
+build/*
+
+# garbagge created by me
+tmp/*
+
+# code coverage
+.coverage
+coverage.xml
+htmlcov/*
+
+# docs
+docs/_build/*
