@@ -71,6 +71,8 @@ setup(
         'PyQtChart==5.13.1',
         'sphinx',
         'vtk==9.0.3',
+        'numpy==1.21.4',
+        'triangle==20220202',
     ],
     packages=[
         'mesher',

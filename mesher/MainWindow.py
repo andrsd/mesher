@@ -9,6 +9,7 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from mesher import consts
 from mesher.AboutDialog import AboutDialog
 from mesher.MesherInteractorStyle2D import MesherInteractorStyle2D
+import triangle as tr
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -48,6 +49,12 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             if not self.restoreGeometry(geom):
                 self.resize(default_size)
+
+        self.clear()
+
+        self.update_timer = QtCore.QTimer()
+        self.update_timer.timeout.connect(self.onUpdateWindow)
+        self.update_timer.start(250)
 
     def setupWidgets(self):
         self.vtk_widget = QVTKRenderWindowInteractor(self)
@@ -113,6 +120,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vtk_render_window.SetMultiSamples(1)
 
     def onNewFile(self):
+        self.clear()
         self.file_name = None
         self.updateWindowTitle()
 
@@ -120,10 +128,19 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         @param file_name[str] Name of the file to open
         """
-        self.file_name = file_name
-        self.updateWindowTitle()
-        self.addToRecentFiles(self.file_name)
-        self.updateMenuBar()
+        self.clear()
+        poly = self.readPolyFile(file_name)
+        if poly is not None:
+            self.polyToVtk(poly)
+            self.resetCamera()
+
+            self.file_name = file_name
+            self.updateWindowTitle()
+            self.addToRecentFiles(self.file_name)
+            self.updateMenuBar()
+        else:
+            # TODO: improve this
+            print("Error reading {}.".format(file_name))
 
     def onOpenFile(self):
         file_name, f = QFileDialog.getOpenFileName(
@@ -208,3 +225,127 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onClicked(self, pt):
         pass
+
+    def clear(self):
+        self.file_name = None
+        self.vtk_renderer.RemoveAllViewProps()
+        self.vtk_vertex_actor = None
+        self.vtk_segment_actor = None
+
+    def onUpdateWindow(self):
+        self.vtk_render_window.Render()
+
+    def resetCamera(self):
+        camera = self.vtk_renderer.GetActiveCamera()
+        focal_point = camera.GetFocalPoint()
+        camera.SetPosition(focal_point[0], focal_point[1], 1)
+        camera.SetRoll(0)
+        self.vtk_renderer.ResetCamera()
+
+    def readPolyFile(self, file_name):
+        data = None
+        with open(file_name) as f:
+            str_poly = f.read()
+            data = tr.loads(poly=str_poly)
+
+        return data
+
+    def polyToVtk(self, poly):
+        vertex_ugrid = self.verticesToUnstructuredGrid(poly)
+        if vertex_ugrid is not None:
+            self.vtk_vertex_actor = self.addToVtk(vertex_ugrid)
+            self.setVertexProperties(self.vtk_vertex_actor)
+        else:
+            # TODO: reprt this to user in GUI
+            print("No vertices found in poly file")
+            self.vtk_vertex_actor = None
+
+        segment_ugrid = self.segmentsToUnstructuredGrid(poly)
+        if segment_ugrid is not None:
+            self.vtk_segment_actor = self.addToVtk(segment_ugrid)
+            self.setSegmentProperties(self.vtk_segment_actor)
+        else:
+            self.vtk_segment_actor = None
+
+    def verticesToUnstructuredGrid(self, poly):
+        """
+        Creates an unstructured grid with vertices
+        """
+        if 'vertices' in poly:
+            points = poly['vertices']
+            n_points = len(points)
+
+            point_array = vtk.vtkPoints()
+            point_array.Allocate(n_points)
+            cell_array = vtk.vtkCellArray()
+            cell_array.Allocate(n_points)
+
+            for i, pt in enumerate(points):
+                point_array.InsertPoint(i, [pt[0], pt[1], 0.])
+
+                elem = vtk.vtkVertex()
+                elem.GetPointIds().SetId(0, i)
+                cell_array.InsertNextCell(elem)
+
+            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid.SetPoints(point_array)
+            ugrid.SetCells(vtk.VTK_VERTEX, cell_array)
+
+            return ugrid
+        else:
+            return None
+
+    def segmentsToUnstructuredGrid(self, poly):
+        if 'segments' in poly:
+            points = poly['vertices']
+            n_points = len(points)
+            point_array = vtk.vtkPoints()
+            point_array.Allocate(n_points)
+            for i, pt in enumerate(points):
+                point_array.InsertPoint(i, [pt[0], pt[1], 0.])
+
+            segments = poly['segments']
+            n_segments = len(segments)
+            cell_array = vtk.vtkCellArray()
+            cell_array.Allocate(n_segments)
+            for seg in list(segments):
+                elem = vtk.vtkLine()
+                elem.GetPointIds().SetId(0, int(seg[0]))
+                elem.GetPointIds().SetId(1, int(seg[1]))
+                cell_array.InsertNextCell(elem)
+
+            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid.SetPoints(point_array)
+            ugrid.SetCells(vtk.VTK_LINE, cell_array)
+
+            return ugrid
+        else:
+            return None
+
+    def addToVtk(self, ugrid):
+        mapper = vtk.vtkDataSetMapper()
+        mapper.SetInputData(ugrid)
+        mapper.ScalarVisibilityOff()
+
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
+        actor.VisibilityOn()
+        self.vtk_renderer.AddActor(actor)
+        return actor
+
+    def setVertexProperties(self, actor):
+        property = actor.GetProperty()
+        property.SetRepresentationToPoints()
+        property.SetRenderPointsAsSpheres(True)
+        property.SetVertexVisibility(True)
+        property.SetPointSize(15)
+        property.SetColor([0., 0., 0.])
+
+    def setSegmentProperties(self, actor):
+        property = actor.GetProperty()
+        property.EdgeVisibilityOn()
+        property.SetLineWidth(4.0)
+        property.SetColor([0.75, 0, 0])
+        property.SetOpacity(1)
+        property.SetAmbient(1)
+        property.SetDiffuse(0)
