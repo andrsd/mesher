@@ -56,11 +56,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_timer.timeout.connect(self.onUpdateWindow)
         self.update_timer.start(250)
 
+        QtCore.QTimer.singleShot(1, self.updateWidgets)
+
     def setupWidgets(self):
         self.vtk_widget = QVTKRenderWindowInteractor(self)
         self.vtk_renderer = vtk.vtkRenderer()
         self.vtk_widget.GetRenderWindow().AddRenderer(self.vtk_renderer)
         self.setCentralWidget(self.vtk_widget)
+
+        self.mesh_button = QtWidgets.QPushButton("Mesh", self)
+        self.mesh_button.setFixedSize(160, 32)
+        self.mesh_button.show()
+        self.mesh_button.clicked.connect(self.onMesh)
+
+    def updateWidgets(self):
+        geom = self.geometry()
+        self.mesh_button.move(
+            geom.width() - 5 - self.mesh_button.width(),
+            geom.height() - 10 - self.mesh_button.height())
+        self.mesh_button.setEnabled(self.poly is not None)
 
     def setupMenuBar(self):
         self.menubar = QMenuBar(self)
@@ -123,21 +137,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.clear()
         self.file_name = None
         self.updateWindowTitle()
+        self.updateWidgets()
 
     def openFile(self, file_name):
         """
         @param file_name[str] Name of the file to open
         """
         self.clear()
-        poly = self.readPolyFile(file_name)
-        if poly is not None:
-            self.polyToVtk(poly)
+        self.poly = self.readPolyFile(file_name)
+        if self.poly is not None:
+            self.polyToVtk(self.poly)
             self.resetCamera()
 
             self.file_name = file_name
             self.updateWindowTitle()
             self.addToRecentFiles(self.file_name)
             self.updateMenuBar()
+            self.updateWidgets()
         else:
             # TODO: improve this
             print("Error reading {}.".format(file_name))
@@ -176,6 +192,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         self.writeSettings()
         event.accept()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.updateWidgets()
 
     def writeSettings(self):
         self.settings.setValue("window/geometry", self.saveGeometry())
@@ -227,10 +247,13 @@ class MainWindow(QtWidgets.QMainWindow):
         pass
 
     def clear(self):
+        self.poly = None
+        self.mesh = None
         self.file_name = None
         self.vtk_renderer.RemoveAllViewProps()
         self.vtk_vertex_actor = None
         self.vtk_segment_actor = None
+        self.vtk_triangles_actor = None
 
     def onUpdateWindow(self):
         self.vtk_render_window.Render()
@@ -251,6 +274,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return data
 
     def polyToVtk(self, poly):
+        self.vtk_renderer.RemoveAllViewProps()
         vertex_ugrid = self.verticesToUnstructuredGrid(poly)
         if vertex_ugrid is not None:
             self.vtk_vertex_actor = self.addToVtk(vertex_ugrid)
@@ -266,6 +290,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setSegmentProperties(self.vtk_segment_actor)
         else:
             self.vtk_segment_actor = None
+
+    def meshToVtk(self, poly):
+        self.vtk_renderer.RemoveAllViewProps()
+        triangles_ugrid = self.trianglesToUnstructuredGrid(poly)
+        if triangles_ugrid is not None:
+            self.vtk_triangles_actor = self.addToVtk(triangles_ugrid)
+            self.setTriangleProperties(self.vtk_triangles_actor)
+        else:
+            self.vtk_triangles_actor = None
 
     def verticesToUnstructuredGrid(self, poly):
         """
@@ -322,6 +355,34 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return None
 
+    def trianglesToUnstructuredGrid(self, poly):
+        if 'triangles' in poly:
+            points = poly['vertices']
+            n_points = len(points)
+            point_array = vtk.vtkPoints()
+            point_array.Allocate(n_points)
+            for i, pt in enumerate(points):
+                point_array.InsertPoint(i, [pt[0], pt[1], 0.])
+
+            triangles = poly['triangles']
+            n_triangles = len(triangles)
+            cell_array = vtk.vtkCellArray()
+            cell_array.Allocate(n_triangles)
+            for tri in list(triangles):
+                elem = vtk.vtkTriangle()
+                elem.GetPointIds().SetId(0, int(tri[0]))
+                elem.GetPointIds().SetId(1, int(tri[1]))
+                elem.GetPointIds().SetId(2, int(tri[2]))
+                cell_array.InsertNextCell(elem)
+
+            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid.SetPoints(point_array)
+            ugrid.SetCells(vtk.VTK_TRIANGLE, cell_array)
+
+            return ugrid
+        else:
+            return None
+
     def addToVtk(self, ugrid):
         mapper = vtk.vtkDataSetMapper()
         mapper.SetInputData(ugrid)
@@ -349,3 +410,24 @@ class MainWindow(QtWidgets.QMainWindow):
         property.SetOpacity(1)
         property.SetAmbient(1)
         property.SetDiffuse(0)
+
+    def setTriangleProperties(self, actor):
+        property = actor.GetProperty()
+        property.SetRepresentationToSurface()
+        property.SetColor([1, 1, 1])
+        property.SetOpacity(1)
+        property.SetAmbient(1)
+        property.SetDiffuse(0)
+
+        property.SetEdgeVisibility(True)
+        property.SetLineWidth(3.0)
+        property.SetEdgeColor([0, 0, 0])
+
+        property.SetVertexVisibility(False)
+        property.SetRenderPointsAsSpheres(False)
+        property.SetPointSize(0)
+
+    def onMesh(self):
+        opts = ''
+        self.mesh = tr.triangulate(self.poly, opts)
+        self.meshToVtk(self.mesh)
