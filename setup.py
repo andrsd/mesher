@@ -73,6 +73,8 @@ setup(
         'vtk==9.0.3',
         'numpy==1.21.4',
         'triangle==20220202',
+        'meshio==5.3.4',
+        'netCDF4==1.5.8'
     ],
     packages=[
         'mesher',
