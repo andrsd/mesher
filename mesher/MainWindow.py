@@ -1,5 +1,4 @@
 import os
-import io
 import vtk
 import meshio
 from PyQt5 import QtWidgets, QtCore
@@ -7,7 +6,6 @@ from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
     QFileDialog
 from PyQt5.QtCore import QEvent, QSettings
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from mesher import consts
 from mesher.AboutDialog import AboutDialog
 from mesher.MesherInteractorStyle2D import MesherInteractorStyle2D
 import triangle as tr
@@ -23,7 +21,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.settings = QtCore.QSettings("Mesher")
+        self.settings = QSettings("Mesher")
         self.about_dlg = None
         self.recent_files = []
         self.clear_recent_file = None
@@ -121,7 +119,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if active_window == self:
             self.show_main_window.setChecked(True)
 
-        self.export_to_exodusii_action.setEnabled(self.mesh != None)
+        self.export_to_exodusii_action.setEnabled(self.mesh is not None)
 
     def connectSignals(self):
         pass
@@ -217,7 +215,7 @@ class MainWindow(QtWidgets.QMainWindow):
             for f in reversed(self.recent_files):
                 unused_path, file_name = os.path.split(f)
                 action = self.recent_menu.addAction(file_name,
-                                                     self.onOpenRecentFile)
+                                                    self.onOpenRecentFile)
                 action.setData(f)
             self.recent_menu.addSeparator()
         self.clear_recent_file = self.recent_menu.addAction(
@@ -441,8 +439,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateMenuBar()
 
     def setupExportMenu(self, menu):
-        self.export_to_exodusii_action = menu.addAction("ExodusII...",
-            self.onExportAsExodusII)
+        self.export_to_exodusii_action = menu.addAction(
+            "ExodusII...", self.onExportAsExodusII)
 
     def getFileName(self, window_title, name_filter, default_suffix):
         dialog = QtWidgets.QFileDialog()

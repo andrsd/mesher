@@ -1,7 +1,6 @@
 import sys
 import os
 import signal
-from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt, QStandardPaths, QCoreApplication, QTimer
 from PyQt5.QtWidgets import QApplication
 from mesher import consts
@@ -46,8 +45,6 @@ def main():
 
     qapp = QApplication(sys.argv)
     qapp.setQuitOnLastWindowClosed(False)
-
-    mesher_dir = os.path.dirname(os.path.realpath(__file__))
 
     window = MainWindow()
     signal.signal(signal.SIGINT, handle_sigint)

@@ -1,6 +1,6 @@
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import QPoint, QEvent, QCoreApplication
+from PyQt5.QtCore import Qt, QPoint, QEvent, QCoreApplication
 from PyQt5.QtGui import QKeySequence, QKeyEvent
+
 
 class MesherInteractorInterface:
 
@@ -36,7 +36,7 @@ class MesherInteractorInterface:
         key = interactor.GetKeyCode()
         seq = QKeySequence(key)
         # FIXME: get the modifiers from interactor
-        mods = QtCore.Qt.NoModifier
+        mods = Qt.NoModifier
         if len(seq) > 0:
             e = QKeyEvent(QEvent.KeyPress, seq[0], mods)
             QCoreApplication.postEvent(self.widget, e)
