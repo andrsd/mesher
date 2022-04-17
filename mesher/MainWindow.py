@@ -1,6 +1,7 @@
 import os
 import io
 import vtk
+import meshio
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
     QFileDialog
@@ -27,6 +28,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.recent_files = []
         self.clear_recent_file = None
         self.file_name = None
+        self.mesh = None
 
         self.recent_files = self.settings.value("recent_files", [])
 
@@ -86,6 +88,9 @@ class MainWindow(QtWidgets.QMainWindow):
             "Open", self.onOpenFile, "Ctrl+O")
         self.recent_menu = file_menu.addMenu("Open Recent")
         self.buildRecentFilesMenu()
+        file_menu.addSeparator()
+        export_menu = file_menu.addMenu("Export as...")
+        self.setupExportMenu(export_menu)
 
         # The "About" item is fine here, since we assume Mac and that will
         # place the item into different submenu but this will need to be fixed
@@ -115,6 +120,8 @@ class MainWindow(QtWidgets.QMainWindow):
         active_window = qapp.activeWindow()
         if active_window == self:
             self.show_main_window.setChecked(True)
+
+        self.export_to_exodusii_action.setEnabled(self.mesh != None)
 
     def connectSignals(self):
         pass
@@ -431,3 +438,33 @@ class MainWindow(QtWidgets.QMainWindow):
         opts = ''
         self.mesh = tr.triangulate(self.poly, opts)
         self.meshToVtk(self.mesh)
+        self.updateMenuBar()
+
+    def setupExportMenu(self, menu):
+        self.export_to_exodusii_action = menu.addAction("ExodusII...",
+            self.onExportAsExodusII)
+
+    def getFileName(self, window_title, name_filter, default_suffix):
+        dialog = QtWidgets.QFileDialog()
+        dialog.setWindowTitle(window_title)
+        dialog.setNameFilter(name_filter)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setDefaultSuffix(default_suffix)
+
+        if dialog.exec_() == QtWidgets.QDialog.Accepted:
+            return str(dialog.selectedFiles()[0])
+        return None
+
+    def onExportAsExodusII(self):
+        file_name = self.getFileName('Export to ExodusII',
+                                     'ExodusII files (*.e *.exo)',
+                                     'e')
+        if file_name:
+            m = meshio.Mesh(
+                self.mesh['vertices'],
+                [
+                    ('triangle', self.mesh['triangles'])
+                ]
+            )
+            m.write(file_name)
