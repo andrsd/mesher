@@ -5,7 +5,7 @@ import pyvista
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
     QFileDialog
-from PyQt5.QtCore import QEvent, QSettings
+from PyQt5.QtCore import QEvent, QSettings, Qt
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from mesher.AboutDialog import AboutDialog
 from mesher.MesherInteractorStyle2D import MesherInteractorStyle2D
@@ -547,3 +547,22 @@ class MainWindow(QtWidgets.QMainWindow):
                     ]
                 )
             m.write(file_name)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.setDropAction(Qt.CopyAction)
+            event.accept()
+
+            file_names = []
+            for url in event.mimeData().urls():
+                file_names.append(url.toLocalFile())
+            if len(file_names) > 0:
+                self.openFile(file_names[0])
+        else:
+            event.ignore()
