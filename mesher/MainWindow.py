@@ -10,6 +10,7 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from mesher.AboutDialog import AboutDialog
 from mesher.MesherInteractorStyle2D import MesherInteractorStyle2D
 from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
+from mesher.NotificationWidget import NotificationWidget
 import triangle as tr
 import tetgen
 
@@ -71,6 +72,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mesh_button.setFixedSize(160, 32)
         self.mesh_button.show()
         self.mesh_button.clicked.connect(self.onMesh)
+
+        self.setupNotificationWidget()
+
+    def setupNotificationWidget(self):
+        self.notification = NotificationWidget(self)
+        self.notification.setVisible(False)
 
     def updateWidgets(self):
         geom = self.geometry()
@@ -566,3 +573,21 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.openFile(file_names[0])
         else:
             event.ignore()
+
+    def showNotification(self, text, ms=2000):
+        """
+        @param text Notification text
+        @param ms Timeout for fade out in milliseconds
+        """
+        self.notification.setText(text)
+        self.notification.adjustSize()
+        width = self.geometry().width()
+        left = (width - self.notification.width()) / 2
+        # top = 10
+        top = self.height() - self.notification.height() - 10
+        self.notification.setGeometry(
+            left, top,
+            self.notification.width(),
+            self.notification.height())
+        self.notification.setGraphicsEffect(None)
+        self.notification.show(ms)
