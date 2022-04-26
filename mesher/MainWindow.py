@@ -326,7 +326,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def polyToVtk(self, poly):
         self.vtk_renderer.RemoveAllViewProps()
-        vertex_ugrid = self.verticesToUnstructuredGrid(poly)
+        vertex_ugrid = self.vertices2DToUnstructuredGrid(poly)
         if vertex_ugrid is not None:
             self.vtk_vertex_actor = self.addToVtk(vertex_ugrid)
             self.setVertexProperties(self.vtk_vertex_actor)
@@ -334,7 +334,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.showNotification("No vertices found in poly file")
             self.vtk_vertex_actor = None
 
-        segment_ugrid = self.segmentsToUnstructuredGrid(poly)
+        segment_ugrid = self.segments2DToUnstructuredGrid(poly)
         if segment_ugrid is not None:
             self.vtk_segment_actor = self.addToVtk(segment_ugrid)
             self.setSegmentProperties(self.vtk_segment_actor)
@@ -356,7 +356,7 @@ class MainWindow(QtWidgets.QMainWindow):
             actor = None
         return actor
 
-    def verticesToUnstructuredGrid(self, poly):
+    def vertices2DToUnstructuredGrid(self, poly):
         """
         Creates an unstructured grid with vertices
         """
@@ -384,7 +384,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return None
 
-    def segmentsToUnstructuredGrid(self, poly):
+    def segments2DToUnstructuredGrid(self, poly):
         if 'segments' in poly:
             points = poly['vertices']
             n_points = len(points)
