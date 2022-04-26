@@ -553,6 +553,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     ]
                 )
             m.write(file_name)
+            self.showNotification("File '{}' exported sucessfully".format(
+                os.path.basename(file_name)))
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
