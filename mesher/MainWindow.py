@@ -167,7 +167,7 @@ class MainWindow(QtWidgets.QMainWindow):
             success = self.openSTLFile(file_name)
             self.dim = 3
         else:
-            print("Unknown file extension")
+            self.showNotification("Unsupported file format")
             success = False
 
         if success:
@@ -193,8 +193,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.polyToVtk(self.poly)
             return True
         else:
-            # TODO: improve this
-            print("Error reading {}.".format(file_name))
+            self.showNotification("Error reading '{}'".format(
+                os.path.basename(file_name)))
             return False
 
     def openSTLFile(self, file_name):
@@ -331,8 +331,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.vtk_vertex_actor = self.addToVtk(vertex_ugrid)
             self.setVertexProperties(self.vtk_vertex_actor)
         else:
-            # TODO: reprt this to user in GUI
-            print("No vertices found in poly file")
+            self.showNotification("No vertices found in poly file")
             self.vtk_vertex_actor = None
 
         segment_ugrid = self.segmentsToUnstructuredGrid(poly)
