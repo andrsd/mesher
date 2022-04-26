@@ -239,7 +239,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def onClearRecentFiles(self):
         self.recent_files = []
         self.buildRecentFilesMenu()
-        self.recent_tab.clear()
 
     def updateWindowTitle(self):
         if self.file_name is None:
