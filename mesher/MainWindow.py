@@ -1,6 +1,7 @@
 import os
 import vtk
 import meshio
+import pyvista
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
     QFileDialog
@@ -8,7 +9,9 @@ from PyQt5.QtCore import QEvent, QSettings
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from mesher.AboutDialog import AboutDialog
 from mesher.MesherInteractorStyle2D import MesherInteractorStyle2D
+from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
 import triangle as tr
+import tetgen
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -149,26 +152,62 @@ class MainWindow(QtWidgets.QMainWindow):
         @param file_name[str] Name of the file to open
         """
         self.clear()
-        self.poly = self.readPolyFile(file_name)
-        if self.poly is not None:
-            self.polyToVtk(self.poly)
-            self.resetCamera()
+        base_name, ext = os.path.splitext(file_name)
+        if ext == '.poly':
+            success = self.openPolyFile(file_name)
+            self.dim = 2
+        elif ext == '.stl':
+            success = self.openSTLFile(file_name)
+            self.dim = 3
+        else:
+            print("Unknown file extension")
+            success = False
 
+        if success:
+            if self.dim == 3:
+                style = MesherInteractorStyle3D(self)
+            else:
+                style = MesherInteractorStyle2D(self)
+            self.vtk_interactor.SetInteractorStyle(style)
+
+            self.resetCamera()
             self.file_name = file_name
             self.updateWindowTitle()
             self.addToRecentFiles(self.file_name)
             self.updateMenuBar()
             self.updateWidgets()
+
+    def openPolyFile(self, file_name):
+        """
+        @param file_name[str] Name of the poly file to open
+        """
+        self.poly = self.readPolyFile(file_name)
+        if self.poly is not None:
+            self.polyToVtk(self.poly)
+            return True
         else:
             # TODO: improve this
             print("Error reading {}.".format(file_name))
+            return False
+
+    def openSTLFile(self, file_name):
+        """
+        @param file_name[str] Name of the STL file to open
+        """
+        reader = pyvista.get_reader(file_name)
+        # TODO: error handling
+        self.poly = reader.read()
+        self.stlToVtk(self.poly)
+        return True
 
     def onOpenFile(self):
         file_name, f = QFileDialog.getOpenFileName(
             self,
             'Open File',
             "",
-            "poly files (*.poly)")
+            "All supported files (*poly *.stl);;"
+            "poly files (*.poly);;"
+            "STL files (*.stl)")
         if file_name:
             self.openFile(file_name)
 
@@ -251,13 +290,14 @@ class MainWindow(QtWidgets.QMainWindow):
         pass
 
     def clear(self):
+        self.dim = None
         self.poly = None
         self.mesh = None
         self.file_name = None
         self.vtk_renderer.RemoveAllViewProps()
         self.vtk_vertex_actor = None
         self.vtk_segment_actor = None
-        self.vtk_triangles_actor = None
+        self.vtk_mesh_actor = None
 
     def onUpdateWindow(self):
         self.vtk_render_window.Render()
@@ -295,14 +335,20 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.vtk_segment_actor = None
 
-    def meshToVtk(self, poly):
+    def stlToVtk(self, poly):
         self.vtk_renderer.RemoveAllViewProps()
-        triangles_ugrid = self.trianglesToUnstructuredGrid(poly)
-        if triangles_ugrid is not None:
-            self.vtk_triangles_actor = self.addToVtk(triangles_ugrid)
-            self.setTriangleProperties(self.vtk_triangles_actor)
+        grid = pyvista.UnstructuredGrid(poly)
+        self.vtk_segment_actor = self.addToVtk(grid)
+        self.setSurface3DProperties(self.vtk_segment_actor)
+
+    def meshToVtk(self, grid):
+        self.vtk_renderer.RemoveAllViewProps()
+        if grid is not None:
+            actor = self.addToVtk(grid)
+            self.setMeshProperties(actor)
         else:
-            self.vtk_triangles_actor = None
+            actor = None
+        return actor
 
     def verticesToUnstructuredGrid(self, poly):
         """
@@ -415,7 +461,22 @@ class MainWindow(QtWidgets.QMainWindow):
         property.SetAmbient(1)
         property.SetDiffuse(0)
 
-    def setTriangleProperties(self, actor):
+    def setSurface3DProperties(self, actor):
+        property = actor.GetProperty()
+        property.EdgeVisibilityOn()
+        property.SetLineWidth(3.0)
+        property.SetEdgeColor([0, 0, 0])
+
+        property.SetColor([0.9, 0.9, 0.9])
+        property.SetOpacity(1)
+        property.SetAmbient(1)
+        property.SetDiffuse(0)
+
+        property.SetVertexVisibility(False)
+        property.SetRenderPointsAsSpheres(False)
+        property.SetPointSize(0)
+
+    def setMeshProperties(self, actor):
         property = actor.GetProperty()
         property.SetRepresentationToSurface()
         property.SetColor([1, 1, 1])
@@ -433,8 +494,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onMesh(self):
         opts = ''
-        self.mesh = tr.triangulate(self.poly, opts)
-        self.meshToVtk(self.mesh)
+        if isinstance(self.poly, dict):
+            tris = tr.triangulate(self.poly, opts)
+            self.mesh = self.trianglesToUnstructuredGrid(tris)
+        elif isinstance(self.poly, pyvista.core.pointset.PolyData):
+            tet = tetgen.TetGen(self.poly)
+            # TODO: user defined options
+            # tet.tetrahedralize(order=1, mindihedral=20, minratio=1.5)
+            tet.tetrahedralize(order=1)
+            self.mesh = tet.grid
+        else:
+            self.mesh = None
+        self.vtk_mesh_actor = self.meshToVtk(self.mesh)
         self.updateMenuBar()
 
     def setupExportMenu(self, menu):
@@ -458,10 +529,21 @@ class MainWindow(QtWidgets.QMainWindow):
                                      'ExodusII files (*.e *.exo)',
                                      'e')
         if file_name:
-            m = meshio.Mesh(
-                self.mesh['vertices'],
-                [
-                    ('triangle', self.mesh['triangles'])
-                ]
-            )
+            grid = pyvista.UnstructuredGrid(self.mesh)
+            if self.dim == 2:
+                vertices = grid.points[:, :2]
+                m = meshio.Mesh(
+                    vertices,
+                    [
+                        ('triangle', grid.cells_dict[vtk.VTK_TRIANGLE])
+                    ]
+                )
+            elif self.dim == 3:
+                vertices = grid.points
+                m = meshio.Mesh(
+                    vertices,
+                    [
+                        ('tetra', grid.cells_dict[vtk.VTK_TETRA])
+                    ]
+                )
             m.write(file_name)
