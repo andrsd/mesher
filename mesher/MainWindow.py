@@ -1,6 +1,7 @@
 import os
 import vtk
 import meshio
+import numpy
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
     QFileDialog
@@ -384,54 +385,27 @@ class MainWindow(QtWidgets.QMainWindow):
             point_array.InsertPoint(i, [pt[0], pt[1], pt[2]])
         return point_array
 
-    def vertices2DToUnstructuredGrid(self, poly):
-        """
-        Creates an unstructured grid with vertices
-        """
-        if 'vertices' in poly:
-            points = self.buildVtkPointArray2D(poly['vertices'])
+    def buildVtkCellArrayVertex(self, vertices):
+        cell_array = vtk.vtkCellArray()
+        cell_array.Allocate(len(vertices))
+        for i, pt in enumerate(vertices):
+            elem = vtk.vtkVertex()
+            elem.GetPointIds().SetId(0, i)
+            cell_array.InsertNextCell(elem)
+        return cell_array
 
-            cell_array = vtk.vtkCellArray()
-            cell_array.Allocate(len(poly['vertices']))
-            for i, pt in enumerate(poly['vertices']):
-                elem = vtk.vtkVertex()
-                elem.GetPointIds().SetId(0, i)
-                cell_array.InsertNextCell(elem)
+    def buildVtkCellArrayLine(self, segments):
+        n_segments = len(segments)
+        cell_array = vtk.vtkCellArray()
+        cell_array.Allocate(n_segments)
+        for seg in list(segments):
+            elem = vtk.vtkLine()
+            elem.GetPointIds().SetId(0, int(seg[0]))
+            elem.GetPointIds().SetId(1, int(seg[1]))
+            cell_array.InsertNextCell(elem)
+        return cell_array
 
-            ugrid = vtk.vtkUnstructuredGrid()
-            ugrid.SetPoints(points)
-            ugrid.SetCells(vtk.VTK_VERTEX, cell_array)
-
-            return ugrid
-        else:
-            return None
-
-    def segments2DToUnstructuredGrid(self, poly):
-        if 'segments' in poly:
-            points = self.buildVtkPointArray2D(poly['vertices'])
-
-            segments = poly['segments']
-            n_segments = len(segments)
-            cell_array = vtk.vtkCellArray()
-            cell_array.Allocate(n_segments)
-            for seg in list(segments):
-                elem = vtk.vtkLine()
-                elem.GetPointIds().SetId(0, int(seg[0]))
-                elem.GetPointIds().SetId(1, int(seg[1]))
-                cell_array.InsertNextCell(elem)
-
-            ugrid = vtk.vtkUnstructuredGrid()
-            ugrid.SetPoints(points)
-            ugrid.SetCells(vtk.VTK_LINE, cell_array)
-
-            return ugrid
-        else:
-            return None
-
-    def triangles2DToUnstructuredGrid(self, mesh):
-        points = self.buildVtkPointArray2D(mesh.points)
-
-        triangles = mesh.elements
+    def buildVtkCellArrayTriangle(self, triangles):
         n_triangles = len(triangles)
         cell_array = vtk.vtkCellArray()
         cell_array.Allocate(n_triangles)
@@ -441,55 +415,72 @@ class MainWindow(QtWidgets.QMainWindow):
             elem.GetPointIds().SetId(1, int(tri[1]))
             elem.GetPointIds().SetId(2, int(tri[2]))
             cell_array.InsertNextCell(elem)
+        return cell_array
 
-        ugrid = vtk.vtkUnstructuredGrid()
-        ugrid.SetPoints(points)
-        ugrid.SetCells(vtk.VTK_TRIANGLE, cell_array)
-
-        return ugrid
-
-    def triangles3DToUnstructuredGrid(self, mesh):
-        if 'triangle' in mesh.cells_dict:
-            points = self.buildVtkPointArray3D(mesh.points)
-
-            triangles = mesh.cells_dict['triangle']
-            n_triangles = len(triangles)
-            cell_array = vtk.vtkCellArray()
-            cell_array.Allocate(n_triangles)
-            for tri in list(triangles):
-                elem = vtk.vtkTriangle()
-                elem.GetPointIds().SetId(0, int(tri[0]))
-                elem.GetPointIds().SetId(1, int(tri[1]))
-                elem.GetPointIds().SetId(2, int(tri[2]))
-                cell_array.InsertNextCell(elem)
-
-            ugrid = vtk.vtkUnstructuredGrid()
-            ugrid.SetPoints(points)
-            ugrid.SetCells(vtk.VTK_TRIANGLE, cell_array)
-
-            return ugrid
-        else:
-            return None
-
-    def tetrasToUnstructuredGrid(self, mesh):
-        points = self.buildVtkPointArray3D(mesh.points)
-
-        tets = mesh.elements
-        n_elems = len(tets)
+    def buildVtkCellArrayTetra(self, tetras):
+        n_elems = len(tetras)
         cell_array = vtk.vtkCellArray()
         cell_array.Allocate(n_elems)
-        for e in list(tets):
+        for e in list(tetras):
             elem = vtk.vtkTetra()
             elem.GetPointIds().SetId(0, int(e[0]))
             elem.GetPointIds().SetId(1, int(e[1]))
             elem.GetPointIds().SetId(2, int(e[2]))
             elem.GetPointIds().SetId(3, int(e[3]))
             cell_array.InsertNextCell(elem)
+        return cell_array
 
+    def vertices2DToUnstructuredGrid(self, poly):
+        """
+        Creates an unstructured grid with vertices
+        """
+        if 'vertices' in poly:
+            points = self.buildVtkPointArray2D(poly['vertices'])
+            vertices = self.buildVtkCellArrayVertex(poly['vertices'])
+            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid.SetPoints(points)
+            ugrid.SetCells(vtk.VTK_VERTEX, vertices)
+            return ugrid
+        else:
+            return None
+
+    def segments2DToUnstructuredGrid(self, poly):
+        if 'segments' in poly:
+            points = self.buildVtkPointArray2D(poly['vertices'])
+            lines = self.buildVtkCellArrayLine(poly['segments'])
+            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid.SetPoints(points)
+            ugrid.SetCells(vtk.VTK_LINE, lines)
+            return ugrid
+        else:
+            return None
+
+    def triangles2DToUnstructuredGrid(self, mesh):
+        points = self.buildVtkPointArray2D(mesh.points)
+        triangles = self.buildVtkCellArrayTriangle(mesh.elements)
         ugrid = vtk.vtkUnstructuredGrid()
         ugrid.SetPoints(points)
-        ugrid.SetCells(vtk.VTK_TETRA, cell_array)
+        ugrid.SetCells(vtk.VTK_TRIANGLE, triangles)
+        return ugrid
 
+    def triangles3DToUnstructuredGrid(self, mesh):
+        if 'triangle' in mesh.cells_dict:
+            points = self.buildVtkPointArray3D(mesh.points)
+            triangles = self.buildVtkCellArrayTriangle(
+                mesh.cells_dict['triangle'])
+            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid.SetPoints(points)
+            ugrid.SetCells(vtk.VTK_TRIANGLE, triangles)
+            return ugrid
+        else:
+            return None
+
+    def tetrasToUnstructuredGrid(self, mesh):
+        points = self.buildVtkPointArray3D(mesh.points)
+        tetras = self.buildVtkCellArrayTetra(mesh.elements)
+        ugrid = vtk.vtkUnstructuredGrid()
+        ugrid.SetPoints(points)
+        ugrid.SetCells(vtk.VTK_TETRA, tetras)
         return ugrid
 
     def addToVtk(self, ugrid):
