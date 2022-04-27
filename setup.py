@@ -75,8 +75,7 @@ setup(
         'triangle==20220202',
         'meshio==5.3.4',
         'netCDF4==1.5.8',
-        'pyvista==0.34.1',
-        'tetgen==0.6.0'
+        'MeshPy==2020.1'
     ],
     packages=[
         'mesher',

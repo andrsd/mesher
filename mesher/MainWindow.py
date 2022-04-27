@@ -1,7 +1,6 @@
 import os
 import vtk
 import meshio
-import pyvista
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
     QFileDialog
@@ -13,7 +12,16 @@ from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
 from mesher.NotificationWidget import NotificationWidget
 from mesher import exodusII
 import triangle as tr
-import tetgen
+import meshpy.triangle
+import meshpy.tet
+
+
+def round_trip_connect(start, end):
+    result = []
+    for i in range(start, end):
+        result.append((i, i + 1))
+    result.append((end, start))
+    return result
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -202,11 +210,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         @param file_name[str] Name of the STL file to open
         """
-        reader = pyvista.get_reader(file_name)
-        # TODO: error handling
-        self.poly = reader.read()
-        self.stlToVtk(self.poly)
-        return True
+        try:
+            self.poly = meshio.read(file_name)
+            self.stlToVtk(self.poly)
+            return True
+        except meshio.ReadError as e:
+            self.showNotification("Error reading '{}': {}".format(
+                os.path.basename(file_name), str(e)))
+            return False
 
     def onOpenFile(self):
         file_name, f = QFileDialog.getOpenFileName(
@@ -342,9 +353,9 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.vtk_segment_actor = None
 
-    def stlToVtk(self, poly):
+    def stlToVtk(self, stl):
         self.vtk_renderer.RemoveAllViewProps()
-        grid = pyvista.UnstructuredGrid(poly)
+        grid = self.triangles3DToUnstructuredGrid(stl)
         self.vtk_segment_actor = self.addToVtk(grid)
         self.setSurface3DProperties(self.vtk_segment_actor)
 
@@ -412,16 +423,41 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return None
 
-    def trianglesToUnstructuredGrid(self, poly):
-        if 'triangles' in poly:
-            points = poly['vertices']
+    def triangles2DToUnstructuredGrid(self, mesh):
+        points = mesh.points
+        n_points = len(points)
+        point_array = vtk.vtkPoints()
+        point_array.Allocate(n_points)
+        for i, pt in enumerate(points):
+            point_array.InsertPoint(i, [pt[0], pt[1], 0.])
+
+        triangles = mesh.elements
+        n_triangles = len(triangles)
+        cell_array = vtk.vtkCellArray()
+        cell_array.Allocate(n_triangles)
+        for tri in list(triangles):
+            elem = vtk.vtkTriangle()
+            elem.GetPointIds().SetId(0, int(tri[0]))
+            elem.GetPointIds().SetId(1, int(tri[1]))
+            elem.GetPointIds().SetId(2, int(tri[2]))
+            cell_array.InsertNextCell(elem)
+
+        ugrid = vtk.vtkUnstructuredGrid()
+        ugrid.SetPoints(point_array)
+        ugrid.SetCells(vtk.VTK_TRIANGLE, cell_array)
+
+        return ugrid
+
+    def triangles3DToUnstructuredGrid(self, mesh):
+        if 'triangle' in mesh.cells_dict:
+            points = mesh.points
             n_points = len(points)
             point_array = vtk.vtkPoints()
             point_array.Allocate(n_points)
             for i, pt in enumerate(points):
-                point_array.InsertPoint(i, [pt[0], pt[1], 0.])
+                point_array.InsertPoint(i, [pt[0], pt[1], pt[2]])
 
-            triangles = poly['triangles']
+            triangles = mesh.cells_dict['triangle']
             n_triangles = len(triangles)
             cell_array = vtk.vtkCellArray()
             cell_array.Allocate(n_triangles)
@@ -439,6 +475,32 @@ class MainWindow(QtWidgets.QMainWindow):
             return ugrid
         else:
             return None
+
+    def tetrasToUnstructuredGrid(self, mesh):
+        points = mesh.points
+        n_points = len(points)
+        point_array = vtk.vtkPoints()
+        point_array.Allocate(n_points)
+        for i, pt in enumerate(points):
+            point_array.InsertPoint(i, [pt[0], pt[1], pt[2]])
+
+        tets = mesh.elements
+        n_elems = len(tets)
+        cell_array = vtk.vtkCellArray()
+        cell_array.Allocate(n_elems)
+        for e in list(tets):
+            elem = vtk.vtkTetra()
+            elem.GetPointIds().SetId(0, int(e[0]))
+            elem.GetPointIds().SetId(1, int(e[1]))
+            elem.GetPointIds().SetId(2, int(e[2]))
+            elem.GetPointIds().SetId(3, int(e[3]))
+            cell_array.InsertNextCell(elem)
+
+        ugrid = vtk.vtkUnstructuredGrid()
+        ugrid.SetPoints(point_array)
+        ugrid.SetCells(vtk.VTK_TETRA, cell_array)
+
+        return ugrid
 
     def addToVtk(self, ugrid):
         mapper = vtk.vtkDataSetMapper()
@@ -500,19 +562,29 @@ class MainWindow(QtWidgets.QMainWindow):
         property.SetPointSize(0)
 
     def onMesh(self):
-        opts = ''
         if isinstance(self.poly, dict):
-            tris = tr.triangulate(self.poly, opts)
-            self.mesh = self.trianglesToUnstructuredGrid(tris)
-        elif isinstance(self.poly, pyvista.core.pointset.PolyData):
-            tet = tetgen.TetGen(self.poly)
-            # TODO: user defined options
-            # tet.tetrahedralize(order=1, mindihedral=20, minratio=1.5)
-            tet.tetrahedralize(order=1)
-            self.mesh = tet.grid
+            info = meshpy.triangle.MeshInfo()
+            vertices = self.poly['vertices']
+            info.set_points(vertices)
+            if 'segments' in self.poly:
+                segs = self.poly['segments']
+            else:
+                segs = round_trip_connect(0, numpy.shape(vertices)[0] - 1)
+            info.set_facets(segs)
+            if 'holes' in self.poly:
+                info.set_holes(self.poly['holes'])
+            self.mesh = meshpy.triangle.build(info)
+            grid = self.triangles2DToUnstructuredGrid(self.mesh)
+        elif isinstance(self.poly, meshio._mesh.Mesh):
+            # meshing 3D tri surface
+            info = meshpy.tet.MeshInfo()
+            info.set_points(self.poly.points)
+            info.set_facets(self.poly.cells_dict['triangle'])
+            self.mesh = meshpy.tet.build(info)
+            grid = self.tetrasToUnstructuredGrid(self.mesh)
         else:
-            self.mesh = None
-        self.vtk_mesh_actor = self.meshToVtk(self.mesh)
+            grid = None
+        self.vtk_mesh_actor = self.meshToVtk(grid)
         self.updateMenuBar()
 
     def setupExportMenu(self, menu):
@@ -536,21 +608,18 @@ class MainWindow(QtWidgets.QMainWindow):
                                      'ExodusII files (*.e *.exo)',
                                      'e')
         if file_name:
-            grid = pyvista.UnstructuredGrid(self.mesh)
             if self.dim == 2:
-                vertices = grid.points[:, :2]
                 m = meshio.Mesh(
-                    vertices,
+                    self.mesh.points,
                     [
-                        ('triangle', grid.cells_dict[vtk.VTK_TRIANGLE])
+                        ('triangle', self.mesh.elements)
                     ]
                 )
             elif self.dim == 3:
-                vertices = grid.points
                 m = meshio.Mesh(
-                    vertices,
+                    self.mesh.points,
                     [
-                        ('tetra', grid.cells_dict[vtk.VTK_TETRA])
+                        ('tetra', self.mesh.elements)
                     ]
                 )
             exodusII.write(file_name, m)
