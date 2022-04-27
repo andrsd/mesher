@@ -11,6 +11,7 @@ from mesher.AboutDialog import AboutDialog
 from mesher.MesherInteractorStyle2D import MesherInteractorStyle2D
 from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
 from mesher.NotificationWidget import NotificationWidget
+from mesher import exodusII
 import triangle as tr
 import tetgen
 
@@ -552,7 +553,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         ('tetra', grid.cells_dict[vtk.VTK_TETRA])
                     ]
                 )
-            m.write(file_name)
+            exodusII.write(file_name, m)
             self.showNotification("File '{}' exported sucessfully".format(
                 os.path.basename(file_name)))
 
