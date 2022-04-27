@@ -12,7 +12,7 @@ from mesher.MesherInteractorStyle2D import MesherInteractorStyle2D
 from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
 from mesher.NotificationWidget import NotificationWidget
 from mesher import exodusII
-import triangle as tr
+import triangle
 import meshpy.triangle
 import meshpy.tet
 
@@ -94,7 +94,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mesh_button.move(
             geom.width() - 5 - self.mesh_button.width(),
             geom.height() - 10 - self.mesh_button.height())
-        self.mesh_button.setEnabled(self.poly is not None)
+        self.mesh_button.setEnabled(self.info is not None)
 
     def setupMenuBar(self):
         self.menubar = QMenuBar(self)
@@ -172,10 +172,8 @@ class MainWindow(QtWidgets.QMainWindow):
         base_name, ext = os.path.splitext(file_name)
         if ext == '.poly':
             success = self.openPolyFile(file_name)
-            self.dim = 2
         elif ext == '.stl':
             success = self.openSTLFile(file_name)
-            self.dim = 3
         else:
             self.showNotification("Unsupported file format")
             success = False
@@ -198,10 +196,9 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         @param file_name[str] Name of the poly file to open
         """
-        self.poly = self.readPolyFile(file_name)
-        if self.poly is not None:
-            self.polyToVtk(self.poly)
-            return True
+        self.info = self.readPolyFile(file_name)
+        if self.info is not None:
+            return self.meshInfoToVtk(self.info)
         else:
             self.showNotification("Error reading '{}'".format(
                 os.path.basename(file_name)))
@@ -212,8 +209,12 @@ class MainWindow(QtWidgets.QMainWindow):
         @param file_name[str] Name of the STL file to open
         """
         try:
-            self.poly = meshio.read(file_name)
-            self.stlToVtk(self.poly)
+            m = meshio.read(file_name)
+            self.dim = 3
+            self.info = meshpy.tet.MeshInfo()
+            self.info.set_points(m.points)
+            self.info.set_facets(m.cells_dict['triangle'])
+            self.surfaceToVtk(m)
             return True
         except meshio.ReadError as e:
             self.showNotification("Error reading '{}': {}".format(
@@ -311,7 +312,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def clear(self):
         self.dim = None
-        self.poly = None
+        self.info = None
         self.mesh = None
         self.file_name = None
         self.vtk_renderer.RemoveAllViewProps()
@@ -330,16 +331,48 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vtk_renderer.ResetCamera()
 
     def readPolyFile(self, file_name):
-        data = None
-        with open(file_name) as f:
-            str_poly = f.read()
-            data = tr.loads(poly=str_poly)
+        try:
+            with open(file_name) as f:
+                str_poly = f.read()
+                data = triangle.loads(poly=str_poly)
 
-        return data
+                info = meshpy.triangle.MeshInfo()
+                vertices = data['vertices']
+                info.set_points(vertices)
+                if 'segments' in data:
+                    segs = data['segments']
+                else:
+                    segs = round_trip_connect(0, numpy.shape(vertices)[0] - 1)
+                info.set_facets(segs)
+                if 'holes' in data:
+                    info.set_holes(data['holes'])
+                self.dim = 2
+                return info
+        except Exception:
+            info = meshpy.tet.MeshInfo()
+            file_base_name = os.path.splitext(file_name)[0]
+            try:
+                info.load_poly(file_base_name)
+                self.dim = 3
+                return info
+            except RuntimeError:
+                return None
 
-    def polyToVtk(self, poly):
-        self.vtk_renderer.RemoveAllViewProps()
-        vertex_ugrid = self.vertices2DToUnstructuredGrid(poly)
+    def meshInfoToVtk(self, info):
+        if self.dim == 2:
+            self.infoToVtk2D(info)
+            return True
+        elif self.dim == 3:
+            self.infoToVtk3D(info)
+            return True
+        else:
+            self.showNotification(
+                "Unsupported dimension in poly file '{}'".format(self.dim))
+            return False
+
+    def infoToVtk2D(self, info):
+        self.vtk_vertex_actor = None
+        vertex_ugrid = self.vertices2DToUnstructuredGrid(info)
         if vertex_ugrid is not None:
             self.vtk_vertex_actor = self.addToVtk(vertex_ugrid)
             self.setVertexProperties(self.vtk_vertex_actor)
@@ -347,21 +380,25 @@ class MainWindow(QtWidgets.QMainWindow):
             self.showNotification("No vertices found in poly file")
             self.vtk_vertex_actor = None
 
-        segment_ugrid = self.segments2DToUnstructuredGrid(poly)
+        segment_ugrid = self.segments2DToUnstructuredGrid(info)
         if segment_ugrid is not None:
             self.vtk_segment_actor = self.addToVtk(segment_ugrid)
             self.setSegmentProperties(self.vtk_segment_actor)
         else:
             self.vtk_segment_actor = None
 
-    def stlToVtk(self, stl):
-        self.vtk_renderer.RemoveAllViewProps()
-        grid = self.triangles3DToUnstructuredGrid(stl)
+    def infoToVtk3D(self, info):
+        polygon_grid = self.facets3DToUnstructuredGrid(info)
+        self.vtk_segment_actor = self.addToVtk(polygon_grid)
+        self.setSurface3DProperties(self.vtk_segment_actor)
+
+    def surfaceToVtk(self, surface):
+        self.vtk_vertex_actor = None
+        grid = self.triangles3DToUnstructuredGrid(surface)
         self.vtk_segment_actor = self.addToVtk(grid)
         self.setSurface3DProperties(self.vtk_segment_actor)
 
     def meshToVtk(self, grid):
-        self.vtk_renderer.RemoveAllViewProps()
         if grid is not None:
             actor = self.addToVtk(grid)
             self.setMeshProperties(actor)
@@ -430,30 +467,35 @@ class MainWindow(QtWidgets.QMainWindow):
             cell_array.InsertNextCell(elem)
         return cell_array
 
-    def vertices2DToUnstructuredGrid(self, poly):
-        """
-        Creates an unstructured grid with vertices
-        """
-        if 'vertices' in poly:
-            points = self.buildVtkPointArray2D(poly['vertices'])
-            vertices = self.buildVtkCellArrayVertex(poly['vertices'])
-            ugrid = vtk.vtkUnstructuredGrid()
-            ugrid.SetPoints(points)
-            ugrid.SetCells(vtk.VTK_VERTEX, vertices)
-            return ugrid
-        else:
-            return None
+    def buildVtkCellArrayPolygon(self, facets):
+        cell_array = vtk.vtkCellArray()
+        for facet in list(facets):
+            for poly in list(facet.polygons):
+                elem = vtk.vtkPolygon()
+                elem.GetPointIds().SetNumberOfIds(len(poly.vertices))
+                for i, vertex_id in enumerate(poly.vertices):
+                    elem.GetPointIds().SetId(i, int(vertex_id))
+                cell_array.InsertNextCell(elem)
+        return cell_array
 
-    def segments2DToUnstructuredGrid(self, poly):
-        if 'segments' in poly:
-            points = self.buildVtkPointArray2D(poly['vertices'])
-            lines = self.buildVtkCellArrayLine(poly['segments'])
-            ugrid = vtk.vtkUnstructuredGrid()
-            ugrid.SetPoints(points)
-            ugrid.SetCells(vtk.VTK_LINE, lines)
-            return ugrid
-        else:
-            return None
+    def vertices2DToUnstructuredGrid(self, info):
+        """
+        Creates an unstructured grid with vertices in 2D
+        """
+        points = self.buildVtkPointArray2D(info.points)
+        vertices = self.buildVtkCellArrayVertex(info.points)
+        ugrid = vtk.vtkUnstructuredGrid()
+        ugrid.SetPoints(points)
+        ugrid.SetCells(vtk.VTK_VERTEX, vertices)
+        return ugrid
+
+    def segments2DToUnstructuredGrid(self, info):
+        points = self.buildVtkPointArray2D(info.points)
+        lines = self.buildVtkCellArrayLine(info.facets)
+        ugrid = vtk.vtkUnstructuredGrid()
+        ugrid.SetPoints(points)
+        ugrid.SetCells(vtk.VTK_LINE, lines)
+        return ugrid
 
     def triangles2DToUnstructuredGrid(self, mesh):
         points = self.buildVtkPointArray2D(mesh.points)
@@ -474,6 +516,17 @@ class MainWindow(QtWidgets.QMainWindow):
             return ugrid
         else:
             return None
+
+    def facets3DToUnstructuredGrid(self, info):
+        """
+        Creates an unstructured grid with polygons in 3D
+        """
+        points = self.buildVtkPointArray3D(info.points)
+        polygons = self.buildVtkCellArrayPolygon(info.facets)
+        ugrid = vtk.vtkUnstructuredGrid()
+        ugrid.SetPoints(points)
+        ugrid.SetCells(vtk.VTK_POLYGON, polygons)
+        return ugrid
 
     def tetrasToUnstructuredGrid(self, mesh):
         points = self.buildVtkPointArray3D(mesh.points)
@@ -543,28 +596,16 @@ class MainWindow(QtWidgets.QMainWindow):
         property.SetPointSize(0)
 
     def onMesh(self):
-        if isinstance(self.poly, dict):
-            info = meshpy.triangle.MeshInfo()
-            vertices = self.poly['vertices']
-            info.set_points(vertices)
-            if 'segments' in self.poly:
-                segs = self.poly['segments']
-            else:
-                segs = round_trip_connect(0, numpy.shape(vertices)[0] - 1)
-            info.set_facets(segs)
-            if 'holes' in self.poly:
-                info.set_holes(self.poly['holes'])
-            self.mesh = meshpy.triangle.build(info)
+        if isinstance(self.info, meshpy.triangle.MeshInfo):
+            self.mesh = meshpy.triangle.build(self.info)
             grid = self.triangles2DToUnstructuredGrid(self.mesh)
-        elif isinstance(self.poly, meshio._mesh.Mesh):
-            # meshing 3D tri surface
-            info = meshpy.tet.MeshInfo()
-            info.set_points(self.poly.points)
-            info.set_facets(self.poly.cells_dict['triangle'])
-            self.mesh = meshpy.tet.build(info)
+        elif isinstance(self.info, meshpy.tet.MeshInfo):
+            self.mesh = meshpy.tet.build(self.info)
             grid = self.tetrasToUnstructuredGrid(self.mesh)
         else:
             grid = None
+
+        self.vtk_renderer.RemoveAllViewProps()
         self.vtk_mesh_actor = self.meshToVtk(grid)
         self.updateMenuBar()
 
