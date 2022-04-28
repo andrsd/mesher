@@ -1,6 +1,7 @@
 # MESHER
 
 [![qa](https://github.com/andrsd/mesher/actions/workflows/flake8.yml/badge.svg?branch=main)](https://github.com/andrsd/mesher/actions/workflows/flake8.yml)
+[![test](https://github.com/andrsd/mesher/actions/workflows/build.yml/badge.svg)](https://github.com/andrsd/mesher/actions/workflows/build.yml)
 
 Features:
 - Generate triangular meshes using [Triangle](https://www.cs.cmu.edu/~quake/triangle.html)
