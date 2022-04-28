@@ -1,7 +1,6 @@
 import os
 import vtk
 import meshio
-import numpy
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
     QFileDialog
