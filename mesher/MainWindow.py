@@ -200,8 +200,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.info is not None:
             return self.meshInfoToVtk(self.info)
         else:
-            self.showNotification("Error reading '{}'".format(
-                os.path.basename(file_name)))
             return False
 
     def openSTLFile(self, file_name):
@@ -336,18 +334,21 @@ class MainWindow(QtWidgets.QMainWindow):
                 str_poly = f.read()
                 data = triangle.loads(poly=str_poly)
 
-                info = meshpy.triangle.MeshInfo()
-                vertices = data['vertices']
-                info.set_points(vertices)
                 if 'segments' in data:
+                    info = meshpy.triangle.MeshInfo()
+                    vertices = data['vertices']
+                    info.set_points(vertices)
                     segs = data['segments']
+                    info.set_facets(segs)
+                    if 'holes' in data:
+                        info.set_holes(data['holes'])
+                    self.dim = 2
+                    return info
                 else:
-                    segs = round_trip_connect(0, numpy.shape(vertices)[0] - 1)
-                info.set_facets(segs)
-                if 'holes' in data:
-                    info.set_holes(data['holes'])
-                self.dim = 2
-                return info
+                    self.showNotification("No segments found in the file.")
+                    self.dim = None
+                    return None
+
         except Exception:
             info = meshpy.tet.MeshInfo()
             file_base_name = os.path.splitext(file_name)[0]
@@ -356,6 +357,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.dim = 3
                 return info
             except RuntimeError:
+                self.showNotification("Error reading '{}'".format(
+                    os.path.basename(file_name)))
                 return None
 
     def meshInfoToVtk(self, info):
