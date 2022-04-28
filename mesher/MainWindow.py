@@ -10,6 +10,8 @@ from mesher.AboutDialog import AboutDialog
 from mesher.MesherInteractorStyle2D import MesherInteractorStyle2D
 from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
 from mesher.NotificationWidget import NotificationWidget
+from mesher.OptionsTetGenWidget import OptionsTetGenWidget
+from mesher.OptionsTriangleWidget import OptionsTriangleWidget
 from mesher import exodusII
 import triangle
 import meshpy.triangle
@@ -36,6 +38,11 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.settings = QSettings("Mesher")
         self.about_dlg = None
+        self.opts_tri_dlg = OptionsTriangleWidget(self.settings, self)
+        self.opts_tri_dlg.mesh_button.clicked.connect(self.onMeshClicked)
+        self.opts_tet_dlg = OptionsTetGenWidget(self.settings, self)
+        self.opts_tet_dlg.mesh_button.clicked.connect(self.onMeshClicked)
+
         self.recent_files = []
         self.clear_recent_file = None
         self.file_name = None
@@ -77,11 +84,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vtk_widget.GetRenderWindow().AddRenderer(self.vtk_renderer)
         self.setCentralWidget(self.vtk_widget)
 
-        self.mesh_button = QtWidgets.QPushButton("Mesh", self)
-        self.mesh_button.setFixedSize(160, 32)
-        self.mesh_button.show()
-        self.mesh_button.clicked.connect(self.onMesh)
-
         self.setupNotificationWidget()
 
     def setupNotificationWidget(self):
@@ -89,11 +91,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.notification.setVisible(False)
 
     def updateWidgets(self):
-        geom = self.geometry()
-        self.mesh_button.move(
-            geom.width() - 5 - self.mesh_button.width(),
-            geom.height() - 10 - self.mesh_button.height())
-        self.mesh_button.setEnabled(self.info is not None)
+        meshing_possible = self.info is not None
+        self.mesh_action.setEnabled(meshing_possible)
 
     def setupMenuBar(self):
         self.menubar = QMenuBar(self)
@@ -105,6 +104,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Open", self.onOpenFile, "Ctrl+O")
         self.recent_menu = file_menu.addMenu("Open Recent")
         self.buildRecentFilesMenu()
+        file_menu.addSeparator()
+        self.mesh_action = file_menu.addAction("Mesh...", self.onMesh)
         file_menu.addSeparator()
         export_menu = file_menu.addMenu("Export as...")
         self.setupExportMenu(export_menu)
@@ -162,6 +163,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.file_name = None
         self.updateWindowTitle()
         self.updateWidgets()
+        self.opts_tri_dlg.hide()
+        self.opts_tet_dlg.hide()
 
     def openFile(self, file_name):
         """
@@ -598,7 +601,11 @@ class MainWindow(QtWidgets.QMainWindow):
         property.SetPointSize(0)
 
     def onMesh(self):
+        self.opts_tri_dlg.show()
+
+    def onMeshClicked(self):
         if isinstance(self.info, meshpy.triangle.MeshInfo):
+            # TODO: pull opts from self.opts_tri_dlg
             self.mesh = meshpy.triangle.build(self.info)
             grid = self.triangles2DToUnstructuredGrid(self.mesh)
         elif isinstance(self.info, meshpy.tet.MeshInfo):
