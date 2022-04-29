@@ -2,6 +2,9 @@
 
 [![qa](https://github.com/andrsd/mesher/actions/workflows/flake8.yml/badge.svg?branch=main)](https://github.com/andrsd/mesher/actions/workflows/flake8.yml)
 [![test](https://github.com/andrsd/mesher/actions/workflows/build.yml/badge.svg)](https://github.com/andrsd/mesher/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/andrsd/mesher/branch/main/graph/badge.svg?token=RHCTM3I44O)](https://codecov.io/gh/andrsd/mesher)
+[![License](http://img.shields.io/:license-mit-blue.svg)](https://andrsd.mit-license.org/)
+[![Scc Count Badge](https://sloc.xyz/github/andrsd/mesher/)](https://github.com/andrsd/mesher/)
 
 Features:
 - Generate triangular meshes using [Triangle](https://www.cs.cmu.edu/~quake/triangle.html)
