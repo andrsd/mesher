@@ -1,5 +1,6 @@
 # MESHER
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/1cdafdee05c548c382ddce93605357fe)](https://www.codacy.com/gh/andrsd/mesher/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=andrsd/mesher&amp;utm_campaign=Badge_Grade)
 [![qa](https://github.com/andrsd/mesher/actions/workflows/flake8.yml/badge.svg?branch=main)](https://github.com/andrsd/mesher/actions/workflows/flake8.yml)
 [![test](https://github.com/andrsd/mesher/actions/workflows/build.yml/badge.svg)](https://github.com/andrsd/mesher/actions/workflows/build.yml)
 [![codecov](https://codecov.io/gh/andrsd/mesher/branch/main/graph/badge.svg?token=RHCTM3I44O)](https://codecov.io/gh/andrsd/mesher)
