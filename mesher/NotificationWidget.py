@@ -5,6 +5,7 @@ from mesher.ClickableLabel import ClickableLabel
 
 
 class NotificationWidget(QWidget):
+
     """
     Widget for simple notifications
 

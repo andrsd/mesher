@@ -3,6 +3,7 @@ from mesher import consts
 
 
 class AboutDialog(QtWidgets.QDialog):
+
     """ About dialog """
 
     def __init__(self, parent):

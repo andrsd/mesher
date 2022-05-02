@@ -27,11 +27,12 @@ def round_trip_connect(start, end):
 
 
 class MainWindow(QtWidgets.QMainWindow):
+
     """
     Main window
     """
-    WINDOW_TITLE = "Mesher"
 
+    WINDOW_TITLE = "Mesher"
     MAX_RECENT_FILES = 10
 
     def __init__(self):
