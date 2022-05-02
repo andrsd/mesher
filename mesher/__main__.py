@@ -8,8 +8,9 @@ from mesher.MainWindow import MainWindow
 
 
 def safe_timer(timeout, func, *args, **kwargs):
-    """Create a timer that is safe against garbage collection and
+    """Create a timer that is safe against garbage collection and \
     overlapping calls.
+
     See: http://ralsina.me/weblog/posts/BB974.html
     """
     def timer_event():
