@@ -125,12 +125,12 @@ class OptionsTriangleWidget(QScrollArea):
         return lineedit
 
     def addHelpWidget(self, item, indent):
-        help = QLabel(item['help'])
-        font = help.font()
+        help_label = QLabel(item['help'])
+        font = help_label.font()
         font.setPointSizeF(font.pointSizeF() * 0.9)
-        help.setFont(font)
-        help.setWordWrap(True)
+        help_label.setFont(font)
+        help_label.setWordWrap(True)
         layout = QHBoxLayout()
-        layout.addWidget(help)
+        layout.addWidget(help_label)
         layout.setContentsMargins(indent, 0, 0, 0)
         self.layout.addLayout(layout)
