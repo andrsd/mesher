@@ -16,6 +16,11 @@ class NotificationWidget(QWidget):
     dismiss = pyqtSignal()
 
     def __init__(self, parent=None):
+        """Inits NotificationWidget
+
+        Args:
+            parent: Parent widget
+        """
         super().__init__(parent)
 
         self.setAttribute(Qt.WA_StyledBackground, True)

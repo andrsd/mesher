@@ -7,6 +7,12 @@ class OptionsTetGenWidget(QScrollArea):
     data = []
 
     def __init__(self, settings, parent):
+        """Inits OptionsTetGenWidget
+
+        Args:
+            settings: Application QSettings objects to store the options into
+            parent: Parent widget
+        """
         super().__init__(parent)
 
         self.settings = settings

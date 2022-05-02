@@ -7,6 +7,11 @@ class AboutDialog(QtWidgets.QDialog):
     """ About dialog """
 
     def __init__(self, parent):
+        """Inits AboutDialog
+
+        Args:
+            parent: Parent widget
+        """
         super().__init__(parent)
 
         self.setWindowFlag(QtCore.Qt.CustomizeWindowHint, True)

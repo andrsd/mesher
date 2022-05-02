@@ -5,6 +5,11 @@ from PyQt5.QtGui import QKeySequence, QKeyEvent
 class MesherInteractorInterface:
 
     def __init__(self, widget):
+        """Inits MesherInteractorInterface
+
+        Args:
+            widget: Widget that recieves VTK events converted into Qt events
+        """
         self.widget = widget
         self.last_mouse_pos = None
         self.left_button_down = False

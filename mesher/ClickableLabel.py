@@ -7,6 +7,11 @@ class ClickableLabel(QLabel):
     clicked = pyqtSignal()
 
     def __init__(self, parent=None):
+        """Inits ClickableLabel
+
+        Args:
+            parent: Parent widget
+        """
         super().__init__(parent)
 
     def enterEvent(self, event):

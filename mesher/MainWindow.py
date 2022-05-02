@@ -36,6 +36,7 @@ class MainWindow(QtWidgets.QMainWindow):
     MAX_RECENT_FILES = 10
 
     def __init__(self):
+        """Inits MainWindow"""
         super().__init__()
         self.settings = QSettings("Mesher")
         self.about_dlg = None

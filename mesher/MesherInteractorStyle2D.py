@@ -6,6 +6,11 @@ class MesherInteractorStyle2D(vtk.vtkInteractorStyleImage,
                               MesherInteractorInterface):
 
     def __init__(self, widget):
+        """Inits MesherInteractorStyle2D
+
+        Args:
+            widget: Widget that recieves VTK events converted into Qt events
+        """
         vtk.vtkInteractorStyleImage.__init__(self)
         MesherInteractorInterface.__init__(self, widget)
 

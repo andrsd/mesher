@@ -6,6 +6,11 @@ class MesherInteractorStyle3D(vtk.vtkInteractorStyleTrackballCamera,
                               MesherInteractorInterface):
 
     def __init__(self, widget):
+        """Inits MesherInteractorStyle3D
+
+        Args:
+            widget: Widget that recieves VTK events converted into Qt events
+        """
         vtk.vtkInteractorStyleImage.__init__(self)
         MesherInteractorInterface.__init__(self, widget)
 
