@@ -269,6 +269,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.updateWidgets()
+        dlg = self.getMeshingOptionsDialog()
+        if dlg is not None:
+            self.updateMeshingOptionsGeometry(dlg)
 
     def writeSettings(self):
         self.settings.setValue("window/geometry", self.saveGeometry())
@@ -611,12 +614,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.openFile(file_names[0])
         else:
             event.ignore()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        dlg = self.getMeshingOptionsDialog()
-        if dlg is not None:
-            self.updateMeshingOptionsGeometry(dlg)
 
     def showNotification(self, text, ms=2000):
         """
