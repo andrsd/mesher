@@ -3,6 +3,7 @@ source=mesher
 omit =
     mesher/__main__.py
     mesher/consts.py
+    mesher/exodusII.py
 
 [report]
 exclude_lines =
