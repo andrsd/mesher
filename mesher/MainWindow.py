@@ -37,6 +37,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         """Inits MainWindow"""
         super().__init__()
+        self.point_size = 15
+        self.line_width = 3.
+
         self.settings = QSettings("Mesher")
         self.about_dlg = None
 
@@ -329,6 +332,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vtk_renderer.RemoveAllViewProps()
         self.vtk_vertex_actor = None
         self.vtk_segment_actor = None
+        self.vtk_hole_actor = None
         self.vtk_mesh_actor = None
 
     def onUpdateWindow(self):
@@ -388,7 +392,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def infoToVtk2D(self, info):
         self.vtk_vertex_actor = None
-        vertex_ugrid = self.vertices2DToUnstructuredGrid(info)
+        vertex_ugrid = vtk_helpers.vertices2DToUnstructuredGrid(info.points)
         if vertex_ugrid is not None:
             self.vtk_vertex_actor = self.addToVtk(vertex_ugrid)
             self.setVertexProperties(self.vtk_vertex_actor)
@@ -403,10 +407,26 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.vtk_segment_actor = None
 
+        if info.holes is not None:
+            holes_ugrid = vtk_helpers.vertices2DToUnstructuredGrid(info.holes)
+            if holes_ugrid is not None:
+                self.vtk_hole_actor = self.addToVtk(holes_ugrid)
+                self.setHolesProperties(self.vtk_hole_actor)
+            else:
+                self.vtk_hole_actor = None
+
     def infoToVtk3D(self, info):
         polygon_grid = self.facets3DToUnstructuredGrid(info)
         self.vtk_segment_actor = self.addToVtk(polygon_grid)
         self.setSurface3DProperties(self.vtk_segment_actor)
+
+        if info.holes is not None:
+            holes_ugrid = vtk_helpers.vertices3DToUnstructuredGrid(info.holes)
+            if holes_ugrid is not None:
+                self.vtk_hole_actor = self.addToVtk(holes_ugrid)
+                self.setHolesProperties(self.vtk_hole_actor)
+            else:
+                self.vtk_hole_actor = None
 
     def surfaceToVtk(self, surface):
         self.vtk_vertex_actor = None
@@ -421,17 +441,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             actor = None
         return actor
-
-    def vertices2DToUnstructuredGrid(self, info):
-        """
-        Creates an unstructured grid with vertices in 2D
-        """
-        points = vtk_helpers.buildPointArray2D(info.points)
-        vertices = vtk_helpers.buildCellArrayVertex(info.points)
-        ugrid = vtk.vtkUnstructuredGrid()
-        ugrid.SetPoints(points)
-        ugrid.SetCells(vtk.VTK_VERTEX, vertices)
-        return ugrid
 
     def segments2DToUnstructuredGrid(self, info):
         points = vtk_helpers.buildPointArray2D(info.points)
@@ -496,22 +505,30 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetRepresentationToPoints()
         prop.SetRenderPointsAsSpheres(True)
         prop.SetVertexVisibility(True)
-        prop.SetPointSize(15)
+        prop.SetPointSize(self.point_size)
         prop.SetColor([0., 0., 0.])
 
     def setSegmentProperties(self, actor):
         prop = actor.GetProperty()
         prop.EdgeVisibilityOn()
-        prop.SetLineWidth(3.0)
+        prop.SetLineWidth(self.line_width)
         prop.SetColor([0, 0, 0])
         prop.SetOpacity(1)
         prop.SetAmbient(1)
         prop.SetDiffuse(0)
 
+    def setHolesProperties(self, actor):
+        prop = actor.GetProperty()
+        prop.SetRepresentationToPoints()
+        prop.SetRenderPointsAsSpheres(True)
+        prop.SetVertexVisibility(True)
+        prop.SetPointSize(self.point_size)
+        prop.SetColor([1., 0., 0.])
+
     def setSurface3DProperties(self, actor):
         prop = actor.GetProperty()
         prop.EdgeVisibilityOn()
-        prop.SetLineWidth(3.0)
+        prop.SetLineWidth(self.line_width)
         prop.SetEdgeColor([0, 0, 0])
 
         prop.SetColor([0.9, 0.9, 0.9])
@@ -532,7 +549,7 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetDiffuse(0)
 
         prop.SetEdgeVisibility(True)
-        prop.SetLineWidth(3.0)
+        prop.SetLineWidth(self.line_width)
         prop.SetEdgeColor([0, 0, 0])
 
         prop.SetVertexVisibility(False)

@@ -78,3 +78,21 @@ def buildCellArrayPolygon(facets):
                 elem.GetPointIds().SetId(i, int(vertex_id))
             cell_array.InsertNextCell(elem)
     return cell_array
+
+
+def vertices2DToUnstructuredGrid(points):
+    pt_arr = buildPointArray2D(points)
+    cell_arr = buildCellArrayVertex(points)
+    ugrid = vtk.vtkUnstructuredGrid()
+    ugrid.SetPoints(pt_arr)
+    ugrid.SetCells(vtk.VTK_VERTEX, cell_arr)
+    return ugrid
+
+
+def vertices3DToUnstructuredGrid(points):
+    pt_arr = buildPointArray3D(points)
+    cell_arr = buildCellArrayVertex(points)
+    ugrid = vtk.vtkUnstructuredGrid()
+    ugrid.SetPoints(pt_arr)
+    ugrid.SetCells(vtk.VTK_VERTEX, cell_arr)
+    return ugrid
