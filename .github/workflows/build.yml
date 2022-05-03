@@ -107,3 +107,8 @@ jobs:
         uses: actions/download-artifact@v2
       - name: Upload to Codecov
         uses: codecov/codecov-action@v1
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: 'macos-coverage/coverage.xml,windows-coverage/coverage.xml,ubuntu-coverage/coverage.xml'
