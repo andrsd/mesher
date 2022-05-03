@@ -614,8 +614,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        dlg = self.opts_tri_dlg
-        self.updateMeshingOptionsGeometry(dlg)
+        dlg = self.getMeshingOptionsDialog()
+        if dlg is not None:
+            self.updateMeshingOptionsGeometry(dlg)
 
     def showNotification(self, text, ms=2000):
         """
@@ -635,10 +636,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.notification.setGraphicsEffect(None)
         self.notification.show(ms)
 
+    def getMeshingOptionsDialog(self):
+        if self.dim == 2:
+            return self.opts_tri_dlg
+        elif self.dim == 3:
+            return self.opts_tet_dlg
+        else:
+            return None
+
     def showMeshingOptions(self):
-        dlg = self.opts_tri_dlg
-        self.updateMeshingOptionsGeometry(dlg)
-        dlg.show()
+        dlg = self.getMeshingOptionsDialog()
+        if dlg is not None:
+            self.updateMeshingOptionsGeometry(dlg)
+            dlg.show()
 
     def updateMeshingOptionsGeometry(self, dlg):
         dlg.adjustSize()
@@ -650,5 +660,6 @@ class MainWindow(QtWidgets.QMainWindow):
         dlg.setGeometry(left, top, dlg.width(), height)
 
     def onHideMeshingOptions(self):
-        dlg = self.opts_tri_dlg
-        dlg.hide()
+        dlg = self.getMeshingOptionsDialog()
+        if dlg is not None:
+            dlg.hide()
