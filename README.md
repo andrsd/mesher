@@ -9,15 +9,10 @@
 
 Features:
 - Generate triangular meshes using [Triangle](https://www.cs.cmu.edu/~quake/triangle.html)
-
 - Generate tetrahedral meshes using [TetGen](https://wias-berlin.de/software/tetgen/)
-
 - Support for .poly file (Triangle and TetGen)
-
 - Support for STL file
-
 - Multiplatform:
-
   - MacOS X,
   - linux (not tested), and
   - Windows (not tested)
