@@ -548,7 +548,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.mesh = meshpy.triangle.build(self.info, **params)
             grid = self.triangles2DToUnstructuredGrid(self.mesh)
         elif isinstance(self.info, meshpy.tet.MeshInfo):
-            self.mesh = meshpy.tet.build(self.info)
+            params = self.opts_tet_dlg.getParams()
+            self.mesh = meshpy.tet.build(self.info, **params)
             grid = self.tetrasToUnstructuredGrid(self.mesh)
         else:
             grid = None
