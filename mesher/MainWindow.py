@@ -3,8 +3,9 @@ import vtk
 import meshio
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
-    QFileDialog
+    QFileDialog, QShortcut
 from PyQt5.QtCore import QEvent, QSettings, Qt
+from PyQt5.QtGui import QKeySequence
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from mesher.AboutDialog import AboutDialog
 from mesher.MesherInteractorStyle2D import MesherInteractorStyle2D
@@ -145,7 +146,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.export_to_exodusii_action.setEnabled(self.mesh is not None)
 
     def connectSignals(self):
-        pass
+        self.mesh_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
+        self.mesh_shortcut.activated.connect(self.onMeshClicked)
 
     def setupVtk(self):
         self.vtk_render_window = self.vtk_widget.GetRenderWindow()
@@ -633,7 +635,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def showMeshingOptions(self):
         dlg = self.opts_tri_dlg
         self.updateMeshingOptionsGeometry(dlg)
-        # dlg.setGraphicsEffect(None)
         dlg.show()
 
     def updateMeshingOptionsGeometry(self, dlg):
