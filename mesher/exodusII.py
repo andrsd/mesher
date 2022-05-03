@@ -178,7 +178,7 @@ def write(filename, mesh):
                 data[k] = k
                 for i, letter in enumerate(name):
                     data_names[k, i] = letter.encode()
-            for k, (key, values) in enumerate(mesh.point_sets.items()):
+            for k, (_, values) in enumerate(mesh.point_sets.items()):
                 dim1 = f"num_nod_ns{k + 1}"
                 rootgrp.createDimension(dim1, values.shape[0])
                 dtype = numpy_to_exodus_dtype[values.dtype.name]
@@ -198,7 +198,7 @@ def write(filename, mesh):
                     data[k] = k
                     for i, letter in enumerate(name):
                         data_names[k, i] = letter.encode()
-                for k, (key, values) in enumerate(mesh.side_sets.items()):
+                for k, (_, values) in enumerate(mesh.side_sets.items()):
                     dim1 = f"num_side_ss{k + 1}"
                     rootgrp.createDimension(dim1, values.shape[0])
                     dtype = numpy_to_exodus_dtype[values.dtype.name]

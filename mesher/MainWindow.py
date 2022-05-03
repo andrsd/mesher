@@ -173,7 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
         @param file_name[str] Name of the file to open
         """
         self.clear()
-        base_name, ext = os.path.splitext(file_name)
+        _, ext = os.path.splitext(file_name)
         if ext == '.poly':
             success = self.openPolyFile(file_name)
         elif ext == '.stl':
@@ -224,7 +224,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
 
     def onOpenFile(self):
-        file_name, f = QFileDialog.getOpenFileName(
+        file_name, _ = QFileDialog.getOpenFileName(
             self,
             'Open File',
             "",
@@ -432,7 +432,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def buildVtkCellArrayVertex(self, vertices):
         cell_array = vtk.vtkCellArray()
         cell_array.Allocate(len(vertices))
-        for i, pt in enumerate(vertices):
+        for i in range(vertices):
             elem = vtk.vtkVertex()
             elem.GetPointIds().SetId(0, i)
             cell_array.InsertNextCell(elem)
