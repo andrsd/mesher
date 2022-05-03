@@ -38,10 +38,6 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.settings = QSettings("Mesher")
         self.about_dlg = None
-        self.opts_tri_dlg = OptionsTriangleWidget(self.settings, self)
-        self.opts_tri_dlg.mesh_button.clicked.connect(self.onMeshClicked)
-        self.opts_tet_dlg = OptionsTetGenWidget(self.settings, self)
-        self.opts_tet_dlg.mesh_button.clicked.connect(self.onMeshClicked)
 
         self.recent_files = []
         self.clear_recent_file = None
@@ -85,6 +81,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.vtk_widget)
 
         self.setupNotificationWidget()
+
+        self.opts_tri_dlg = OptionsTriangleWidget(self.settings, self)
+        self.opts_tri_dlg.mesh_button.clicked.connect(self.onMeshClicked)
+        self.opts_tri_dlg.setVisible(False)
+        self.opts_tet_dlg = OptionsTetGenWidget(self.settings, self)
+        self.opts_tet_dlg.mesh_button.clicked.connect(self.onMeshClicked)
+        self.opts_tet_dlg.setVisible(False)
 
     def setupNotificationWidget(self):
         self.notification = NotificationWidget(self)
@@ -529,7 +532,7 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetPointSize(0)
 
     def onMesh(self):
-        self.opts_tri_dlg.show()
+        self.showMeshingOptions()
 
     def onMeshClicked(self):
         if isinstance(self.info, meshpy.triangle.MeshInfo):
@@ -604,6 +607,11 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             event.ignore()
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        dlg = self.opts_tri_dlg
+        self.updateMeshingOptionsGeometry(dlg)
+
     def showNotification(self, text, ms=2000):
         """
         @param text Notification text
@@ -621,3 +629,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.notification.height())
         self.notification.setGraphicsEffect(None)
         self.notification.show(ms)
+
+    def showMeshingOptions(self):
+        dlg = self.opts_tri_dlg
+        self.updateMeshingOptionsGeometry(dlg)
+        # dlg.setGraphicsEffect(None)
+        dlg.show()
+
+    def updateMeshingOptionsGeometry(self, dlg):
+        dlg.adjustSize()
+        margin = 10
+        width = self.geometry().width()
+        height = self.geometry().height() - (2 * margin)
+        left = (width - dlg.width()) - margin
+        top = margin
+        dlg.setGeometry(left, top, dlg.width(), height)

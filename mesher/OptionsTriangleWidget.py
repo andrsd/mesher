@@ -1,11 +1,12 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QScrollArea, QCheckBox, QLabel, QLineEdit, \
-    QVBoxLayout, QHBoxLayout, QPushButton
+    QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QSizePolicy
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QDoubleValidator
+from mesher.ClickableLabel import ClickableLabel
 
 
-class OptionsTriangleWidget(QScrollArea):
+class OptionsTriangleWidget(QWidget):
 
     data = [
         {
@@ -73,31 +74,53 @@ class OptionsTriangleWidget(QScrollArea):
 
         self.settings = settings
 
-        self.layout = QVBoxLayout()
-        self.layout.addSpacing(8)
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setObjectName("triangleOptions")
+        self.setStyleSheet("""
+            #triangleOptions, #closeButton {
+                border-radius: 6px;
+                background-color: rgb(0, 0, 0);
+                color: #fff;
+            }
+            QLabel, QCheckBox {
+                background-color: rgb(0, 0, 0);
+                color: #fff;
+            }
+            """)
 
         self.setupWidgets()
 
-        w = QtWidgets.QWidget()
-        w.setLayout(self.layout)
-        self.setWidget(w)
-        self.setWindowTitle("Triangle Options")
+        effect = QtWidgets.QGraphicsOpacityEffect()
+        effect.setOpacity(0.66)
+        self.setGraphicsEffect(effect)
+
         self.setFixedWidth(300)
-        self.setWidgetResizable(True)
-        self.setWindowFlag(QtCore.Qt.Tool)
-
-        geom = self.settings.value("tri_opts/geometry")
-        default_size = QtCore.QSize(300, 700)
-        if geom is None:
-            self.resize(default_size)
-        else:
-            if not self.restoreGeometry(geom):
-                self.resize(default_size)
-
         self.updateWidgets()
         self.connectSignals()
 
     def setupWidgets(self):
+        self.layout = QVBoxLayout()
+        self.layout.addSpacing(8)
+        self.layout.setContentsMargins(15, 4, 15, 17)
+
+        title_layout = QHBoxLayout()
+        self.title = QLabel("Triangle Options")
+        self.title.setStyleSheet("""
+            font-weight: bold;
+            qproperty-alignment: AlignCenter;
+            """)
+        self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        title_layout.addWidget(self.title)
+
+        self.close_button = QPushButton("\u2716")
+        self.close_button.setObjectName("closeButton")
+        self.close_button.setStyleSheet("""
+            font-size: 20px;
+            """)
+        title_layout.addWidget(self.close_button)
+
+        self.layout.addLayout(title_layout)
+
         for d in self.data:
             if d['type'] == 'bool':
                 self.addCheckbox(d)
@@ -108,7 +131,12 @@ class OptionsTriangleWidget(QScrollArea):
         self.layout.addStretch()
 
         self.mesh_button = QPushButton("Mesh")
+        self.mesh_button.setStyleSheet("""
+            background-color: #eee;
+            """)
+        # self.mesh_button.setAttribute(Qt.WA_StyledBackground, False)
         self.layout.addWidget(self.mesh_button)
+        self.setLayout(self.layout)
 
     def updateWidgets(self):
         quality_meshing = self.quality_meshing.checkState() == Qt.Checked
@@ -117,13 +145,10 @@ class OptionsTriangleWidget(QScrollArea):
 
     def connectSignals(self):
         self.quality_meshing.stateChanged.connect(self.updateWidgets)
-
-    def closeEvent(self, event):
-        self.settings.setValue("tri_opts/geometry", self.saveGeometry())
-        event.accept()
+        self.close_button.clicked.connect(self.hide)
 
     def addCheckbox(self, item):
-        checkbox = QCheckBox(item['label'])
+        checkbox = QCheckBox(item['label'], self)
         if item['value']:
             checkbox.setCheckState(Qt.Checked)
         else:
