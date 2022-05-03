@@ -37,6 +37,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         """Inits MainWindow"""
         super().__init__()
+        self.point_size = 15
+        self.line_width = 3.
+
         self.settings = QSettings("Mesher")
         self.about_dlg = None
 
@@ -502,13 +505,13 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetRepresentationToPoints()
         prop.SetRenderPointsAsSpheres(True)
         prop.SetVertexVisibility(True)
-        prop.SetPointSize(15)
+        prop.SetPointSize(self.point_size)
         prop.SetColor([0., 0., 0.])
 
     def setSegmentProperties(self, actor):
         prop = actor.GetProperty()
         prop.EdgeVisibilityOn()
-        prop.SetLineWidth(3.0)
+        prop.SetLineWidth(self.line_width)
         prop.SetColor([0, 0, 0])
         prop.SetOpacity(1)
         prop.SetAmbient(1)
@@ -519,13 +522,13 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetRepresentationToPoints()
         prop.SetRenderPointsAsSpheres(True)
         prop.SetVertexVisibility(True)
-        prop.SetPointSize(15)
+        prop.SetPointSize(self.point_size)
         prop.SetColor([1., 0., 0.])
 
     def setSurface3DProperties(self, actor):
         prop = actor.GetProperty()
         prop.EdgeVisibilityOn()
-        prop.SetLineWidth(3.0)
+        prop.SetLineWidth(self.line_width)
         prop.SetEdgeColor([0, 0, 0])
 
         prop.SetColor([0.9, 0.9, 0.9])
@@ -546,7 +549,7 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetDiffuse(0)
 
         prop.SetEdgeVisibility(True)
-        prop.SetLineWidth(3.0)
+        prop.SetLineWidth(self.line_width)
         prop.SetEdgeColor([0, 0, 0])
 
         prop.SetVertexVisibility(False)
