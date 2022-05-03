@@ -2,12 +2,14 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QScrollArea, QCheckBox, QLabel, QLineEdit, \
     QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QDoubleValidator
 
 
 class OptionsTriangleWidget(QScrollArea):
 
     data = [
         {
+            'name': 'assign_regional_attrs',
             'label': 'Assign regional attributes',
             'param': 'attributes',
             'type': 'bool',
@@ -16,6 +18,7 @@ class OptionsTriangleWidget(QScrollArea):
                     'identifies what segment-bounded region it belongs to.'
         },
         {
+            'name': 'max_area_constraint',
             'label': 'Maximum area constraint',
             'param': 'max_volume',
             'type': 'float',
@@ -23,6 +26,7 @@ class OptionsTriangleWidget(QScrollArea):
             'help': 'Imposes a maximum triangle area constraint.'
         },
         {
+            'name': 'steiner_pts_on_bnd',
             'label': 'Steiner points on the mesh boundary',
             'param': 'allow_boundary_steiner',
             'type': 'bool',
@@ -31,6 +35,7 @@ class OptionsTriangleWidget(QScrollArea):
                     'boundary'
         },
         {
+            'name': 'second_order_mesh',
             'label': 'Second order mesh',
             'param': 'mesh_order',
             'type': 'bool',
@@ -39,6 +44,7 @@ class OptionsTriangleWidget(QScrollArea):
                     'nodes each'
         },
         {
+            'name': 'quality_meshing',
             'label': 'Quality meshing',
             'param': 'quality_meshing',
             'type': 'bool',
@@ -47,6 +53,7 @@ class OptionsTriangleWidget(QScrollArea):
                     'degrees.'
         },
         {
+            'name': 'minimal_angle',
             'label': 'Minimal angle',
             'param': 'min_angle',
             'type': 'float',
@@ -87,6 +94,9 @@ class OptionsTriangleWidget(QScrollArea):
             if not self.restoreGeometry(geom):
                 self.resize(default_size)
 
+        self.updateWidgets()
+        self.connectSignals()
+
     def setupWidgets(self):
         for d in self.data:
             if d['type'] == 'bool':
@@ -100,6 +110,14 @@ class OptionsTriangleWidget(QScrollArea):
         self.mesh_button = QPushButton("Mesh")
         self.layout.addWidget(self.mesh_button)
 
+    def updateWidgets(self):
+        quality_meshing = self.quality_meshing.checkState() == Qt.Checked
+        self.minimal_angle.setEnabled(quality_meshing)
+        self.minimal_angle_label.setEnabled(quality_meshing)
+
+    def connectSignals(self):
+        self.quality_meshing.stateChanged.connect(self.updateWidgets)
+
     def closeEvent(self, event):
         self.settings.setValue("tri_opts/geometry", self.saveGeometry())
         event.accept()
@@ -111,6 +129,7 @@ class OptionsTriangleWidget(QScrollArea):
         else:
             checkbox.setCheckState(Qt.Unchecked)
         self.layout.addWidget(checkbox)
+        setattr(self, item['name'], checkbox)
 
         if len(item['help']) > 0:
             self.addHelpWidget(item, 18)
@@ -121,8 +140,11 @@ class OptionsTriangleWidget(QScrollArea):
         layout = QHBoxLayout()
         label = QLabel(item['label'])
         layout.addWidget(label)
+        setattr(self, item['name'] + "_label", label)
         lineedit = QLineEdit()
+        lineedit.setValidator(QDoubleValidator())
         layout.addWidget(lineedit)
+        setattr(self, item['name'], lineedit)
         self.layout.addLayout(layout)
 
         if len(item['help']) > 0:
@@ -140,3 +162,18 @@ class OptionsTriangleWidget(QScrollArea):
         layout.addWidget(help_label)
         layout.setContentsMargins(indent, 0, 0, 0)
         self.layout.addLayout(layout)
+
+    def getParams(self):
+        params = {}
+        for d in self.data:
+            widget = getattr(self, d['name'])
+            param_name = d['param']
+            if isinstance(widget, QtWidgets.QCheckBox):
+                params[param_name] = widget.checkState() == Qt.Checked
+            elif isinstance(widget, QtWidgets.QLineEdit):
+                text = widget.text()
+                if len(text) == 0:
+                    params[param_name] = None
+                else:
+                    params[param_name] = float(text)
+        return params

@@ -533,8 +533,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onMeshClicked(self):
         if isinstance(self.info, meshpy.triangle.MeshInfo):
-            # TODO: pull opts from self.opts_tri_dlg
-            self.mesh = meshpy.triangle.build(self.info)
+            params = self.opts_tri_dlg.getParams()
+            self.mesh = meshpy.triangle.build(self.info, **params)
             grid = self.triangles2DToUnstructuredGrid(self.mesh)
         elif isinstance(self.info, meshpy.tet.MeshInfo):
             self.mesh = meshpy.tet.build(self.info)
