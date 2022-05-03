@@ -149,6 +149,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mesh_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
         self.mesh_shortcut.activated.connect(self.onMeshClicked)
 
+        self.esc_shortcut = QShortcut(QKeySequence("Escape"), self)
+        self.esc_shortcut.activated.connect(self.onHideMeshingOptions)
+
     def setupVtk(self):
         self.vtk_render_window = self.vtk_widget.GetRenderWindow()
         self.vtk_interactor = self.vtk_render_window.GetInteractor()
@@ -645,3 +648,7 @@ class MainWindow(QtWidgets.QMainWindow):
         left = (width - dlg.width()) - margin
         top = margin
         dlg.setGeometry(left, top, dlg.width(), height)
+
+    def onHideMeshingOptions(self):
+        dlg = self.opts_tri_dlg
+        dlg.hide()
