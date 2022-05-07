@@ -4,7 +4,7 @@ import meshio
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
     QFileDialog, QShortcut
-from PyQt5.QtCore import QEvent, QSettings, Qt
+from PyQt5.QtCore import QEvent, QSettings, Qt, QTimer
 from PyQt5.QtGui import QKeySequence
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from mesher.AboutDialog import AboutDialog
@@ -13,6 +13,7 @@ from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
 from mesher.NotificationWidget import NotificationWidget
 from mesher.OptionsTetGenWidget import OptionsTetGenWidget
 from mesher.OptionsTriangleWidget import OptionsTriangleWidget
+from mesher.Selection import Selection
 from mesher import exodusII
 from mesher import vtk_helpers
 import triangle
@@ -33,6 +34,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     WINDOW_TITLE = "Mesher"
     MAX_RECENT_FILES = 10
+
+    SELECTION_CLR = [255, 173, 79]
+    SELECTION_EDGE_CLR = [179, 95, 0]
 
     def __init__(self):
         """Inits MainWindow"""
@@ -72,7 +76,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.clear()
 
-        self.update_timer = QtCore.QTimer()
+        self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.onUpdateWindow)
         self.update_timer.start(250)
 
@@ -154,6 +158,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.esc_shortcut = QShortcut(QKeySequence("Escape"), self)
         self.esc_shortcut.activated.connect(self.onHideMeshingOptions)
+
+        self.deselect_all_shortcut = QShortcut(QKeySequence("Space"), self)
+        self.deselect_all_shortcut.activated.connect(self.onDeselectAll)
 
     def setupVtk(self):
         self.vtk_render_window = self.vtk_widget.GetRenderWindow()
@@ -322,7 +329,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.WINDOW_TITLE, os.path.basename(self.file_name)))
 
     def onClicked(self, pt):
-        pass
+        if self.dim == 2:
+            self.selectSegment(pt)
+        else:
+            # TODO:
+            pass
 
     def clear(self):
         self.dim = None
@@ -334,6 +345,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vtk_segment_actor = None
         self.vtk_hole_actor = None
         self.vtk_mesh_actor = None
+        self.highlight = None
+        self.selection = None
 
     def onUpdateWindow(self):
         self.vtk_render_window.Render()
@@ -404,6 +417,17 @@ class MainWindow(QtWidgets.QMainWindow):
         if segment_ugrid is not None:
             self.vtk_segment_actor = self.addToVtk(segment_ugrid)
             self.setSegmentProperties(self.vtk_segment_actor)
+
+            self.selection = Selection(segment_ugrid)
+            selection_act = self.selection.getActor()
+            self.setSelectedSegmentProperties(selection_act)
+            self.vtk_renderer.AddActor(selection_act)
+
+            self.highlight = Selection(segment_ugrid)
+            hilight_act = self.highlight.getActor()
+            self.setHighlightSegmentProperties(hilight_act)
+            self.vtk_renderer.AddActor(hilight_act)
+
         else:
             self.vtk_segment_actor = None
 
@@ -556,6 +580,32 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetRenderPointsAsSpheres(False)
         prop.SetPointSize(0)
 
+    def setHighlightSegmentProperties(self, actor):
+        prop = actor.GetProperty()
+        prop.SetRepresentationToSurface()
+        prop.SetRenderPointsAsSpheres(False)
+        prop.SetVertexVisibility(False)
+        prop.SetPointSize(0)
+        prop.EdgeVisibilityOn()
+        prop.SetColor(vtk_helpers.rgb2vtk(self.SELECTION_CLR))
+        prop.SetLineWidth(self.line_width + 4)
+        prop.SetOpacity(1)
+        prop.SetAmbient(1)
+        prop.SetDiffuse(0)
+
+    def setSelectedSegmentProperties(self, actor):
+        prop = actor.GetProperty()
+        prop.SetRepresentationToSurface()
+        prop.SetRenderPointsAsSpheres(False)
+        prop.SetVertexVisibility(False)
+        prop.SetPointSize(0)
+        prop.EdgeVisibilityOn()
+        prop.SetColor(vtk_helpers.rgb2vtk(self.SELECTION_EDGE_CLR))
+        prop.SetLineWidth(self.line_width + 4)
+        prop.SetOpacity(1)
+        prop.SetAmbient(1)
+        prop.SetDiffuse(0)
+
     def onMesh(self):
         self.showMeshingOptions()
 
@@ -678,3 +728,37 @@ class MainWindow(QtWidgets.QMainWindow):
         dlg = self.getMeshingOptionsDialog()
         if dlg is not None:
             dlg.hide()
+
+    def onMouseMove(self, pt):
+        if self.dim == 2:
+            self.highlightSegment(pt)
+        else:
+            # TODO:
+            pass
+
+    def pickSegment(self, pt):
+        picker = vtk.vtkCellPicker()
+        picker.SetTolerance(3e-3)
+        if picker.Pick(pt.x(), pt.y(), 0, self.vtk_renderer):
+            return picker.GetCellId()
+        else:
+            return None
+
+    def highlightSegment(self, pt):
+        cell_id = self.pickSegment(pt)
+        if cell_id is not None:
+            self.highlight.selectCell(cell_id)
+            self.setHighlightSegmentProperties(self.highlight.getActor())
+        else:
+            self.highlight.clear()
+
+    def selectSegment(self, pt):
+        cell_id = self.pickSegment(pt)
+        if cell_id is not None:
+            if self.selection.hasCell(cell_id):
+                self.selection.removeCell(cell_id)
+            else:
+                self.selection.addCell(cell_id)
+
+    def onDeselectAll(self):
+        self.selection.deselectAll()

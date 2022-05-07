@@ -21,3 +21,7 @@ class MesherInteractorStyle2D(vtk.vtkInteractorStyleImage,
     def onLeftButtonRelease(self, interactor_style, event):
         super().onLeftButtonRelease(interactor_style, event)
         super().OnLeftButtonUp()
+
+    def onMouseMove(self, interactor_style, event):
+        super().onMouseMove(interactor_style, event)
+        super().OnMouseMove()

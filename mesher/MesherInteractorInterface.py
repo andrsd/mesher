@@ -20,6 +20,7 @@ class MesherInteractorInterface:
         self.AddObserver("KeyPressEvent", self.onKeyPress)
         self.AddObserver("KeyReleaseEvent", self.onKeyRelease)
         self.AddObserver("CharEvent", self.onChar)
+        self.AddObserver("MouseMoveEvent", self.onMouseMove)
 
     def onLeftButtonPress(self, interactor_style, event):
         self.left_button_down = True
@@ -53,3 +54,10 @@ class MesherInteractorInterface:
     def onChar(self, interactor_style, event):
         # interactor = interactor_style.GetInteractor()
         pass
+
+    def onMouseMove(self, interactor_style, event):
+        interactor = interactor_style.GetInteractor()
+        pos = interactor.GetEventPosition()
+        pt = QPoint(pos[0], pos[1])
+        if hasattr(self.widget, 'onMouseMove'):
+            self.widget.onMouseMove(pt)
