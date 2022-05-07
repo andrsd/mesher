@@ -161,7 +161,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.vtk_interactor.SetInteractorStyle(MesherInteractorStyle2D(self))
 
-        bkgnd = [0.9098039216, 0.92578125, 0.9450980392]
+        bkgnd = vtk_helpers.rgb2vtk([232, 236, 241])
         self.vtk_renderer.SetGradientBackground(True)
         self.vtk_renderer.SetBackground(bkgnd)
         self.vtk_renderer.SetBackground2(bkgnd)
@@ -506,13 +506,13 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetRenderPointsAsSpheres(True)
         prop.SetVertexVisibility(True)
         prop.SetPointSize(self.point_size)
-        prop.SetColor([0., 0., 0.])
+        prop.SetColor(vtk_helpers.rgb2vtk([0, 0, 0]))
 
     def setSegmentProperties(self, actor):
         prop = actor.GetProperty()
         prop.EdgeVisibilityOn()
         prop.SetLineWidth(self.line_width)
-        prop.SetColor([0, 0, 0])
+        prop.SetColor(vtk_helpers.rgb2vtk([0, 0, 0]))
         prop.SetOpacity(1)
         prop.SetAmbient(1)
         prop.SetDiffuse(0)
@@ -523,15 +523,15 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetRenderPointsAsSpheres(True)
         prop.SetVertexVisibility(True)
         prop.SetPointSize(self.point_size)
-        prop.SetColor([1., 0., 0.])
+        prop.SetColor(vtk_helpers.rgb2vtk([255, 0, 0]))
 
     def setSurface3DProperties(self, actor):
         prop = actor.GetProperty()
         prop.EdgeVisibilityOn()
         prop.SetLineWidth(self.line_width)
-        prop.SetEdgeColor([0, 0, 0])
+        prop.SetEdgeColor(vtk_helpers.rgb2vtk([0, 0, 0]))
 
-        prop.SetColor([0.9, 0.9, 0.9])
+        prop.SetColor(vtk_helpers.rgb2vtk([230, 230, 230]))
         prop.SetOpacity(1)
         prop.SetAmbient(1)
         prop.SetDiffuse(0)
@@ -543,14 +543,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def setMeshProperties(self, actor):
         prop = actor.GetProperty()
         prop.SetRepresentationToSurface()
-        prop.SetColor([1, 1, 1])
+        prop.SetColor(vtk_helpers.rgb2vtk([255, 255, 255]))
         prop.SetOpacity(1)
         prop.SetAmbient(1)
         prop.SetDiffuse(0)
 
         prop.SetEdgeVisibility(True)
         prop.SetLineWidth(self.line_width)
-        prop.SetEdgeColor([0, 0, 0])
+        prop.SetEdgeColor(vtk_helpers.rgb2vtk([0, 0, 0]))
 
         prop.SetVertexVisibility(False)
         prop.SetRenderPointsAsSpheres(False)

@@ -96,3 +96,15 @@ def vertices3DToUnstructuredGrid(points):
     ugrid.SetPoints(pt_arr)
     ugrid.SetCells(vtk.VTK_VERTEX, cell_arr)
     return ugrid
+
+
+def qcolor2vtk(qcolor):
+    return [
+        qcolor.redF(),
+        qcolor.greenF(),
+        qcolor.blueF()
+    ]
+
+
+def rgb2vtk(rgb):
+    return [rgb[0] / 255., rgb[1] / 255., rgb[2] / 255.]
