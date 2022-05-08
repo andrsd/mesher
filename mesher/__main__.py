@@ -57,9 +57,6 @@ def main():
 
     qapp.exec()
 
-    del window
-    del qapp
-
 
 if __name__ == '__main__':
     main()
