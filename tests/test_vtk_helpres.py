@@ -1,5 +1,6 @@
 from mesher import vtk_helpers
 import vtk
+from PyQt5 import QtGui
 from unittest.mock import MagicMock
 
 
@@ -75,3 +76,40 @@ def test_build_cell_array_polygon():
     cell_arr = vtk_helpers.buildCellArrayPolygon(facets)
     assert isinstance(cell_arr, vtk.vtkCellArray)
     assert cell_arr.GetNumberOfCells() == 1
+
+
+def test_vertices_2d_to_unstructured_grid():
+    points = [
+        [0, 0],
+        [1, 0]
+    ]
+    ugrid = vtk_helpers.vertices2DToUnstructuredGrid(points)
+    assert isinstance(ugrid, vtk.vtkUnstructuredGrid)
+    assert ugrid.GetNumberOfPoints() == 2
+    assert ugrid.GetNumberOfCells() == 2
+
+
+def test_vertices_3d_to_unstructured_grid():
+    points = [
+        [0, 0, 0],
+        [1, 0, 0]
+    ]
+    ugrid = vtk_helpers.vertices3DToUnstructuredGrid(points)
+    assert isinstance(ugrid, vtk.vtkUnstructuredGrid)
+    assert ugrid.GetNumberOfPoints() == 2
+    assert ugrid.GetNumberOfCells() == 2
+
+
+def test_qcolor2vtk():
+    qclr = QtGui.QColor(51, 102, 153)
+    c = vtk_helpers.qcolor2vtk(qclr)
+    assert c[0] == 0.2
+    assert c[1] == 0.4
+    assert c[2] == 0.6
+
+
+def test_rgb2vtk():
+    c = vtk_helpers.rgb2vtk([51, 102, 153])
+    assert c[0] == 0.2
+    assert c[1] == 0.4
+    assert c[2] == 0.6

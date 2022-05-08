@@ -13,7 +13,7 @@ from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
 from mesher.NotificationWidget import NotificationWidget
 from mesher.OptionsTetGenWidget import OptionsTetGenWidget
 from mesher.OptionsTriangleWidget import OptionsTriangleWidget
-from mesher.AssignMarkerDlg import AssignMarkerDlg
+from mesher.AssignMarkerDialog import AssignMarkerDialog
 from mesher import exodusII
 from mesher import vtk_helpers
 import triangle
@@ -879,7 +879,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if len(self.selected_actors) == 0:
             return
 
-        dlg = AssignMarkerDlg(self)
+        dlg = AssignMarkerDialog(self)
         if dlg.exec() == QDialog.Accepted:
             marker = int(dlg.marker.text())
             for actor in self.selected_actors.keys():

@@ -4,10 +4,10 @@ from PyQt5.QtGui import QIntValidator
 from PyQt5.QtCore import Qt
 
 
-class AssignMarkerDlg(QDialog):
+class AssignMarkerDialog(QDialog):
 
     def __init__(self, parent):
-        """Inits AssignMarkerDlg."""
+        """Inits AssignMarkerDialog."""
         super().__init__(parent)
 
         self.layout = QVBoxLayout()
