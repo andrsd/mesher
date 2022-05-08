@@ -42,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Inits MainWindow"""
         super().__init__()
         self.point_size = 15
-        self.line_width = 3.
+        self.line_width = 2.
 
         self.settings = QSettings("Mesher")
         self.about_dlg = None
@@ -332,8 +332,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.dim == 2:
             self.selectSegment(pt)
         else:
-            # TODO:
-            pass
+            self.selectFacet(pt)
 
     def clear(self):
         self.dim = None
@@ -347,6 +346,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vtk_mesh_actor = None
         self.highlight = None
         self.selection = None
+        self.higlight_actor = None
+        self.selected_actors = {}
 
     def onUpdateWindow(self):
         self.vtk_render_window.Render()
@@ -623,6 +624,37 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetAmbient(1)
         prop.SetDiffuse(0)
 
+    def setHighlightFacetProperties(self, actor, selected):
+        prop = actor.GetProperty()
+        prop.SetRepresentationToSurface()
+        prop.SetRenderPointsAsSpheres(False)
+        prop.SetVertexVisibility(False)
+        prop.SetPointSize(0)
+        prop.EdgeVisibilityOn()
+        prop.SetLineWidth(self.line_width + 2)
+        prop.SetEdgeColor(vtk_helpers.rgb2vtk(self.SELECTION_EDGE_CLR))
+        if selected:
+            prop.SetColor(vtk_helpers.rgb2vtk([237, 181, 69]))
+        else:
+            prop.SetColor(vtk_helpers.rgb2vtk([255, 207, 110]))
+        prop.SetOpacity(1)
+        prop.SetAmbient(1)
+        prop.SetDiffuse(0)
+
+    def setSelectedFacetProperties(self, actor):
+        prop = actor.GetProperty()
+        prop.SetRepresentationToSurface()
+        prop.SetRenderPointsAsSpheres(False)
+        prop.SetVertexVisibility(False)
+        prop.SetPointSize(0)
+        prop.EdgeVisibilityOn()
+        prop.SetLineWidth(self.line_width + 4)
+        prop.SetEdgeColor(vtk_helpers.rgb2vtk(self.SELECTION_EDGE_CLR))
+        prop.SetColor(vtk_helpers.rgb2vtk(self.SELECTION_CLR))
+        prop.SetOpacity(1)
+        prop.SetAmbient(1)
+        prop.SetDiffuse(0)
+
     def onMesh(self):
         self.showMeshingOptions()
 
@@ -750,14 +782,20 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.dim == 2:
             self.highlightSegment(pt)
         else:
-            # TODO:
-            pass
+            self.highlightFacet(pt)
 
     def pickSegment(self, pt):
         picker = vtk.vtkCellPicker()
         picker.SetTolerance(3e-3)
         if picker.Pick(pt.x(), pt.y(), 0, self.vtk_renderer):
             return picker.GetCellId()
+        else:
+            return None
+
+    def pickActor(self, pt):
+        picker = vtk.vtkPropPicker()
+        if picker.PickProp(pt.x(), pt.y(), self.vtk_renderer):
+            return picker.GetViewProp()
         else:
             return None
 
@@ -778,4 +816,36 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.selection.addCell(cell_id)
 
     def onDeselectAll(self):
-        self.selection.deselectAll()
+        if self.selection is not None:
+            self.selection.deselectAll()
+
+        for actor in self.selected_actors:
+            self.setSurface3DProperties(actor)
+        self.selected_actors = {}
+        if self.higlight_actor is not None:
+            self.setHighlightFacetProperties(actor, False)
+
+    def highlightFacet(self, pt):
+        if self.higlight_actor is not None:
+            if self.higlight_actor in self.selected_actors:
+                self.setSelectedFacetProperties(self.higlight_actor)
+            else:
+                self.setSurface3DProperties(self.higlight_actor)
+            self.higlight_actor = None
+
+        actor = self.pickActor(pt)
+        if actor is not None:
+            selected = actor in self.selected_actors
+            self.setHighlightFacetProperties(actor, selected)
+            self.higlight_actor = actor
+
+    def selectFacet(self, pt):
+        actor = self.pickActor(pt)
+        if actor is not None:
+            if actor in self.selected_actors:
+                del self.selected_actors[actor]
+                selected = actor in self.selected_actors
+                self.setHighlightFacetProperties(actor, selected)
+            else:
+                self.selected_actors[actor] = True
+                self.setHighlightFacetProperties(actor, True)
