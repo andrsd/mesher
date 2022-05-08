@@ -440,9 +440,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.vtk_hole_actor = None
 
     def infoToVtk3D(self, info):
-        polygon_grid = self.facets3DToUnstructuredGrid(info)
-        self.vtk_segment_actor = self.addToVtk(polygon_grid)
-        self.setSurface3DProperties(self.vtk_segment_actor)
+        self.facets3DToVtk(info)
 
         if info.holes is not None:
             holes_ugrid = vtk_helpers.vertices3DToUnstructuredGrid(info.holes)
@@ -494,16 +492,35 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return None
 
-    def facets3DToUnstructuredGrid(self, info):
+    def facets3DToVtk(self, info):
         """
-        Creates an unstructured grid with polygons in 3D
+        Create unstructured grids one for each facet
         """
-        points = vtk_helpers.buildPointArray3D(info.points)
-        polygons = vtk_helpers.buildCellArrayPolygon(info.facets)
-        ugrid = vtk.vtkUnstructuredGrid()
-        ugrid.SetPoints(points)
-        ugrid.SetCells(vtk.VTK_POLYGON, polygons)
-        return ugrid
+        self.vtk_segment_actor = []
+        for facet in list(info.facets):
+            pt_map = {}
+            pts = vtk.vtkPoints()
+            cells = vtk.vtkCellArray()
+            for poly in list(facet.polygons):
+                elem = vtk.vtkPolygon()
+                elem.GetPointIds().SetNumberOfIds(len(poly.vertices))
+                for i, vertex_id in enumerate(poly.vertices):
+                    vertex_id = int(vertex_id)
+                    if vertex_id in pt_map:
+                        vtk_pt_id = pt_map[vertex_id]
+                    else:
+                        pt = info.points[vertex_id]
+                        vtk_pt_id = pts.InsertNextPoint(pt[0], pt[1], pt[2])
+                        pt_map[vertex_id] = vtk_pt_id
+                    elem.GetPointIds().SetId(i, vtk_pt_id)
+                cells.InsertNextCell(elem)
+
+            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid.SetPoints(pts)
+            ugrid.SetCells(vtk.VTK_POLYGON, cells)
+            actor = self.addToVtk(ugrid)
+            self.vtk_segment_actor.append(actor)
+            self.setSurface3DProperties(actor)
 
     def tetrasToUnstructuredGrid(self, mesh):
         points = vtk_helpers.buildPointArray3D(mesh.points)
