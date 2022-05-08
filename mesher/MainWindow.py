@@ -3,7 +3,7 @@ import vtk
 import meshio
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
-    QFileDialog, QShortcut
+    QFileDialog, QShortcut, QDialog
 from PyQt5.QtCore import QEvent, QSettings, Qt, QTimer
 from PyQt5.QtGui import QKeySequence
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -13,7 +13,7 @@ from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
 from mesher.NotificationWidget import NotificationWidget
 from mesher.OptionsTetGenWidget import OptionsTetGenWidget
 from mesher.OptionsTriangleWidget import OptionsTriangleWidget
-from mesher.Selection import Selection
+from mesher.AssignMarkerDlg import AssignMarkerDlg
 from mesher import exodusII
 from mesher import vtk_helpers
 import triangle
@@ -150,7 +150,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if active_window == self:
             self.show_main_window.setChecked(True)
 
-        self.export_to_exodusii_action.setEnabled(self.mesh is not None)
+        self.export_to_exodusii_action.setEnabled(self.isMeshView())
 
     def connectSignals(self):
         self.mesh_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
@@ -161,6 +161,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.deselect_all_shortcut = QShortcut(QKeySequence("Space"), self)
         self.deselect_all_shortcut.activated.connect(self.onDeselectAll)
+
+        self.assign_marker_shortcut = QShortcut(QKeySequence("M"), self)
+        self.assign_marker_shortcut.activated.connect(self.onAssignMarker)
 
     def setupVtk(self):
         self.vtk_render_window = self.vtk_widget.GetRenderWindow()
@@ -329,11 +332,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.WINDOW_TITLE, os.path.basename(self.file_name)))
 
     def onClicked(self, pt):
-        if self.dim == 2:
-            self.selectSegment(pt)
-        else:
-            # TODO:
-            pass
+        if self.isGeometryView():
+            # highlighting is done only on geometries, not meshes
+            if self.dim == 2:
+                self.selectSegment(pt)
+            else:
+                self.selectFacet(pt)
 
     def clear(self):
         self.dim = None
@@ -345,8 +349,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vtk_segment_actor = None
         self.vtk_hole_actor = None
         self.vtk_mesh_actor = None
-        self.highlight = None
-        self.selection = None
+        self.higlight_actor = None
+        self.selected_actors = {}
+        self.facet_marker = {}
 
     def onUpdateWindow(self):
         self.vtk_render_window.Render()
@@ -404,32 +409,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
 
     def infoToVtk2D(self, info):
-        self.vtk_vertex_actor = None
-        vertex_ugrid = vtk_helpers.vertices2DToUnstructuredGrid(info.points)
-        if vertex_ugrid is not None:
-            self.vtk_vertex_actor = self.addToVtk(vertex_ugrid)
-            self.setVertexProperties(self.vtk_vertex_actor)
-        else:
-            self.showNotification("No vertices found in poly file")
-            self.vtk_vertex_actor = None
-
-        segment_ugrid = self.segments2DToUnstructuredGrid(info)
-        if segment_ugrid is not None:
-            self.vtk_segment_actor = self.addToVtk(segment_ugrid)
-            self.setSegmentProperties(self.vtk_segment_actor)
-
-            self.selection = Selection(segment_ugrid)
-            selection_act = self.selection.getActor()
-            self.setSelectedSegmentProperties(selection_act)
-            self.vtk_renderer.AddActor(selection_act)
-
-            self.highlight = Selection(segment_ugrid)
-            hilight_act = self.highlight.getActor()
-            self.setHighlightSegmentProperties(hilight_act)
-            self.vtk_renderer.AddActor(hilight_act)
-
-        else:
-            self.vtk_segment_actor = None
+        self.segments2DToVtk(info)
 
         if info.holes is not None:
             holes_ugrid = vtk_helpers.vertices2DToUnstructuredGrid(info.holes)
@@ -440,9 +420,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.vtk_hole_actor = None
 
     def infoToVtk3D(self, info):
-        polygon_grid = self.facets3DToUnstructuredGrid(info)
-        self.vtk_segment_actor = self.addToVtk(polygon_grid)
-        self.setSurface3DProperties(self.vtk_segment_actor)
+        self.facets3DToVtk(info)
 
         if info.holes is not None:
             holes_ugrid = vtk_helpers.vertices3DToUnstructuredGrid(info.holes)
@@ -494,16 +472,66 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return None
 
-    def facets3DToUnstructuredGrid(self, info):
+    def segments2DToVtk(self, info):
         """
-        Creates an unstructured grid with polygons in 3D
+        Create unstructured grids one for each segment
         """
-        points = vtk_helpers.buildPointArray3D(info.points)
-        polygons = vtk_helpers.buildCellArrayPolygon(info.facets)
-        ugrid = vtk.vtkUnstructuredGrid()
-        ugrid.SetPoints(points)
-        ugrid.SetCells(vtk.VTK_POLYGON, polygons)
-        return ugrid
+        self.vtk_segment_actor = []
+        self.facet_marker = {}
+        for facet in list(info.facets):
+            pt_map = {}
+            pts = vtk.vtkPoints()
+            cells = vtk.vtkCellArray()
+            elem = vtk.vtkLine()
+            for i, vertex_id in enumerate(facet):
+                vertex_id = int(vertex_id)
+                if vertex_id in pt_map:
+                    vtk_pt_id = pt_map[vertex_id]
+                else:
+                    pt = info.points[vertex_id]
+                    vtk_pt_id = pts.InsertNextPoint(pt[0], pt[1], 0)
+                    pt_map[vertex_id] = vtk_pt_id
+                elem.GetPointIds().SetId(i, vtk_pt_id)
+            cells.InsertNextCell(elem)
+
+            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid.SetPoints(pts)
+            ugrid.SetCells(vtk.VTK_LINE, cells)
+            actor = self.addToVtk(ugrid)
+            self.vtk_segment_actor.append(actor)
+            self.setSegmentProperties(actor)
+            # TODO: get the marker from `info`
+            self.facet_marker[actor] = 1
+
+    def facets3DToVtk(self, info):
+        """
+        Create unstructured grids one for each facet
+        """
+        self.vtk_segment_actor = []
+        for facet in list(info.facets):
+            pt_map = {}
+            pts = vtk.vtkPoints()
+            cells = vtk.vtkCellArray()
+            for poly in list(facet.polygons):
+                elem = vtk.vtkPolygon()
+                elem.GetPointIds().SetNumberOfIds(len(poly.vertices))
+                for i, vertex_id in enumerate(poly.vertices):
+                    vertex_id = int(vertex_id)
+                    if vertex_id in pt_map:
+                        vtk_pt_id = pt_map[vertex_id]
+                    else:
+                        pt = info.points[vertex_id]
+                        vtk_pt_id = pts.InsertNextPoint(pt[0], pt[1], pt[2])
+                        pt_map[vertex_id] = vtk_pt_id
+                    elem.GetPointIds().SetId(i, vtk_pt_id)
+                cells.InsertNextCell(elem)
+
+            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid.SetPoints(pts)
+            ugrid.SetCells(vtk.VTK_POLYGON, cells)
+            actor = self.addToVtk(ugrid)
+            self.vtk_segment_actor.append(actor)
+            self.setSurface3DProperties(actor)
 
     def tetrasToUnstructuredGrid(self, mesh):
         points = vtk_helpers.buildPointArray3D(mesh.points)
@@ -580,14 +608,18 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetRenderPointsAsSpheres(False)
         prop.SetPointSize(0)
 
-    def setHighlightSegmentProperties(self, actor):
+    def setHighlightSegmentProperties(self, actor, selected):
         prop = actor.GetProperty()
         prop.SetRepresentationToSurface()
         prop.SetRenderPointsAsSpheres(False)
         prop.SetVertexVisibility(False)
         prop.SetPointSize(0)
         prop.EdgeVisibilityOn()
-        prop.SetColor(vtk_helpers.rgb2vtk(self.SELECTION_CLR))
+        # TODO: move colors into class variables
+        if selected:
+            prop.SetColor(vtk_helpers.rgb2vtk([237, 181, 69]))
+        else:
+            prop.SetColor(vtk_helpers.rgb2vtk([255, 207, 110]))
         prop.SetLineWidth(self.line_width + 4)
         prop.SetOpacity(1)
         prop.SetAmbient(1)
@@ -606,15 +638,49 @@ class MainWindow(QtWidgets.QMainWindow):
         prop.SetAmbient(1)
         prop.SetDiffuse(0)
 
+    def setHighlightFacetProperties(self, actor, selected):
+        prop = actor.GetProperty()
+        prop.SetRepresentationToSurface()
+        prop.SetRenderPointsAsSpheres(False)
+        prop.SetVertexVisibility(False)
+        prop.SetPointSize(0)
+        prop.EdgeVisibilityOn()
+        prop.SetLineWidth(self.line_width + 2)
+        prop.SetEdgeColor(vtk_helpers.rgb2vtk(self.SELECTION_EDGE_CLR))
+        # TODO: move colors into class variables
+        if selected:
+            prop.SetColor(vtk_helpers.rgb2vtk([237, 181, 69]))
+        else:
+            prop.SetColor(vtk_helpers.rgb2vtk([255, 207, 110]))
+        prop.SetOpacity(1)
+        prop.SetAmbient(1)
+        prop.SetDiffuse(0)
+
+    def setSelectedFacetProperties(self, actor):
+        prop = actor.GetProperty()
+        prop.SetRepresentationToSurface()
+        prop.SetRenderPointsAsSpheres(False)
+        prop.SetVertexVisibility(False)
+        prop.SetPointSize(0)
+        prop.EdgeVisibilityOn()
+        prop.SetLineWidth(self.line_width + 4)
+        prop.SetEdgeColor(vtk_helpers.rgb2vtk(self.SELECTION_EDGE_CLR))
+        prop.SetColor(vtk_helpers.rgb2vtk(self.SELECTION_CLR))
+        prop.SetOpacity(1)
+        prop.SetAmbient(1)
+        prop.SetDiffuse(0)
+
     def onMesh(self):
         self.showMeshingOptions()
 
     def onMeshClicked(self):
         if isinstance(self.info, meshpy.triangle.MeshInfo):
+            self.setFacetMarkers()
             params = self.opts_tri_dlg.getParams()
             self.mesh = meshpy.triangle.build(self.info, **params)
             grid = self.triangles2DToUnstructuredGrid(self.mesh)
         elif isinstance(self.info, meshpy.tet.MeshInfo):
+            self.setFacetMarkers()
             params = self.opts_tet_dlg.getParams()
             self.mesh = meshpy.tet.build(self.info, **params)
             grid = self.tetrasToUnstructuredGrid(self.mesh)
@@ -653,6 +719,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         ('triangle', self.mesh.elements)
                     ]
                 )
+                setattr(m, 'side_sets', self.createExodusIISideSets())
             elif self.dim == 3:
                 m = meshio.Mesh(
                     self.mesh.points,
@@ -660,6 +727,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         ('tetra', self.mesh.elements)
                     ]
                 )
+                setattr(m, 'side_sets', self.createExodusIISideSets())
             exodusII.write(file_name, m)
             self.showNotification("File '{}' exported sucessfully".format(
                 os.path.basename(file_name)))
@@ -730,35 +798,110 @@ class MainWindow(QtWidgets.QMainWindow):
             dlg.hide()
 
     def onMouseMove(self, pt):
-        if self.dim == 2:
-            self.highlightSegment(pt)
-        else:
-            # TODO:
-            pass
+        if self.isGeometryView():
+            # highlighting is done only on geometries, not meshes
+            if self.dim == 2:
+                self.highlightSegment(pt)
+            else:
+                self.highlightFacet(pt)
 
-    def pickSegment(self, pt):
-        picker = vtk.vtkCellPicker()
-        picker.SetTolerance(3e-3)
-        if picker.Pick(pt.x(), pt.y(), 0, self.vtk_renderer):
-            return picker.GetCellId()
+    def pickActor(self, pt):
+        picker = vtk.vtkPropPicker()
+        if picker.PickProp(pt.x(), pt.y(), self.vtk_renderer):
+            return picker.GetViewProp()
         else:
             return None
 
     def highlightSegment(self, pt):
-        cell_id = self.pickSegment(pt)
-        if cell_id is not None:
-            self.highlight.selectCell(cell_id)
-            self.setHighlightSegmentProperties(self.highlight.getActor())
-        else:
-            self.highlight.clear()
+        if self.higlight_actor is not None:
+            if self.higlight_actor in self.selected_actors:
+                self.setSelectedSegmentProperties(self.higlight_actor)
+            else:
+                self.setSegmentProperties(self.higlight_actor)
+            self.higlight_actor = None
+
+        actor = self.pickActor(pt)
+        if actor is not None:
+            selected = actor in self.selected_actors
+            self.setHighlightSegmentProperties(actor, selected)
+            self.higlight_actor = actor
 
     def selectSegment(self, pt):
-        cell_id = self.pickSegment(pt)
-        if cell_id is not None:
-            if self.selection.hasCell(cell_id):
-                self.selection.removeCell(cell_id)
+        actor = self.pickActor(pt)
+        if actor is not None:
+            if actor in self.selected_actors:
+                del self.selected_actors[actor]
+                selected = actor in self.selected_actors
+                self.setHighlightSegmentProperties(actor, selected)
             else:
-                self.selection.addCell(cell_id)
+                self.selected_actors[actor] = True
+                self.setHighlightSegmentProperties(actor, True)
 
     def onDeselectAll(self):
-        self.selection.deselectAll()
+        if self.dim == 2:
+            for actor in self.selected_actors:
+                self.setSegmentProperties(actor)
+            if self.higlight_actor is not None:
+                self.setHighlightSegmentProperties(actor, False)
+        else:
+            for actor in self.selected_actors:
+                self.setSurface3DProperties(actor)
+            if self.higlight_actor is not None:
+                self.setHighlightFacetProperties(actor, False)
+        self.selected_actors = {}
+
+    def highlightFacet(self, pt):
+        if self.higlight_actor is not None:
+            if self.higlight_actor in self.selected_actors:
+                self.setSelectedFacetProperties(self.higlight_actor)
+            else:
+                self.setSurface3DProperties(self.higlight_actor)
+            self.higlight_actor = None
+
+        actor = self.pickActor(pt)
+        if actor is not None:
+            selected = actor in self.selected_actors
+            self.setHighlightFacetProperties(actor, selected)
+            self.higlight_actor = actor
+
+    def selectFacet(self, pt):
+        actor = self.pickActor(pt)
+        if actor is not None:
+            if actor in self.selected_actors:
+                del self.selected_actors[actor]
+                selected = actor in self.selected_actors
+                self.setHighlightFacetProperties(actor, selected)
+            else:
+                self.selected_actors[actor] = True
+                self.setHighlightFacetProperties(actor, True)
+
+    def onAssignMarker(self):
+        if len(self.selected_actors) == 0:
+            return
+
+        dlg = AssignMarkerDlg(self)
+        if dlg.exec() == QDialog.Accepted:
+            marker = int(dlg.marker.text())
+            for actor in self.selected_actors.keys():
+                self.facet_marker[actor] = marker
+
+    def setFacetMarkers(self):
+        # drill into MeshInfo bypassing the API
+        self.info.facet_markers.setup()
+        for i, actor in enumerate(self.vtk_segment_actor):
+            marker = self.facet_marker[actor]
+            self.info.facet_markers[i] = marker
+
+    def createExodusIISideSets(self):
+        # TODO: create ExodusII sidesets from self.mesh
+        # figure out how to map facet info into a element ID and local element
+        # side
+        return []
+
+    def isGeometryView(self):
+        """Returns True if showing geometry."""
+        return self.mesh is None
+
+    def isMeshView(self):
+        """Returns True if showing mesh."""
+        return self.mesh is not None
