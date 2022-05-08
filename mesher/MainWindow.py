@@ -150,7 +150,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if active_window == self:
             self.show_main_window.setChecked(True)
 
-        self.export_to_exodusii_action.setEnabled(self.mesh is not None)
+        self.export_to_exodusii_action.setEnabled(self.isMeshView())
 
     def connectSignals(self):
         self.mesh_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
@@ -332,10 +332,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.WINDOW_TITLE, os.path.basename(self.file_name)))
 
     def onClicked(self, pt):
-        if self.dim == 2:
-            self.selectSegment(pt)
-        else:
-            self.selectFacet(pt)
+        if self.isGeometryView():
+            # highlighting is done only on geometries, not meshes
+            if self.dim == 2:
+                self.selectSegment(pt)
+            else:
+                self.selectFacet(pt)
 
     def clear(self):
         self.dim = None
@@ -796,10 +798,12 @@ class MainWindow(QtWidgets.QMainWindow):
             dlg.hide()
 
     def onMouseMove(self, pt):
-        if self.dim == 2:
-            self.highlightSegment(pt)
-        else:
-            self.highlightFacet(pt)
+        if self.isGeometryView():
+            # highlighting is done only on geometries, not meshes
+            if self.dim == 2:
+                self.highlightSegment(pt)
+            else:
+                self.highlightFacet(pt)
 
     def pickActor(self, pt):
         picker = vtk.vtkPropPicker()
@@ -893,3 +897,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # figure out how to map facet info into a element ID and local element
         # side
         return []
+
+    def isGeometryView(self):
+        """Returns True if showing geometry."""
+        return self.mesh is None
+
+    def isMeshView(self):
+        """Returns True if showing mesh."""
+        return self.mesh is not None
