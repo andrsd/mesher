@@ -3,7 +3,7 @@ import vtk
 import meshio
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMenuBar, QActionGroup, QApplication, \
-    QFileDialog, QShortcut
+    QFileDialog, QShortcut, QDialog
 from PyQt5.QtCore import QEvent, QSettings, Qt, QTimer
 from PyQt5.QtGui import QKeySequence
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -13,6 +13,7 @@ from mesher.MesherInteractorStyle3D import MesherInteractorStyle3D
 from mesher.NotificationWidget import NotificationWidget
 from mesher.OptionsTetGenWidget import OptionsTetGenWidget
 from mesher.OptionsTriangleWidget import OptionsTriangleWidget
+from mesher.AssignMarkerDlg import AssignMarkerDlg
 from mesher import exodusII
 from mesher import vtk_helpers
 import triangle
@@ -160,6 +161,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.deselect_all_shortcut = QShortcut(QKeySequence("Space"), self)
         self.deselect_all_shortcut.activated.connect(self.onDeselectAll)
+
+        self.assign_marker_shortcut = QShortcut(QKeySequence("M"), self)
+        self.assign_marker_shortcut.activated.connect(self.onAssignMarker)
 
     def setupVtk(self):
         self.vtk_render_window = self.vtk_widget.GetRenderWindow()
@@ -345,6 +349,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vtk_mesh_actor = None
         self.higlight_actor = None
         self.selected_actors = {}
+        self.facet_marker = {}
 
     def onUpdateWindow(self):
         self.vtk_render_window.Render()
@@ -470,6 +475,7 @@ class MainWindow(QtWidgets.QMainWindow):
         Create unstructured grids one for each segment
         """
         self.vtk_segment_actor = []
+        self.facet_marker = {}
         for facet in list(info.facets):
             pt_map = {}
             pts = vtk.vtkPoints()
@@ -492,6 +498,8 @@ class MainWindow(QtWidgets.QMainWindow):
             actor = self.addToVtk(ugrid)
             self.vtk_segment_actor.append(actor)
             self.setSegmentProperties(actor)
+            # TODO: get the marker from `info`
+            self.facet_marker[actor] = 1
 
     def facets3DToVtk(self, info):
         """
@@ -665,10 +673,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onMeshClicked(self):
         if isinstance(self.info, meshpy.triangle.MeshInfo):
+            self.setFacetMarkers()
             params = self.opts_tri_dlg.getParams()
             self.mesh = meshpy.triangle.build(self.info, **params)
             grid = self.triangles2DToUnstructuredGrid(self.mesh)
         elif isinstance(self.info, meshpy.tet.MeshInfo):
+            self.setFacetMarkers()
             params = self.opts_tet_dlg.getParams()
             self.mesh = meshpy.tet.build(self.info, **params)
             grid = self.tetrasToUnstructuredGrid(self.mesh)
@@ -707,6 +717,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         ('triangle', self.mesh.elements)
                     ]
                 )
+                setattr(m, 'side_sets', self.createExodusIISideSets())
             elif self.dim == 3:
                 m = meshio.Mesh(
                     self.mesh.points,
@@ -714,6 +725,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         ('tetra', self.mesh.elements)
                     ]
                 )
+                setattr(m, 'side_sets', self.createExodusIISideSets())
             exodusII.write(file_name, m)
             self.showNotification("File '{}' exported sucessfully".format(
                 os.path.basename(file_name)))
@@ -858,3 +870,26 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 self.selected_actors[actor] = True
                 self.setHighlightFacetProperties(actor, True)
+
+    def onAssignMarker(self):
+        if len(self.selected_actors) == 0:
+            return
+
+        dlg = AssignMarkerDlg(self)
+        if dlg.exec() == QDialog.Accepted:
+            marker = int(dlg.marker.text())
+            for actor in self.selected_actors.keys():
+                self.facet_marker[actor] = marker
+
+    def setFacetMarkers(self):
+        # drill into MeshInfo bypassing the API
+        self.info.facet_markers.setup()
+        for i, actor in enumerate(self.vtk_segment_actor):
+            marker = self.facet_marker[actor]
+            self.info.facet_markers[i] = marker
+
+    def createExodusIISideSets(self):
+        # TODO: create ExodusII sidesets from self.mesh
+        # figure out how to map facet info into a element ID and local element
+        # side
+        return []
