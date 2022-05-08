@@ -41,7 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Inits MainWindow"""
         super().__init__()
         self.point_size = 15
-        self.line_width = 2.
+        self.line_width = 3.
 
         self.settings = QSettings("Mesher")
         self.about_dlg = None
