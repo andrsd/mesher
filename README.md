@@ -2,6 +2,8 @@
 
 Simple Qt-based graphical front end for meshing 2D and 3D domains for finite element analysis.
 
+![main-wnd](https://github.com/andrsd/mesher/raw/main/docs/imgs/mesher.png)
+
 Features:
 - Generate triangular meshes using [Triangle](https://www.cs.cmu.edu/~quake/triangle.html)
 - Generate tetrahedral meshes using [TetGen](https://wias-berlin.de/software/tetgen/)
