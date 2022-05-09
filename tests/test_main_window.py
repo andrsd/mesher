@@ -33,6 +33,12 @@ def test_open_file_unsupported_file(sh_notf, main_window):
     sh_notf.assert_called_with('Unsupported file format')
 
 
+def test_on_about(main_window):
+    main_window.about_dlg = MagicMock()
+    main_window.onAbout()
+    main_window.about_dlg.show.assert_called_once()
+
+
 @patch('mesher.MainWindow.MainWindow.openFile')
 @patch('PyQt5.QtWidgets.QFileDialog.getOpenFileName')
 def test_file_open_with_no_filename(ofd, opn, main_window):

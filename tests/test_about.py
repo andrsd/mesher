@@ -1,17 +1,18 @@
+import pytest
 from PyQt5 import QtWidgets
 from mesher import consts
-from mesher.AboutDialog import AboutDialog
 
 
-def test_open_about_dialog(main_window):
-    assert main_window.about_dlg is None
-    main_window.onAbout()
-    assert isinstance(main_window.about_dlg, AboutDialog)
-
-
-def test_about_dialog(main_window):
+@pytest.fixture
+def about_dlg(qtbot, main_window):
+    from mesher.AboutDialog import AboutDialog
     dlg = AboutDialog(main_window)
-    assert isinstance(dlg.icon, QtWidgets.QLabel)
-    assert isinstance(dlg.title, QtWidgets.QLabel)
-    assert dlg.title.text() == consts.APP_NAME
-    assert isinstance(dlg.layout, QtWidgets.QVBoxLayout)
+    qtbot.addWidget(dlg)
+    yield dlg
+
+
+def test_about_dialog(about_dlg):
+    assert isinstance(about_dlg.icon, QtWidgets.QLabel)
+    assert isinstance(about_dlg.title, QtWidgets.QLabel)
+    assert about_dlg.title.text() == consts.APP_NAME
+    assert isinstance(about_dlg.layout, QtWidgets.QVBoxLayout)
