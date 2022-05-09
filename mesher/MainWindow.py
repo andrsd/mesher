@@ -21,14 +21,6 @@ import meshpy.triangle
 import meshpy.tet
 
 
-def round_trip_connect(start, end):
-    result = []
-    for i in range(start, end):
-        result.append((i, i + 1))
-    result.append((end, start))
-    return result
-
-
 class MainWindow(QtWidgets.QMainWindow):
     """Main window"""
 
