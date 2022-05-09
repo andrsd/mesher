@@ -21,14 +21,6 @@ import meshpy.triangle
 import meshpy.tet
 
 
-def round_trip_connect(start, end):
-    result = []
-    for i in range(start, end):
-        result.append((i, i + 1))
-    result.append((end, start))
-    return result
-
-
 class MainWindow(QtWidgets.QMainWindow):
     """Main window"""
 
@@ -831,8 +823,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if actor is not None:
             if actor in self.selected_actors:
                 del self.selected_actors[actor]
-                selected = actor in self.selected_actors
-                self.setHighlightSegmentProperties(actor, selected)
+                self.setHighlightSegmentProperties(actor, False)
             else:
                 self.selected_actors[actor] = True
                 self.setHighlightSegmentProperties(actor, True)
