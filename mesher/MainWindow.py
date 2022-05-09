@@ -823,8 +823,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if actor is not None:
             if actor in self.selected_actors:
                 del self.selected_actors[actor]
-                selected = actor in self.selected_actors
-                self.setHighlightSegmentProperties(actor, selected)
+                self.setHighlightSegmentProperties(actor, False)
             else:
                 self.selected_actors[actor] = True
                 self.setHighlightSegmentProperties(actor, True)
