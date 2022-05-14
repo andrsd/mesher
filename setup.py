@@ -71,11 +71,11 @@ setup(
         'PyQtChart==5.13.1',
         'sphinx',
         'vtk==9.0.3',
-        'numpy==1.21.4',
-        'triangle==20220202',
-        'meshio==5.3.4',
-        'netCDF4==1.5.8',
-        'MeshPy==2020.1'
+        'numpy>=1.18.1',
+        'triangle>=20220202',
+        'meshio>=5.3.4',
+        'netCDF4>=1.5.8',
+        'MeshPy>=2020.1'
     ],
     packages=[
         'mesher',
