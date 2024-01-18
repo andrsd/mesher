@@ -95,8 +95,7 @@ MainWindow::setupMenuBar()
     this->bring_all_to_front =
         window_menu->addAction("Bring All to Front", this, &MainWindow::onBringAllToFront);
     window_menu->addSeparator();
-    this->show_main_window =
-        window_menu->addAction("Mesher", this, &MainWindow::onShowMainWindow);
+    this->show_main_window = window_menu->addAction("Mesher", this, &MainWindow::onShowMainWindow);
     this->show_main_window->setCheckable(true);
 
     this->windows_action_group = new QActionGroup(this);
