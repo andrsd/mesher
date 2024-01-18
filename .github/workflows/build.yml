@@ -1,0 +1,67 @@
+name: build
+
+env:
+  QT_VERSION: 6.2.4
+  CACHE_NUM: 0
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: "${{ matrix.os }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            arch: gcc_64
+          - os: macos-11
+            arch: macos
+          - os: windows-2019
+            arch: msvc2019_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Cache environment
+        id: cache-env
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/Qt
+          key: ${{ runner.os }}-qt-cache-${{ env.CACHE_NUM }}
+
+      - name: Environment
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          echo "C:\msys64\usr\bin" >> $env:GITHUB_PATH
+
+      - name: Install Qt
+        if: steps.cache-env.outputs.cache-hit != 'true'
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: 'desktop'
+          dir: '${{ github.workspace }}'
+          install-deps: 'true'
+
+      - name: Install dependencies (linux)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update -qq
+          sudo apt install libgl1-mesa-dev
+
+      - name: Configure
+        run: cmake
+          -S . -B "${{ github.workspace }}/build" \
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" \
+          -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build "${{ github.workspace }}/build" --config Release
