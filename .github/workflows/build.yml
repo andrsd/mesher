@@ -58,10 +58,10 @@ jobs:
           sudo apt install libgl1-mesa-dev
 
       - name: Configure
-        run: cmake
-          -S . -B "${{ github.workspace }}/build" \
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" \
-          -DCMAKE_BUILD_TYPE=Release
+        run: |
+          cmake -S . -B "${{ github.workspace }}/build" \
+            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" \
+            -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build "${{ github.workspace }}/build" --config Release
