@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Mesher
+Comment=A simple tool for creating meshes
+Exec=mesher
+Icon=mesher
+Categories=Qt;Science;Utility;
