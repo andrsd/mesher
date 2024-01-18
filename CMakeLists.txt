@@ -30,4 +30,5 @@ find_package(Qt6 REQUIRED
         Svg
 )
 
+add_subdirectory(common)
 add_subdirectory(src)

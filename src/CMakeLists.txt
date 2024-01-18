@@ -21,6 +21,7 @@ target_include_directories(
 target_link_libraries(
     ${PROJECT_NAME}
     PRIVATE
+        common
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
