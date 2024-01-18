@@ -16,6 +16,7 @@
 #include <QFileInfo>
 #include <QApplication>
 #include <QShortcut>
+#include "aboutdlg.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -31,7 +32,8 @@ MainWindow::MainWindow(QWidget * parent) :
     minimize(nullptr),
     bring_all_to_front(nullptr),
     show_main_window(nullptr),
-    windows_action_group(nullptr)
+    windows_action_group(nullptr),
+    about_dlg(nullptr)
 {
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
@@ -85,6 +87,13 @@ MainWindow::setupMenuBar()
     file_menu->addSeparator();
     this->close_action =
         file_menu->addAction("Close", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
+
+    // The "About" item is fine here, since we assume Mac and that will
+    // place the item into different submenu but this will need to be fixed
+    // for linux and windows
+    file_menu->addSeparator();
+    auto about_box_action = file_menu->addAction("About", this, &MainWindow::onAbout);
+    about_box_action->setMenuRole(QAction::ApplicationSpecificRole);
 
     file_menu->addAction("Quit", this, &QCoreApplication::quit, QKeySequence("Ctrl+Q"));
 
@@ -274,4 +283,12 @@ MainWindow::onShowMainWindow()
     activateWindow();
     raise();
     updateMenuBar();
+}
+
+void
+MainWindow::onAbout()
+{
+    if (this->about_dlg == nullptr)
+        this->about_dlg = new AboutDialog(this);
+    this->about_dlg->show();
 }

@@ -9,6 +9,7 @@ class QMenu;
 class QActionGroup;
 class QResizeEvent;
 class QDragEnterEvent;
+class AboutDialog;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -51,6 +52,7 @@ public slots:
     void onMinimize();
     void onBringAllToFront();
     void onShowMainWindow();
+    void onAbout();
 
 protected:
     QSettings * settings;
@@ -67,4 +69,6 @@ protected:
     QAction * show_main_window;
 
     QActionGroup * windows_action_group;
+
+    AboutDialog * about_dlg;
 };
