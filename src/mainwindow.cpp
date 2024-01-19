@@ -16,7 +16,10 @@
 #include <QFileInfo>
 #include <QApplication>
 #include <QShortcut>
+#include <QTreeWidget>
+#include <QSplitter>
 #include "aboutdlg.h"
+#include "view.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -33,7 +36,8 @@ MainWindow::MainWindow(QWidget * parent) :
     bring_all_to_front(nullptr),
     show_main_window(nullptr),
     windows_action_group(nullptr),
-    about_dlg(nullptr)
+    about_dlg(nullptr),
+    splitter(nullptr)
 {
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
@@ -71,6 +75,22 @@ MainWindow::getSettings()
 void
 MainWindow::setupWidgets()
 {
+    this->left = new QTreeWidget(this);
+    this->left->setHeaderHidden(true);
+
+    this->view = new View(this);
+
+    this->splitter = new QSplitter(Qt::Orientation::Horizontal, this);
+    this->splitter->addWidget(this->left);
+    this->splitter->addWidget(this->view);
+    this->splitter->setHandleWidth(2);
+    this->splitter->setStretchFactor(0, 0.);
+    this->splitter->setStretchFactor(1, 1.);
+    this->splitter->setStyleSheet(QString("QSplitter::handle {"
+                                          "    image: none;"
+                                          "}"));
+
+    setCentralWidget(this->splitter);
 }
 
 void

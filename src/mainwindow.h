@@ -10,6 +10,9 @@ class QActionGroup;
 class QResizeEvent;
 class QDragEnterEvent;
 class AboutDialog;
+class QSplitter;
+class QTreeWidget;
+class View;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -71,4 +74,7 @@ protected:
     QActionGroup * windows_action_group;
 
     AboutDialog * about_dlg;
+    QSplitter * splitter;
+    QTreeWidget * left;
+    View * view;
 };
