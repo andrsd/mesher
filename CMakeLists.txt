@@ -32,4 +32,5 @@ find_package(Qt6 REQUIRED
 )
 
 add_subdirectory(common)
+add_subdirectory(gmsh)
 add_subdirectory(src)
