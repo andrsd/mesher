@@ -1,0 +1,77 @@
+set(METIS_DIR ${GMSH_DIR}/contrib/metis)
+
+set(SRC
+    ${METIS_DIR}/GKlib/b64.c
+    ${METIS_DIR}/GKlib/blas.c
+    ${METIS_DIR}/GKlib/csr.c
+    ${METIS_DIR}/GKlib/error.c
+    ${METIS_DIR}/GKlib/evaluate.c
+    ${METIS_DIR}/GKlib/fkvkselect.c
+    ${METIS_DIR}/GKlib/fs.c
+    ${METIS_DIR}/GKlib/getopt.c
+    ${METIS_DIR}/GKlib/gkregex.c
+    ${METIS_DIR}/GKlib/graph.c
+    ${METIS_DIR}/GKlib/htable.c
+    ${METIS_DIR}/GKlib/io.c
+    ${METIS_DIR}/GKlib/itemsets.c
+    ${METIS_DIR}/GKlib/mcore.c
+    ${METIS_DIR}/GKlib/memory.c
+    ${METIS_DIR}/GKlib/omp.c
+    ${METIS_DIR}/GKlib/pdb.c
+    ${METIS_DIR}/GKlib/pqueue.c
+    ${METIS_DIR}/GKlib/random.c
+    ${METIS_DIR}/GKlib/rw.c
+    ${METIS_DIR}/GKlib/seq.c
+    ${METIS_DIR}/GKlib/sort.c
+    ${METIS_DIR}/GKlib/string.c
+    ${METIS_DIR}/GKlib/timers.c
+    ${METIS_DIR}/GKlib/tokenizer.c
+    ${METIS_DIR}/GKlib/util.c
+    ${METIS_DIR}/libmetis/auxapi.c
+    ${METIS_DIR}/libmetis/balance.c
+    ${METIS_DIR}/libmetis/bucketsort.c
+    ${METIS_DIR}/libmetis/checkgraph.c
+    ${METIS_DIR}/libmetis/coarsen.c
+    ${METIS_DIR}/libmetis/compress.c
+    ${METIS_DIR}/libmetis/contig.c
+    ${METIS_DIR}/libmetis/debug.c
+    ${METIS_DIR}/libmetis/fm.c
+    ${METIS_DIR}/libmetis/fortran.c
+    ${METIS_DIR}/libmetis/frename.c
+    ${METIS_DIR}/libmetis/gklib.c
+    ${METIS_DIR}/libmetis/graph.c
+    ${METIS_DIR}/libmetis/initpart.c
+    ${METIS_DIR}/libmetis/kmetis.c
+    ${METIS_DIR}/libmetis/kwayfm.c
+    ${METIS_DIR}/libmetis/kwayrefine.c
+    ${METIS_DIR}/libmetis/mcutil.c
+    ${METIS_DIR}/libmetis/mesh.c
+    ${METIS_DIR}/libmetis/meshpart.c
+    ${METIS_DIR}/libmetis/minconn.c
+    ${METIS_DIR}/libmetis/mincover.c
+    ${METIS_DIR}/libmetis/mmd.c
+    ${METIS_DIR}/libmetis/ometis.c
+    ${METIS_DIR}/libmetis/options.c
+    #${METIS_DIR}/libmetis/parmetis.c
+    ${METIS_DIR}/libmetis/pmetis.c
+    ${METIS_DIR}/libmetis/refine.c
+    ${METIS_DIR}/libmetis/separator.c
+    ${METIS_DIR}/libmetis/sfm.c
+    ${METIS_DIR}/libmetis/srefine.c
+    ${METIS_DIR}/libmetis/stat.c
+    ${METIS_DIR}/libmetis/timing.c
+    ${METIS_DIR}/libmetis/util.c
+    ${METIS_DIR}/libmetis/wspace.c
+)
+
+add_library(metis OBJECT ${SRC})
+
+target_include_directories(
+    metis
+    PUBLIC
+        ${METIS_DIR}/include
+        ${METIS_DIR}/libmetis
+        ${METIS_DIR}/GKLib
+    PRIVATE
+        ${CMAKE_BINARY_DIR}/gmsh
+)

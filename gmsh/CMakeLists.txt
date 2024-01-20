@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(gmsh
+project(libgmsh
     VERSION 1.0
     LANGUAGES CXX
 )
@@ -70,11 +70,20 @@ if(ENABLE_BUILD_DYNAMIC)
     set(GMSH_OS "${GMSH_OS}-sdk")
 endif()
 
+# GMSH modules
+set(HAVE_MESH TRUE)
+set(HAVE_PARSER TRUE)
+set(HAVE_PLUGINS TRUE)
+set(HAVE_POST TRUE)
+set(HAVE_SOLVER TRUE)
 
+# GMSH deps
 check_include_file(dlfcn.h DLFCN_H)
 if(DLFCN_H)
     set(HAVE_DLOPEN TRUE)
 endif()
+
+find_package(BLAS)
 
 find_package(ZLIB)
 if(ZLIB_FOUND)
@@ -93,16 +102,55 @@ endif()
 find_package(OpenCASCADE 6.9.1 REQUIRED)
 set(HAVE_OCC TRUE)
 
-set(HAVE_MESH TRUE)
-set(HAVE_POST TRUE)
+set(HAVE_ALGLIB TRUE)
+set(HAVE_ANN TRUE)
+set(HAVE_BAMG TRUE)
+set(HAVE_BLAS TRUE)
+set(HAVE_BLOSSOM TRUE)
+set(HAVE_DINTEGRATION TRUE)
+set(HAVE_DOMHEX TRUE)
+set(HAVE_GMM TRUE)
+set(HAVE_HXT TRUE)
+set(HAVE_KBIPACK FALSE)
+set(HAVE_LAPACK TRUE)
+set(HAVE_LIBCGNS FALSE)
+set(HAVE_MATHEX TRUE)
+set(HAVE_MED FALSE)
+set(HAVE_METIS TRUE)
+set(HAVE_MMG FALSE)
+set(HAVE_NETGEN TRUE)
+set(HAVE_OPTHOM FALSE)
+set(HAVE_QUADTRI TRUE)
+set(HAVE_TETGENBR FALSE)
+set(HAVE_VOROPP TRUE)
+
+# gmsh 3rd party packages
+add_subdirectory(contrib/alglib)
+add_subdirectory(contrib/ann)
+add_subdirectory(contrib/bamg)
+add_subdirectory(contrib/blossom)
+add_subdirectory(contrib/discreteintegration)
+add_subdirectory(contrib/domhex)
+add_subdirectory(contrib/gmm)
+add_subdirectory(contrib/hxt)
+add_subdirectory(contrib/kbipack)
+add_subdirectory(contrib/mathex)
+add_subdirectory(contrib/metis)
+add_subdirectory(contrib/netgen)
+add_subdirectory(contrib/quadtri)
+add_subdirectory(contrib/voro++)
 
 #
 
-file(GLOB COMMON_SRC CONFIGURE_DEPENDS ${GMSH_DIR}/src/common/*.cpp)
-list(REMOVE_ITEM COMMON_SRC ${GMSH_DIR}/src/common/gmsh.cpp)
+file(GLOB COMMON_SRC CONFIGURE_DEPENDS
+    ${GMSH_DIR}/src/common/*.cpp
+    ${GMSH_DIR}/src/common/*.c
+)
 
 file(GLOB GEO_SRCS CONFIGURE_DEPENDS ${GMSH_DIR}/src/geo/*.cpp)
 list(REMOVE_ITEM GEO_SRCS ${GMSH_DIR}/src/geo/gmshEdgeDiscretize.cpp)
+
+file(GLOB GRAPHICS_SRCS CONFIGURE_DEPENDS ${GMSH_DIR}/src/graphics/*.cpp)
 
 file(GLOB MESH_SRCS CONFIGURE_DEPENDS ${GMSH_DIR}/src/mesh/*.cpp)
 
@@ -118,9 +166,10 @@ file(GLOB POST_SRCS CONFIGURE_DEPENDS ${GMSH_DIR}/src/post/*.cpp)
 file(GLOB SOLVER_SRCS CONFIGURE_DEPENDS ${GMSH_DIR}/src/solver/*.cpp)
 
 add_library(${PROJECT_NAME}
-    OBJECT
+    SHARED
         ${COMMON_SRC}
         ${GEO_SRCS}
+        ${GRAPHICS_SRCS}
         ${MESH_SRCS}
         ${NUMERIC_SRCS}
         ${PARSER_SRCS}
@@ -128,6 +177,10 @@ add_library(${PROJECT_NAME}
         ${POST_SRCS}
         ${SOLVER_SRCS}
 )
+
+if(NOT MSVC)
+    set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME gmsh)
+endif()
 
 target_include_directories(
     ${PROJECT_NAME}
@@ -148,8 +201,24 @@ target_include_directories(
 
 target_link_libraries(
     ${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
+        ALGLIB
+        ANN
+        bamg
+        blossom
+        DiscreteIntegration
+        domhex
+        gmm
+        hxt
+        kbipack
+        MathEx
+        metis
+        Netgen
+        QuadTri
+        voropp
         ${OCC_LIBRARIES}
+        BLAS::BLAS
+        OpenGL::GL
 )
 
 if(HAVE_DLOPEN)
