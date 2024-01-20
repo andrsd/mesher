@@ -13,6 +13,7 @@ class AboutDialog;
 class QSplitter;
 class QTreeWidget;
 class View;
+class SettingsDialog;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -56,6 +57,7 @@ public slots:
     void onBringAllToFront();
     void onShowMainWindow();
     void onAbout();
+    void onSettings();
 
 protected:
     QSettings * settings;
@@ -77,4 +79,5 @@ protected:
     QSplitter * splitter;
     QTreeWidget * left;
     View * view;
+    SettingsDialog * prefs_dlg;
 };

@@ -20,6 +20,7 @@
 #include <QSplitter>
 #include "aboutdlg.h"
 #include "view.h"
+#include "settingsdlg.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -115,8 +116,13 @@ MainWindow::setupMenuBar()
     auto about_box_action = file_menu->addAction("About", this, &MainWindow::onAbout);
     about_box_action->setMenuRole(QAction::ApplicationSpecificRole);
 
-    file_menu->addAction("Quit", this, &QCoreApplication::quit, QKeySequence("Ctrl+Q"));
+    file_menu->addSeparator();
+    auto settings_action =
+        file_menu->addAction("Settings...", this, &MainWindow::onSettings, QKeySequence("Ctrl+."));
+    settings_action->setMenuRole(QAction::ApplicationSpecificRole);
 
+    file_menu->addAction("Quit", this, &QCoreApplication::quit, QKeySequence("Ctrl+Q"));
+    
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
         window_menu->addAction("Minimize", this, &MainWindow::onMinimize, QKeySequence("Ctrl+M"));
@@ -311,4 +317,12 @@ MainWindow::onAbout()
     if (this->about_dlg == nullptr)
         this->about_dlg = new AboutDialog(this);
     this->about_dlg->show();
+}
+
+void
+MainWindow::onSettings()
+{
+    if (this->prefs_dlg == nullptr)
+        this->prefs_dlg = new SettingsDialog(this);
+    this->prefs_dlg->show();
 }
