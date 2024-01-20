@@ -9,6 +9,7 @@ add_executable(
         ${SRCS}
         resources.qrc
         ${APP_ICON_MACOSX}
+        ../resources/mesher.svg
 )
 
 target_include_directories(
@@ -30,6 +31,7 @@ target_link_libraries(
         Qt6::Network
         Qt6::OpenGLWidgets
         Qt6::Svg
+        Qt6::SvgWidgets
 )
 
 set_target_properties(
@@ -46,6 +48,7 @@ set_target_properties(
 
 set_source_files_properties(
     icon.icns
+    ../resources/mesher.svg
     PROPERTIES
         MACOSX_PACKAGE_LOCATION "Resources"
 )

@@ -1,9 +1,15 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
-    <qresource alias="app-icon">
-        <file>../resources/app-icon.png</file>
+    <qresource>
+        <file alias="app-icon">../resources/app-icon.png</file>
+    </qresource>
+    <qresource>
+        <file alias="app-icon-svg">../resources/mesher.svg</file>
     </qresource>
     <qresource>
         <file alias="license">../LICENSE</file>
+    </qresource>
+    <qresource>
+        <file alias="acknowledgements">../ACKNOWLEDGEMENTS</file>
     </qresource>
 </RCC>

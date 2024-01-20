@@ -1,12 +1,16 @@
 #include "aboutdlg.h"
+#include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QApplication>
-#include <QIcon>
 #include <QPalette>
 #include <QDesktopServices>
+#include <QSvgWidget>
+#include <QPushButton>
+#include <QFile>
 #include "common/clickablelabel.h"
 #include "mesherconfig.h"
+#include "textboxdlg.h"
 
 namespace {
 
@@ -21,33 +25,44 @@ AboutDialog::AboutDialog(QWidget * parent) :
     title(nullptr),
     version(nullptr),
     homepage(nullptr),
-    copyright(nullptr)
+    copyright(nullptr),
+    license_dlg(nullptr),
+    ack_dlg(nullptr)
 {
     setWindowFlag(Qt::CustomizeWindowHint, true);
     setWindowFlag(Qt::WindowMaximizeButtonHint, false);
 
-    this->layout = new QVBoxLayout();
+    this->layout = new QHBoxLayout();
     this->layout->addSpacing(8);
 
-    QIcon ico = QApplication::windowIcon();
-    this->icon = new QLabel();
-    this->icon->setPixmap(ico.pixmap(64, 64));
-    this->layout->addWidget(this->icon, 0, Qt::AlignHCenter);
+    QByteArray svg;
+    QString file_name(":/app-icon-svg");
+    QFile file(file_name);
+    if (file.open(QIODevice::ReadOnly))
+        svg = file.readAll();
+
+    this->icon = new QSvgWidget();
+    this->icon->setFixedSize(128, 128);
+    this->icon->setContentsMargins(16, 16, 16, 16);
+    this->icon->load(svg);
+    this->layout->addWidget(this->icon, 0, Qt::AlignTop);
+
+    auto rside = new QVBoxLayout();
+    rside->setSpacing(0);
 
     this->title = new QLabel(MESHER_APP_NAME);
     QFont font = this->title->font();
     font.setBold(true);
-    font.setPointSize(int(1.2 * font.pointSize()));
+    font.setPointSize(int(2 * font.pointSize()));
     this->title->setFont(font);
-    this->title->setAlignment(Qt::AlignHCenter);
-    this->layout->addWidget(this->title);
+    rside->addWidget(this->title);
 
     this->version = new QLabel(QString("Version %1").arg(MESHER_VERSION));
     font = this->version->font();
-    font.setPointSize(0.9 * font.pointSize());
     this->version->setFont(font);
-    this->version->setAlignment(Qt::AlignHCenter);
-    this->layout->addWidget(this->version);
+    rside->addWidget(this->version);
+
+    rside->addSpacing(4);
 
     this->homepage = new ClickableLabel();
     this->homepage->setText(HOME_PAGE_URL);
@@ -55,23 +70,35 @@ AboutDialog::AboutDialog(QWidget * parent) :
     auto link_clr = plt.color(QPalette::Link);
     this->homepage->setStyleSheet(QString("color: %1").arg(link_clr.name()));
     font = this->homepage->font();
-    font.setPointSize(0.9 * font.pointSize());
     this->homepage->setFont(font);
-    this->homepage->setAlignment(Qt::AlignHCenter);
-    this->layout->addWidget(this->homepage);
+    rside->addWidget(this->homepage);
 
-    this->layout->addSpacing(20);
+    rside->addSpacing(40);
 
-    this->copyright = new QLabel(QString("%1").arg(MESHER_COPYRIGHT));
+    this->copyright = new QLabel(MESHER_COPYRIGHT);
     font = this->copyright->font();
-    font.setPointSize(0.9 * font.pointSize());
     this->copyright->setFont(font);
-    this->copyright->setAlignment(Qt::AlignHCenter);
-    this->layout->addWidget(this->copyright);
+    rside->addWidget(this->copyright);
+
+    auto btn_layout = new QHBoxLayout();
+    btn_layout->setSpacing(16);
+
+    auto ack_btn = new QPushButton("Acknowledgements...");
+    btn_layout->addWidget(ack_btn);
+
+    auto license_btn = new QPushButton("License...");
+    btn_layout->addWidget(license_btn);
+
+    rside->addSpacing(16);
+    rside->addLayout(btn_layout);
+
+    this->layout->addLayout(rside, 1);
 
     setLayout(this->layout);
 
     connect(this->homepage, &ClickableLabel::clicked, this, &AboutDialog::onHomepageClicked);
+    connect(ack_btn, &QPushButton::clicked, this, &AboutDialog::onAcknowledgements);
+    connect(license_btn, &QPushButton::clicked, this, &AboutDialog::onLicense);
 }
 
 AboutDialog::~AboutDialog()
@@ -81,10 +108,36 @@ AboutDialog::~AboutDialog()
     delete this->title;
     delete this->version;
     delete this->copyright;
+    delete this->license_dlg;
+    delete this->ack_dlg;
 }
 
 void
 AboutDialog::onHomepageClicked()
 {
     QDesktopServices::openUrl(QUrl(HOME_PAGE_URL));
+}
+
+void
+AboutDialog::onAcknowledgements()
+{
+    if (this->ack_dlg == nullptr) {
+        this->ack_dlg = new TextBoxDialog(this);
+        this->ack_dlg->setWindowTitle("Acknowledgements");
+        this->ack_dlg->loadTextFromFile(":/acknowledgements");
+        this->ack_dlg->setMinimumSize(650, 550);
+    }
+    this->ack_dlg->show();
+}
+
+void
+AboutDialog::onLicense()
+{
+    if (this->license_dlg == nullptr) {
+        this->license_dlg = new TextBoxDialog(this);
+        this->license_dlg->setWindowTitle("License");
+        this->license_dlg->loadTextFromFile(":/license");
+        this->license_dlg->setMinimumSize(500, 600);
+    }
+    this->license_dlg->show();
 }

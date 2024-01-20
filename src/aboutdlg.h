@@ -2,9 +2,11 @@
 
 #include <QDialog>
 
-class QVBoxLayout;
+class QHBoxLayout;
 class QLabel;
+class QSvgWidget;
 class ClickableLabel;
+class TextBoxDialog;
 
 class AboutDialog : public QDialog {
 public:
@@ -13,12 +15,16 @@ public:
 
 protected slots:
     void onHomepageClicked();
+    void onAcknowledgements();
+    void onLicense();
 
 protected:
-    QVBoxLayout * layout;
-    QLabel * icon;
+    QHBoxLayout * layout;
+    QSvgWidget * icon;
     QLabel * title;
     QLabel * version;
     ClickableLabel * homepage;
     QLabel * copyright;
+    TextBoxDialog * license_dlg;
+    TextBoxDialog * ack_dlg;
 };

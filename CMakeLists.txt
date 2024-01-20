@@ -29,6 +29,7 @@ find_package(Qt6 REQUIRED
         Network
         OpenGLWidgets
         Svg
+        SvgWidgets
 )
 
 add_subdirectory(common)
