@@ -118,11 +118,11 @@ MainWindow::setupMenuBar()
 
     file_menu->addSeparator();
     auto settings_action =
-        file_menu->addAction("Settings...", this, &MainWindow::onSettings, QKeySequence("Ctrl+."));
+        file_menu->addAction("Settings...", this, &MainWindow::onSettings, QKeySequence("Ctrl+,"));
     settings_action->setMenuRole(QAction::ApplicationSpecificRole);
 
     file_menu->addAction("Quit", this, &QCoreApplication::quit, QKeySequence("Ctrl+Q"));
-    
+
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
         window_menu->addAction("Minimize", this, &MainWindow::onMinimize, QKeySequence("Ctrl+M"));
