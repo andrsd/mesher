@@ -323,6 +323,6 @@ void
 MainWindow::onSettings()
 {
     if (this->prefs_dlg == nullptr)
-        this->prefs_dlg = new SettingsDialog(this);
+        this->prefs_dlg = new SettingsDialog(this->settings, this);
     this->prefs_dlg->show();
 }
