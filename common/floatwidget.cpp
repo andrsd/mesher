@@ -49,3 +49,18 @@ FloatWidget::setValue(double value)
     auto txt = QString("%1").arg(value);
     this->num->setText(txt);
 }
+
+void
+FloatWidget::bindToSettings(QSettings * settings,
+                            const QString & key,
+                            const QVariant & default_value)
+{
+    bindSettings(settings, key);
+    setValue(readSetting(default_value).toDouble());
+}
+
+void
+FloatWidget::onTextChanged(const QString & text)
+{
+    storeSetting(text);
+}

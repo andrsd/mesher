@@ -49,3 +49,18 @@ IntegerWidget::setValue(int value)
     auto s = QString("%1").arg(value);
     this->num->setText(s);
 }
+
+void
+IntegerWidget::bindToSettings(QSettings * settings,
+                              const QString & key,
+                              const QVariant & default_value)
+{
+    bindSettings(settings, key);
+    setValue(readSetting(default_value).toDouble());
+}
+
+void
+IntegerWidget::onTextChanged(const QString & text)
+{
+    storeSetting(text);
+}

@@ -2,6 +2,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QCheckBox>
+#include <QSettings>
 
 BooleanWidget::BooleanWidget(const QString & txt, QWidget * parent) : QWidget(parent)
 {
@@ -17,6 +18,8 @@ BooleanWidget::BooleanWidget(const QString & txt, QWidget * parent) : QWidget(pa
 
     this->check = new QCheckBox("");
     this->layout->addWidget(this->check);
+
+    connect(this->check, &QCheckBox::stateChanged, this, &BooleanWidget::onStateChanged);
 }
 
 BooleanWidget::~BooleanWidget()
@@ -36,4 +39,20 @@ void
 BooleanWidget::setValue(bool state)
 {
     this->check->setCheckState(state ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
+}
+
+void
+BooleanWidget::bindToSettings(QSettings * settings,
+                              const QString & key,
+                              const QVariant & default_value)
+{
+    bindSettings(settings, key);
+    setValue(readSetting(default_value).toBool());
+}
+
+void
+BooleanWidget::onStateChanged(int state)
+{
+    bool checked = state == Qt::CheckState::Checked;
+    storeSetting(checked);
 }
