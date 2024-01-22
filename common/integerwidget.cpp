@@ -11,6 +11,7 @@ IntegerWidget::IntegerWidget(const QString & text, QWidget * parent) : QWidget(p
     this->lbl = new QLabel(text);
 
     this->num = new QLineEdit();
+    this->num->setFixedWidth(80);
     this->num->setValidator(this->validator);
 
     this->layout = new QHBoxLayout();

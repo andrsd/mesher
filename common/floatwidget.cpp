@@ -12,10 +12,12 @@ FloatWidget::FloatWidget(const QString & text, QWidget * parent) : QWidget(paren
 
     this->num = new QLineEdit();
     this->num->setValidator(this->validator);
+    this->num->setFixedWidth(80);
+    this->num->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
 
     this->layout = new QHBoxLayout();
     this->layout->addWidget(this->lbl);
-    this->layout->addWidget(this->num);
+    this->layout->addWidget(this->num, 0, Qt::AlignLeft);
 
     this->layout->setContentsMargins(0, 0, 0, 0);
 
