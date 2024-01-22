@@ -21,7 +21,7 @@ SettingsDialog::SettingsDialog(QSettings * settings, QWidget * parent) :
 {
     setWindowFlag(Qt::WindowMaximizeButtonHint, false);
     setWindowTitle("Settings");
-    setMinimumSize(800, 700);
+    setMinimumSize(600, 700);
 
     this->layout = new QHBoxLayout();
 
