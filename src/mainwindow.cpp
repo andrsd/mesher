@@ -113,13 +113,10 @@ MainWindow::setupMenuBar()
     // place the item into different submenu but this will need to be fixed
     // for linux and windows
     file_menu->addSeparator();
-    auto about_box_action = file_menu->addAction("About", this, &MainWindow::onAbout);
-    about_box_action->setMenuRole(QAction::ApplicationSpecificRole);
+    file_menu->addAction("About", this, &MainWindow::onAbout);
 
     file_menu->addSeparator();
-    auto settings_action =
-        file_menu->addAction("Settings...", this, &MainWindow::onSettings, QKeySequence("Ctrl+,"));
-    settings_action->setMenuRole(QAction::ApplicationSpecificRole);
+    file_menu->addAction("Settings...", this, &MainWindow::onSettings, QKeySequence("Ctrl+,"));
 
     file_menu->addAction("Quit", this, &QCoreApplication::quit, QKeySequence("Ctrl+Q"));
 
