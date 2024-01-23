@@ -102,7 +102,7 @@ std::tuple<QWidget *, QFormLayout *>
 SettingsDialog::createPane()
 {
     auto layout = new QFormLayout();
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(0, 10, 0, 0);
 
     auto pane = new QWidget();
     pane->setLayout(layout);
@@ -119,8 +119,6 @@ QWidget *
 SettingsDialog::createGeneralPane()
 {
     auto [pane, layout] = createPane();
-
-    layout->setContentsMargins(0, 0, 0, 0);
 
     auto show_bounding_boxes = new BooleanWidget("Show bounding boxes");
     show_bounding_boxes->bindToSettings(this->settings, "general/show_bounding_boxes", false);
