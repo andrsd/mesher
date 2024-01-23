@@ -6,19 +6,24 @@
 
 PointWidget::PointWidget(QWidget * parent) : QWidget(parent)
 {
+    const int wd = 50;
+
     this->validator = new QDoubleValidator();
 
     this->x_lbl = new QLabel("X");
     this->x_edit = new QLineEdit();
     this->x_edit->setValidator(this->validator);
+    this->x_edit->setFixedWidth(wd);
 
     this->y_lbl = new QLabel("Y");
     this->y_edit = new QLineEdit();
     this->y_edit->setValidator(this->validator);
+    this->y_edit->setFixedWidth(wd);
 
     this->z_lbl = new QLabel("Z");
     this->z_edit = new QLineEdit();
     this->z_edit->setValidator(this->validator);
+    this->z_edit->setFixedWidth(wd);
 
     this->layout = new QHBoxLayout();
     this->layout->addWidget(this->x_lbl);
