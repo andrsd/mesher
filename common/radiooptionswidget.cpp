@@ -61,3 +61,10 @@ RadioOptionsWidget::onChanged(int id)
     if (this->options[id]->isChecked())
         storeSetting(id);
 }
+
+void
+RadioOptionsWidget::enableOption(int idx, bool state)
+{
+    if ((idx >= 0) && (idx < this->options.size()))
+        this->options[idx]->setEnabled(state);
+}

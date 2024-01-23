@@ -22,6 +22,8 @@ public:
                         const QString & key,
                         const QVariant & default_value) override;
 
+    void enableOption(int idx, bool state);
+
 signals:
     void changed(int id);
 
