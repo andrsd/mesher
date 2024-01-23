@@ -36,6 +36,10 @@ PointWidget::PointWidget(QWidget * parent) : QWidget(parent)
     this->layout->setContentsMargins(0, 0, 0, 0);
 
     setLayout(this->layout);
+
+    connect(this->x_edit, &QLineEdit::textChanged, this, &PointWidget::onXTextChanged);
+    connect(this->y_edit, &QLineEdit::textChanged, this, &PointWidget::onYTextChanged);
+    connect(this->z_edit, &QLineEdit::textChanged, this, &PointWidget::onZTextChanged);
 }
 
 PointWidget::~PointWidget()
@@ -50,23 +54,60 @@ PointWidget::~PointWidget()
     delete this->z_edit;
 }
 
-double
-PointWidget::userX() const
+QVector3D
+PointWidget::value() const
 {
-    auto txt = this->x_edit->text();
-    return txt.toDouble();
+    auto x = this->x_edit->text().toDouble();
+    auto y = this->y_edit->text().toDouble();
+    auto z = this->z_edit->text().toDouble();
+    return QVector3D(x, y, z);
 }
 
-double
-PointWidget::userY() const
+void
+PointWidget::setValue(const QVector3D & value)
 {
-    auto txt = this->y_edit->text();
-    return txt.toDouble();
+    auto x = QString("%1").arg(value.x());
+    this->x_edit->setText(x);
+
+    auto y = QString("%1").arg(value.y());
+    this->y_edit->setText(y);
+
+    auto z = QString("%1").arg(value.z());
+    this->z_edit->setText(z);
 }
 
-double
-PointWidget::userZ() const
+void
+PointWidget::bindToSettings(QSettings * settings,
+                            const QString & key,
+                            const QVariant & default_value)
 {
-    auto txt = this->z_edit->text();
-    return txt.toDouble();
+    bindSettings(settings, key);
+    setValue(readSetting(default_value).value<QVector3D>());
+}
+
+void
+PointWidget::onXTextChanged(const QString & text)
+{
+    auto x = text.toDouble();
+    auto y = this->y_edit->text().toDouble();
+    auto z = this->z_edit->text().toDouble();
+    storeSetting(QVector3D(x, y, z));
+}
+
+void
+PointWidget::onYTextChanged(const QString & text)
+{
+    auto x = this->x_edit->text().toDouble();
+    auto y = text.toDouble();
+    auto z = this->z_edit->text().toDouble();
+    storeSetting(QVector3D(x, y, z));
+}
+
+void
+PointWidget::onZTextChanged(const QString & text)
+{
+    auto x = this->x_edit->text().toDouble();
+    auto y = this->y_edit->text().toDouble();
+    auto z = text.toDouble();
+    storeSetting(QVector3D(x, y, z));
 }
