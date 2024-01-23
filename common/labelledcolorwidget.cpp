@@ -6,7 +6,7 @@
 LabelledColorWidget::LabelledColorWidget(const QString & name, QWidget * parent) : QWidget(parent)
 {
     this->layout = new QHBoxLayout();
-    this->layout->setContentsMargins(0, 0, 0, 0);
+    this->layout->setContentsMargins(30, 0, 30, 0);
     setLayout(this->layout);
 
     this->label = new QLabel(name);

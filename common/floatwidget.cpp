@@ -4,52 +4,35 @@
 #include <QLineEdit>
 #include <QDoubleValidator>
 
-FloatWidget::FloatWidget(const QString & text, QWidget * parent) : QWidget(parent)
+FloatWidget::FloatWidget(const QString & text, QWidget * parent) : QLineEdit(parent)
 {
     this->validator = new QDoubleValidator();
 
-    this->lbl = new QLabel(text);
-
-    this->num = new QLineEdit();
-    this->num->setValidator(this->validator);
-    this->num->setFixedWidth(80);
-    this->num->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-
-    this->layout = new QHBoxLayout();
-    this->layout->addWidget(this->lbl);
-    this->layout->addWidget(this->num, 0, Qt::AlignLeft);
-
-    this->layout->setContentsMargins(0, 0, 0, 0);
-
-    setLayout(this->layout);
+    setValidator(this->validator);
+    setFixedWidth(80);
 }
 
 FloatWidget::~FloatWidget()
 {
     delete this->validator;
-    delete this->layout;
-    delete this->lbl;
-    delete this->num;
 }
 
 void
 FloatWidget::setLabelText(const QString & txt)
 {
-    this->lbl->setWindowTitle(txt);
 }
 
 double
 FloatWidget::value() const
 {
-    auto txt = this->num->text();
-    return txt.toDouble();
+    return text().toDouble();
 }
 
 void
 FloatWidget::setValue(double value)
 {
     auto txt = QString("%1").arg(value);
-    this->num->setText(txt);
+    setText(txt);
 }
 
 void

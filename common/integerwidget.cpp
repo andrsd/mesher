@@ -4,51 +4,35 @@
 #include <QLineEdit>
 #include <QIntValidator>
 
-IntegerWidget::IntegerWidget(const QString & text, QWidget * parent) : QWidget(parent)
+IntegerWidget::IntegerWidget(const QString & text, QWidget * parent) : QLineEdit(parent)
 {
     this->validator = new QIntValidator();
 
-    this->lbl = new QLabel(text);
-
-    this->num = new QLineEdit();
-    this->num->setFixedWidth(80);
-    this->num->setValidator(this->validator);
-
-    this->layout = new QHBoxLayout();
-    this->layout->addWidget(this->lbl);
-    this->layout->addWidget(this->num);
-
-    this->layout->setContentsMargins(0, 0, 0, 0);
-
-    setLayout(this->layout);
+    setFixedWidth(80);
+    setValidator(this->validator);
 }
 
 IntegerWidget::~IntegerWidget()
 {
     delete this->validator;
-    delete this->layout;
-    delete this->lbl;
-    delete this->num;
 }
 
 void
 IntegerWidget::setLabelText(const QString & txt)
 {
-    this->lbl->setWindowTitle(txt);
 }
 
 int
 IntegerWidget::value() const
 {
-    auto txt = this->num->text();
-    return txt.toInt();
+    return text().toInt();
 }
 
 void
 IntegerWidget::setValue(int value)
 {
     auto s = QString("%1").arg(value);
-    this->num->setText(s);
+    setText(s);
 }
 
 void

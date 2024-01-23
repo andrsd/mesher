@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QWidget>
+#include <QLineEdit>
 #include "settingsstorable.h"
 
 class QLabel;
@@ -8,7 +8,7 @@ class QLineEdit;
 class QHBoxLayout;
 class QIntValidator;
 
-class IntegerWidget : public QWidget, protected SettingsStorable {
+class IntegerWidget : public QLineEdit, protected SettingsStorable {
     Q_OBJECT
 public:
     explicit IntegerWidget(const QString & text, QWidget * parent = nullptr);
@@ -28,7 +28,4 @@ protected slots:
 
 private:
     QIntValidator * validator;
-    QHBoxLayout * layout;
-    QLabel * lbl;
-    QLineEdit * num;
 };

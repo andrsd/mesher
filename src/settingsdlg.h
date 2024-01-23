@@ -4,6 +4,7 @@
 
 class QHBoxLayout;
 class QVBoxLayout;
+class QFormLayout;
 class QTreeWidget;
 class QStackedWidget;
 class QSettings;
@@ -21,7 +22,7 @@ protected slots:
 private:
     QTreeWidgetItem * addPane(QWidget * pane, const QString & name, QTreeWidgetItem * parent);
     void createPanes();
-    std::tuple<QWidget *, QVBoxLayout *> createPane();
+    std::tuple<QWidget *, QFormLayout *> createPane();
     QWidget * createGeneralPane();
     QWidget * createAppearancePane();
     QWidget * createAppearanceMeshPane();

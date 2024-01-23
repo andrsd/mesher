@@ -1,10 +1,14 @@
 #pragma once
 
-#include <QLabel>
+#include <QHBoxLayout>
 
-class SectionTitleWidget : public QLabel {
+class QLabel;
+
+class SectionTitleWidget : public QHBoxLayout {
     Q_OBJECT
 public:
     SectionTitleWidget(const QString & name, QWidget * parent = nullptr);
     ~SectionTitleWidget() = default;
+
+    QLabel * text;
 };
