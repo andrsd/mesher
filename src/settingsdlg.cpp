@@ -248,37 +248,152 @@ SettingsDialog::createAppearanceMeshPane()
 
     auto color_layout = new QVBoxLayout();
 
-    color_layout->addWidget(new LabelledColorWidget("Nodes"));
-    color_layout->addWidget(new LabelledColorWidget("NodesSup"));
-    color_layout->addWidget(new LabelledColorWidget("Lines"));
-    color_layout->addWidget(new LabelledColorWidget("Triangles"));
-    color_layout->addWidget(new LabelledColorWidget("Quadrangles"));
-    color_layout->addWidget(new LabelledColorWidget("Tetrahedra"));
-    color_layout->addWidget(new LabelledColorWidget("Hexahedra"));
-    color_layout->addWidget(new LabelledColorWidget("Prisms"));
-    color_layout->addWidget(new LabelledColorWidget("Pyramids"));
-    color_layout->addWidget(new LabelledColorWidget("Trihedra"));
-    color_layout->addWidget(new LabelledColorWidget("Normals"));
-    color_layout->addWidget(new LabelledColorWidget("Zero"));
-    color_layout->addWidget(new LabelledColorWidget("One"));
-    color_layout->addWidget(new LabelledColorWidget("Two"));
-    color_layout->addWidget(new LabelledColorWidget("Three"));
-    color_layout->addWidget(new LabelledColorWidget("Four"));
-    color_layout->addWidget(new LabelledColorWidget("Five"));
-    color_layout->addWidget(new LabelledColorWidget("Six"));
-    color_layout->addWidget(new LabelledColorWidget("Seven"));
-    color_layout->addWidget(new LabelledColorWidget("Eight"));
-    color_layout->addWidget(new LabelledColorWidget("Nine"));
-    color_layout->addWidget(new LabelledColorWidget("Ten"));
-    color_layout->addWidget(new LabelledColorWidget("Eleven"));
-    color_layout->addWidget(new LabelledColorWidget("Twelve"));
-    color_layout->addWidget(new LabelledColorWidget("Thirteen"));
-    color_layout->addWidget(new LabelledColorWidget("Fourteen"));
-    color_layout->addWidget(new LabelledColorWidget("Fifteen"));
-    color_layout->addWidget(new LabelledColorWidget("Sixteen"));
-    color_layout->addWidget(new LabelledColorWidget("Seventeen"));
-    color_layout->addWidget(new LabelledColorWidget("Eighteen"));
-    color_layout->addWidget(new LabelledColorWidget("Nineteen"));
+    auto clr_nodes = new LabelledColorWidget("Nodes");
+    clr_nodes->bindToSettings(this->settings, "appearance/mesh/clr_nodes", QColor(0, 0, 255));
+    color_layout->addWidget(clr_nodes);
+
+    auto clr_nodes_sup = new LabelledColorWidget("NodesSup");
+    clr_nodes_sup->bindToSettings(this->settings,
+                                  "appearance/mesh/clr_nodes_sup",
+                                  QColor(255, 0, 255));
+    color_layout->addWidget(clr_nodes_sup);
+
+    auto clr_lines = new LabelledColorWidget("Lines");
+    clr_lines->bindToSettings(this->settings, "appearance/mesh/clr_lines", QColor(0, 0, 0));
+    color_layout->addWidget(clr_lines);
+
+    auto clr_tris = new LabelledColorWidget("Triangles");
+    clr_tris->bindToSettings(this->settings, "appearance/mesh/clr_tris", QColor(160, 150, 255));
+    color_layout->addWidget(clr_tris);
+
+    auto clr_quads = new LabelledColorWidget("Quadrangles");
+    clr_quads->bindToSettings(this->settings, "appearance/mesh/clr_quads", QColor(130, 120, 225));
+    color_layout->addWidget(clr_quads);
+
+    auto clr_tets = new LabelledColorWidget("Tetrahedra");
+    clr_tets->bindToSettings(this->settings, "appearance/mesh/clr_tets", QColor(160, 150, 255));
+    color_layout->addWidget(clr_tets);
+
+    auto clr_hexs = new LabelledColorWidget("Hexahedra");
+    clr_hexs->bindToSettings(this->settings, "appearance/mesh/clr_hexs", QColor(130, 120, 225));
+    color_layout->addWidget(clr_hexs);
+
+    auto clr_prisms = new LabelledColorWidget("Prisms");
+    clr_prisms->bindToSettings(this->settings, "appearance/mesh/clr_prisms", QColor(232, 210, 23));
+    color_layout->addWidget(clr_prisms);
+
+    auto clr_pyramids = new LabelledColorWidget("Pyramids");
+    clr_pyramids->bindToSettings(this->settings,
+                                 "appearance/mesh/clr_pyramids",
+                                 QColor(217, 113, 38));
+    color_layout->addWidget(clr_pyramids);
+
+    auto clr_trihedra = new LabelledColorWidget("Trihedra");
+    clr_trihedra->bindToSettings(this->settings,
+                                 "appearance/mesh/clr_trihedra",
+                                 QColor(20, 255, 0));
+    color_layout->addWidget(clr_trihedra);
+
+    auto clr_tangents = new LabelledColorWidget("Tangents");
+    clr_tangents->bindToSettings(this->settings,
+                                 "appearance/mesh/clr_tangents",
+                                 QColor(255, 255, 0));
+    color_layout->addWidget(clr_tangents);
+
+    auto clr_normal = new LabelledColorWidget("Normals");
+    clr_normal->bindToSettings(this->settings, "appearance/mesh/clr_normal", QColor(255, 0, 0));
+    color_layout->addWidget(clr_normal);
+
+    auto clr_zero = new LabelledColorWidget("Zero");
+    clr_zero->bindToSettings(this->settings, "appearance/mesh/clr_zero", QColor(255, 120, 0));
+    color_layout->addWidget(clr_zero);
+
+    auto clr_one = new LabelledColorWidget("One");
+    clr_one->bindToSettings(this->settings, "appearance/mesh/clr_one", QColor(0, 255, 132));
+    color_layout->addWidget(clr_one);
+
+    auto clr_two = new LabelledColorWidget("Two");
+    clr_two->bindToSettings(this->settings, "appearance/mesh/clr_two", QColor(255, 160, 0));
+    color_layout->addWidget(clr_two);
+
+    auto clr_three = new LabelledColorWidget("Three");
+    clr_three->bindToSettings(this->settings, "appearance/mesh/clr_three", QColor(0, 255, 192));
+    color_layout->addWidget(clr_three);
+
+    auto clr_four = new LabelledColorWidget("Four");
+    clr_four->bindToSettings(this->settings, "appearance/mesh/clr_four", QColor(255, 200, 0));
+    color_layout->addWidget(clr_four);
+
+    auto clr_five = new LabelledColorWidget("Five");
+    clr_five->bindToSettings(this->settings, "appearance/mesh/clr_five", QColor(0, 216, 255));
+    color_layout->addWidget(clr_five);
+
+    auto clr_six = new LabelledColorWidget("Six");
+    clr_six->bindToSettings(this->settings, "appearance/mesh/clr_six", QColor(255, 240, 0));
+    color_layout->addWidget(clr_six);
+
+    auto clr_seven = new LabelledColorWidget("Seven");
+    clr_seven->bindToSettings(this->settings, "appearance/mesh/clr_seven", QColor(0, 176, 255));
+    color_layout->addWidget(clr_seven);
+
+    auto clr_eight = new LabelledColorWidget("Eight");
+    clr_eight->bindToSettings(this->settings, "appearance/mesh/clr_eight", QColor(228, 255, 0));
+    color_layout->addWidget(clr_eight);
+
+    auto clr_nine = new LabelledColorWidget("Nine");
+    clr_nine->bindToSettings(this->settings, "appearance/mesh/clr_nine", QColor(0, 116, 255));
+    color_layout->addWidget(clr_nine);
+
+    auto clr_ten = new LabelledColorWidget("Ten");
+    clr_ten->bindToSettings(this->settings, "appearance/mesh/clr_ten", QColor(188, 255, 0));
+    color_layout->addWidget(clr_ten);
+
+    auto clr_eleven = new LabelledColorWidget("Eleven");
+    clr_eleven->bindToSettings(this->settings, "appearance/mesh/clr_eleven", QColor(0, 76, 255));
+    color_layout->addWidget(clr_eleven);
+
+    auto clr_twelve = new LabelledColorWidget("Twelve");
+    clr_twelve->bindToSettings(this->settings, "appearance/mesh/clr_twelve", QColor(148, 255, 0));
+    color_layout->addWidget(clr_twelve);
+
+    auto clr_thirteen = new LabelledColorWidget("Thirteen");
+    clr_thirteen->bindToSettings(this->settings,
+                                 "appearance/mesh/clr_thirteen",
+                                 QColor(24, 0, 255));
+    color_layout->addWidget(clr_thirteen);
+
+    auto clr_fourteen = new LabelledColorWidget("Fourteen");
+    clr_fourteen->bindToSettings(this->settings,
+                                 "appearance/mesh/clr_fourteen",
+                                 QColor(108, 255, 0));
+    color_layout->addWidget(clr_fourteen);
+
+    auto clr_fifteen = new LabelledColorWidget("Fifteen");
+    clr_fifteen->bindToSettings(this->settings, "appearance/mesh/clr_fifteen", QColor(84, 0, 255));
+    color_layout->addWidget(clr_fifteen);
+
+    auto clr_sixteen = new LabelledColorWidget("Sixteen");
+    clr_sixteen->bindToSettings(this->settings, "appearance/mesh/clr_sixteen", QColor(68, 255, 0));
+    color_layout->addWidget(clr_sixteen);
+
+    auto clr_seventeen = new LabelledColorWidget("Seventeen");
+    clr_seventeen->bindToSettings(this->settings,
+                                  "appearance/mesh/clr_seventeen",
+                                  QColor(104, 0, 255));
+    color_layout->addWidget(clr_seventeen);
+
+    auto clr_eighteen = new LabelledColorWidget("Eighteen");
+    clr_eighteen->bindToSettings(this->settings,
+                                 "appearance/mesh/clr_eighteen",
+                                 QColor(0, 255, 52));
+    color_layout->addWidget(clr_eighteen);
+
+    auto clr_nineteen = new LabelledColorWidget("Nineteen");
+    clr_nineteen->bindToSettings(this->settings,
+                                 "appearance/mesh/clr_nineteen",
+                                 QColor(184, 0, 255));
+    color_layout->addWidget(clr_nineteen);
+
     layout->addRow(color_layout);
 
     return pane;
