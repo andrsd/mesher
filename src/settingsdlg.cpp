@@ -33,7 +33,17 @@ SettingsDialog::SettingsDialog(QSettings * settings, QWidget * parent) :
     this->pane->setContentsMargins(0, 0, 0, 0);
 
     this->layout->addWidget(this->categories);
-    this->layout->addWidget(this->pane);
+
+    auto rlayout = new QVBoxLayout();
+
+    this->pane_title = new QLabel();
+    this->pane_title->setFixedHeight(30);
+
+    rlayout->addWidget(this->pane_title);
+
+    rlayout->addWidget(this->pane);
+
+    this->layout->addLayout(rlayout);
 
     setLayout(this->layout);
 
@@ -45,6 +55,8 @@ SettingsDialog::SettingsDialog(QSettings * settings, QWidget * parent) :
             &QTreeWidget::itemSelectionChanged,
             this,
             &SettingsDialog::onCategorySelected);
+
+    this->categories->topLevelItem(0)->setSelected(true);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -103,8 +115,6 @@ SettingsDialog::createGeneralPane()
 {
     auto [pane, layout] = createPane();
 
-    auto label = new QLabel("General");
-    layout->addWidget(label);
     layout->setContentsMargins(0, 0, 0, 0);
 
     auto show_bounding_boxes = new BooleanWidget("Show bounding boxes");
@@ -169,9 +179,6 @@ QWidget *
 SettingsDialog::createAppearanceMeshPane()
 {
     auto [pane, layout] = createPane();
-
-    auto label = new QLabel("Mesh");
-    layout->addWidget(label);
 
     auto elem_shrink_fact = new FloatWidget("Element shrinking factor");
     elem_shrink_fact->bindToSettings(this->settings, "appearance/mesh/element_shrink_fact", 1.0);
@@ -276,9 +283,6 @@ SettingsDialog::createAppearanceGeometryPane()
 {
     auto [pane, layout] = createPane();
 
-    auto label = new QLabel("Geometry");
-    layout->addWidget(label);
-
     auto pnt_appear = new SectionTitleWidget("Points");
     layout->addWidget(pnt_appear);
 
@@ -360,9 +364,6 @@ SettingsDialog::createOpenCASCADEPane()
 {
     auto [pane, layout] = createPane();
 
-    auto label = new QLabel("OpenCASCADE");
-    layout->addWidget(label);
-
     auto lbl = new QLabel("Model healing options");
 
     auto remove_degenerates = new BooleanWidget("Remove degenerated edge and face");
@@ -403,5 +404,6 @@ SettingsDialog::onCategorySelected()
         auto first = selected.first();
         auto pane_index = first->data(column, Qt::UserRole).value<int>();
         this->pane->setCurrentIndex(pane_index);
+        this->pane_title->setText(first->text(column));
     }
 }

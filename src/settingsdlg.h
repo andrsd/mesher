@@ -8,6 +8,7 @@ class QTreeWidget;
 class QStackedWidget;
 class QSettings;
 class QTreeWidgetItem;
+class QLabel;
 
 class SettingsDialog : public QDialog {
 public:
@@ -30,5 +31,6 @@ private:
     QSettings * settings;
     QHBoxLayout * layout;
     QTreeWidget * categories;
+    QLabel * pane_title;
     QStackedWidget * pane;
 };
