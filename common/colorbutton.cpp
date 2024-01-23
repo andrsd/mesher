@@ -11,7 +11,11 @@ ColorButton::ColorButton(const QString & name, QWidget * parent) :
 
     this->setFixedWidth(50);
     this->setFixedHeight(20);
-    this->setStyleSheet("border: 1px solid #000");
+    this->setStyleSheet(QString("QPushButton {"
+                                "  border: 1px solid #000;"
+                                "  background-color: %1;"
+                                "}")
+                            .arg(this->clr.name()));
 
     connect(this, &QPushButton::clicked, this, &ColorButton::onClick);
     connect(this->color_picker, &ColorPicker::colorChanged, this, &ColorButton::onColorPicked);
@@ -21,6 +25,24 @@ ColorButton::ColorButton(const QString & name, QWidget * parent) :
 ColorButton::~ColorButton()
 {
     delete this->color_picker;
+}
+
+QColor
+ColorButton::color() const
+{
+    return this->clr;
+}
+
+void
+ColorButton::setColor(const QColor & color)
+{
+    this->clr = color;
+
+    this->setStyleSheet(QString("QPushButton {"
+                                "  border: 1px solid #000;"
+                                "  background-color: %1;"
+                                "}")
+                            .arg(this->clr.name()));
 }
 
 void
@@ -33,7 +55,8 @@ ColorButton::onClick()
 void
 ColorButton::onColorPicked(const QColor & qcolor)
 {
-    this->clr = qcolor;
+    setColor(qcolor);
+    emit colorPicked(qcolor);
 }
 
 void

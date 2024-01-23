@@ -10,6 +10,12 @@ public:
     ColorButton(const QString & name = "", QWidget * parent = nullptr);
     ~ColorButton() override;
 
+    QColor color() const;
+    void setColor(const QColor & color);
+
+signals:
+    void colorPicked(const QColor & color);
+
 protected slots:
     void onClick();
     void onColorPicked(const QColor & qcolor);
