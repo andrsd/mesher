@@ -10,6 +10,7 @@ FloatWidget::FloatWidget(const QString & text, QWidget * parent) : QLineEdit(par
 
     setValidator(this->validator);
     setFixedWidth(80);
+    connect(this, &QLineEdit::textChanged, this, &FloatWidget::onTextChanged);
 }
 
 FloatWidget::~FloatWidget()

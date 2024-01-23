@@ -10,6 +10,7 @@ IntegerWidget::IntegerWidget(const QString & text, QWidget * parent) : QLineEdit
 
     setFixedWidth(80);
     setValidator(this->validator);
+    connect(this, &QLineEdit::textChanged, this, &IntegerWidget::onTextChanged);
 }
 
 IntegerWidget::~IntegerWidget()
