@@ -142,6 +142,9 @@ SettingsDialog::createGeneralPane()
     anti_aliasing->bindToSettings(this->settings, "general/anti_aliasng", false);
     layout->addWidget(anti_aliasing);
 
+    auto rot_lbl = new SectionTitleWidget("Rotation");
+    layout->addRow(rot_lbl);
+
     auto rotation = new RadioOptionsWidget({ "Trackball rotation", "Euler angles" });
     rotation->bindToSettings(this->settings, "general/rotation", 0);
     layout->addRow("Rotation style", rotation);
@@ -149,6 +152,9 @@ SettingsDialog::createGeneralPane()
     auto rot_about_com = new BooleanWidget("Rotate about pseudo center of mass");
     rot_about_com->bindToSettings(this->settings, "general/rotate_about_pseudo_com", true);
     layout->addWidget(rot_about_com);
+
+    auto zoom_lbl = new SectionTitleWidget("Zoom");
+    layout->addRow(zoom_lbl);
 
     auto invert_zoom_direction = new BooleanWidget("Invert zoom direction");
     invert_zoom_direction->bindToSettings(this->settings, "general/invert_zoom_direction", false);
@@ -226,6 +232,9 @@ SettingsDialog::createAppearanceMeshPane()
     two_side_lighting->bindToSettings(this->settings, "appearance/mesh/two_side_lighting", true);
     layout->addWidget(two_side_lighting);
 
+    auto smooth_lbl = new SectionTitleWidget("Smoothing");
+    layout->addRow(smooth_lbl);
+
     auto smooth_normals = new BooleanWidget("Smooth normals");
     smooth_normals->bindToSettings(this->settings, "appearance/mesh/smooth_normals", false);
     layout->addWidget(smooth_normals);
@@ -237,6 +246,9 @@ SettingsDialog::createAppearanceMeshPane()
     QLabel * w2 = new QLabel("Smoothing threshold angle");
     w2->setWordWrap(true);
     layout->addRow(w2, smooth_theshold_angle);
+
+    auto color_mode_lbl = new SectionTitleWidget("Coloring mode");
+    layout->addRow(color_mode_lbl);
 
     auto coloring_mode = new RadioOptionsWidget(
         { "By element type", "By elementary entity", "By physical group", "By mesh partition" });
