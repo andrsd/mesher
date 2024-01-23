@@ -525,7 +525,6 @@ SettingsDialog::createOpenCASCADEPane()
     auto vert_layout = new QVBoxLayout();
 
     auto lbl = new QLabel("Model healing options");
-    vert_layout->addWidget(lbl);
 
     auto remove_degenerates = new BooleanWidget("Remove degenerated edge and face");
     remove_degenerates->bindToSettings(this->settings, "open_cascasde/remove_degenerates", false);
@@ -550,14 +549,9 @@ SettingsDialog::createOpenCASCADEPane()
     auto global_model_scaling = new FloatWidget("");
     global_model_scaling->bindToSettings(this->settings, "open_cascasde/global_model_scaling", 1.);
 
-    auto horz_layout = new QHBoxLayout();
-    auto lbl2 = new QLabel("Global model scaling");
-    horz_layout->addWidget(lbl2);
-    horz_layout->addWidget(global_model_scaling);
-    horz_layout->addStretch();
-    vert_layout->addLayout(horz_layout);
+    layout->addRow(lbl, vert_layout);
 
-    layout->addRow(vert_layout);
+    layout->addRow("Global model scaling", global_model_scaling);
 
     return pane;
 }
