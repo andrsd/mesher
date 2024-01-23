@@ -2,10 +2,8 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTreeWidget>
-#include <QTreeWidgetItem>
 #include <QStackedWidget>
 #include <QLabel>
-#include <QCheckBox>
 #include <QSettings>
 #include <QScrollArea>
 #include <QFormLayout>
@@ -15,6 +13,7 @@
 #include "common/booleanwidget.h"
 #include "common/labelledcolorwidget.h"
 #include "common/sectiontitlewidget.h"
+#include "common/pointwidget.h"
 
 SettingsDialog::SettingsDialog(QSettings * settings, QWidget * parent) :
     QDialog(parent),
@@ -182,6 +181,118 @@ QWidget *
 SettingsDialog::createAppearancePane()
 {
     auto [pane, layout] = createPane();
+
+    auto z_clip_factor = new FloatWidget("");
+    z_clip_factor->bindToSettings(this->settings, "appearance/z_clip_factor", 5.0);
+    layout->addRow("Z-clipping distance factor", z_clip_factor);
+
+    auto poly_offset_factor = new FloatWidget("");
+    poly_offset_factor->bindToSettings(this->settings, "appearance/poly_offset_factor", 0.5);
+    layout->addRow("Polygon offset factor", poly_offset_factor);
+
+    auto apply_poly_offset = new BooleanWidget("Apply polygon offset");
+    apply_poly_offset->bindToSettings(this->settings, "appearance/apply_poly_offset", false);
+    layout->addRow("", apply_poly_offset);
+
+    auto lbl1 = new SectionTitleWidget("");
+    layout->addRow(lbl1);
+
+    auto quadric_subdivs = new IntegerWidget("");
+    quadric_subdivs->bindToSettings(this->settings, "appearance/quadric_subdivs", 6);
+    layout->addRow("Quadric subdivisions", quadric_subdivs);
+
+    auto point_size = new FloatWidget("");
+    point_size->bindToSettings(this->settings, "appearance/point_size", 3.0);
+    layout->addRow("Point size", point_size);
+
+    auto line_width = new FloatWidget("");
+    line_width->bindToSettings(this->settings, "appearance/line_width", 1.0);
+    layout->addRow("Line width", line_width);
+
+    auto lbl2 = new SectionTitleWidget("");
+    layout->addRow(lbl2);
+
+    auto font_engine = new RadioOptionsWidget({ "Native", "Cairo", "String texture" });
+    font_engine->enableOption(1, false);
+    font_engine->bindToSettings(this->settings, "appearance/font_engine", 0);
+    layout->addRow("Font rending engine", font_engine);
+
+    auto lbl3 = new SectionTitleWidget("");
+    layout->addRow(lbl3);
+
+    auto light_position = new PointWidget();
+    light_position->bindToSettings(this->settings,
+                                   "appearance/light_position",
+                                   QVector3D(0.65, 0.65, 1.00));
+    layout->addRow("Light position", light_position);
+
+    auto light_pos_divisor = new FloatWidget("");
+    light_pos_divisor->bindToSettings(this->settings, "appearance/light_pos_divisor", 0.);
+    layout->addRow("Light position divisor", light_pos_divisor);
+
+    auto lbl4 = new SectionTitleWidget("");
+    layout->addRow(lbl4);
+
+    auto material_shininess = new FloatWidget("");
+    material_shininess->bindToSettings(this->settings, "appearance/material_shininess", 0.4);
+    layout->addRow("Material shininess", material_shininess);
+
+    auto material_exponent = new FloatWidget("");
+    material_exponent->bindToSettings(this->settings, "appearance/material_exponent", 40.);
+    layout->addRow("Material exponent", material_exponent);
+
+    auto lbl5 = new SectionTitleWidget("");
+    layout->addRow(lbl5);
+
+    auto bkgnd_gradient = new RadioOptionsWidget({ "None", "Vertical", "Horizontal", "Radial" });
+    bkgnd_gradient->bindToSettings(this->settings, "appearance/bkgnd_gradient", 1);
+    layout->addRow("Background gradient", bkgnd_gradient);
+
+    auto colors = new SectionTitleWidget("Colors");
+    layout->addRow(colors);
+
+    auto color_layout = new QVBoxLayout();
+
+    auto clr_bkgnd = new LabelledColorWidget("Background");
+    clr_bkgnd->bindToSettings(this->settings, "appearance/clr_bkgnd", QColor(255, 255, 255));
+    color_layout->addWidget(clr_bkgnd);
+
+    auto clr_bkgnd2 = new LabelledColorWidget("Background gradient");
+    clr_bkgnd2->bindToSettings(this->settings, "appearance/clr_bkgnd2", QColor(208, 215, 255));
+    color_layout->addWidget(clr_bkgnd2);
+
+    auto clr_foregnd = new LabelledColorWidget("Foreground");
+    clr_foregnd->bindToSettings(this->settings, "appearance/clr_foregnd", QColor(85, 85, 85));
+    color_layout->addWidget(clr_foregnd);
+
+    auto clr_text = new LabelledColorWidget("Text");
+    clr_text->bindToSettings(this->settings, "appearance/clr_text", QColor(0, 0, 0));
+    color_layout->addWidget(clr_text);
+
+    auto clr_axes = new LabelledColorWidget("Axes");
+    clr_axes->bindToSettings(this->settings, "appearance/clr_axes", QColor(0, 0, 0));
+    color_layout->addWidget(clr_axes);
+
+    auto clr_ambient_light = new LabelledColorWidget("Ambient light");
+    clr_ambient_light->bindToSettings(this->settings,
+                                      "appearance/clr_ambient_light",
+                                      QColor(25, 25, 25));
+    color_layout->addWidget(clr_ambient_light);
+
+    auto clr_diffuse_light = new LabelledColorWidget("Diffuse light");
+    clr_diffuse_light->bindToSettings(this->settings,
+                                      "appearance/clr_diffuse_light",
+                                      QColor(255, 255, 255));
+    color_layout->addWidget(clr_diffuse_light);
+
+    auto clr_specular_light = new LabelledColorWidget("Specular light");
+    clr_specular_light->bindToSettings(this->settings,
+                                       "appearance/clr_specular_light",
+                                       QColor(255, 255, 255));
+    color_layout->addWidget(clr_specular_light);
+
+    layout->addRow(color_layout);
+
     return pane;
 }
 
