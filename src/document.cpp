@@ -31,6 +31,29 @@ LoadThread::run()
 
 //
 
+class SaveThread : public QThread {
+public:
+    explicit SaveThread(const QString & file_name) : file_name(file_name), QThread() {}
+
+    const QString &
+    fileName() const
+    {
+        return this->file_name;
+    }
+
+protected:
+    void run() override;
+
+    QString file_name;
+};
+
+void
+SaveThread::run()
+{
+}
+
+//
+
 Document::Document() : has_file(false), gmodel(new GModel()) {}
 
 Document::~Document()
@@ -110,4 +133,20 @@ Document::onLoadFinished()
     delete this->load_thread;
     this->load_thread = nullptr;
     emit loadFinished();
+}
+
+void
+Document::save(const QString & file_name)
+{
+    this->save_thread = new LoadThread(file_name);
+    connect(this->save_thread, &SaveThread::finished, this, &Document::onSaveFinished);
+    this->save_thread->start(QThread::IdlePriority);
+}
+
+void
+Document::onSaveFinished()
+{
+    delete this->save_thread;
+    this->save_thread = nullptr;
+    emit saveFinished();
 }
