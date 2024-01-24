@@ -14,7 +14,7 @@ class QSplitter;
 class QTreeWidget;
 class View;
 class SettingsDialog;
-class GModel;
+class Document;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -82,6 +82,5 @@ protected:
     View * view;
     SettingsDialog * prefs_dlg;
 
-    //
-    GModel * gmodel;
+    Document * doc;
 };

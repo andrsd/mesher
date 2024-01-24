@@ -22,12 +22,7 @@
 #include "aboutdlg.h"
 #include "view.h"
 #include "settingsdlg.h"
-#include "GModel.h"
-#include "GModelIO_GEO.h"
-#if defined(HAVE_PARSER)
-    #include "Parser.h"
-    #include "FunctionManager.h"
-#endif
+#include "document.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -46,7 +41,7 @@ MainWindow::MainWindow(QWidget * parent) :
     windows_action_group(nullptr),
     about_dlg(nullptr),
     splitter(nullptr),
-    gmodel(nullptr)
+    doc(new Document())
 {
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
@@ -152,15 +147,13 @@ MainWindow::updateMenuBar()
 void
 MainWindow::updateWindowTitle()
 {
-    auto file_name = this->gmodel->getFileName();
-    if (file_name.empty()) {
-        setWindowTitle(MESHER_APP_NAME);
-    }
-    else {
-        QFileInfo fi(file_name.c_str());
+    if (this->doc->hasFile()) {
+        QFileInfo fi(this->doc->getFileName());
         QString title = QString("%1 \u2014 %2").arg(MESHER_APP_NAME).arg(fi.fileName());
         setWindowTitle(title);
     }
+    else
+        setWindowTitle(MESHER_APP_NAME);
 }
 
 void
@@ -171,12 +164,7 @@ MainWindow::connectSignals()
 void
 MainWindow::clear()
 {
-    if (this->gmodel != nullptr) {
-        this->gmodel->destroy();
-        this->gmodel->getGEOInternals()->destroy();
-        delete this->gmodel;
-    }
-    this->gmodel = new GModel();
+    this->doc->destroy();
 }
 
 void
@@ -185,28 +173,7 @@ MainWindow::loadFile(const QString & file_name)
     QFileInfo fi(file_name);
     if (fi.exists()) {
         this->clear();
-
-        Msg::ResetErrorCounter();
-        this->gmodel->setFileName(file_name.toStdString());
-        this->gmodel->setName("ASDF");
-
-#if defined(HAVE_PARSER)
-        gmsh_yysymbols.clear();
-        gmsh_yystringsymbols.clear();
-        std::map<std::string, std::vector<double>> cln(Msg::GetCommandLineNumbers());
-        for (auto it = cln.begin(); it != cln.end(); it++)
-            gmsh_yysymbols[it->first].value = it->second;
-        std::map<std::string, std::string> cls(Msg::GetCommandLineStrings());
-        for (auto it = cls.begin(); it != cls.end(); it++)
-            gmsh_yystringsymbols[it->first] = std::vector<std::string>(1, it->second);
-        gmsh_yyfactory.clear();
-        gmsh_yynamespaces.clear();
-        FunctionManager::Instance()->clear();
-#endif
-        // FIXME: merge the file
-        // MergeFile(fileName, errorIfMissing);
-        qDebug() << "load file" << file_name;
-
+        this->doc->load(file_name);
         updateWindowTitle();
         addToRecentFiles(file_name);
         buildRecentFilesMenu();
@@ -339,11 +306,8 @@ MainWindow::onNewFile()
 {
     this->clear();
     showNormal();
-
-    this->gmodel->setFileName("");
-    this->gmodel->setName("");
+    this->doc->create();
     this->updateWindowTitle();
-    Msg::ResetErrorCounter();
 }
 
 void
