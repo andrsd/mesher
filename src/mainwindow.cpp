@@ -19,6 +19,7 @@
 #include <QTreeWidget>
 #include <QSplitter>
 #include <QFileDialog>
+#include <QProgressDialog>
 #include "aboutdlg.h"
 #include "view.h"
 #include "settingsdlg.h"
@@ -159,6 +160,7 @@ MainWindow::updateWindowTitle()
 void
 MainWindow::connectSignals()
 {
+    connect(this->doc, &Document::loadFinished, this, &MainWindow::onLoadFinished);
 }
 
 void
@@ -173,10 +175,13 @@ MainWindow::loadFile(const QString & file_name)
     QFileInfo fi(file_name);
     if (fi.exists()) {
         this->clear();
+
+        this->progress =
+            new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this);
+        this->progress->setWindowModality(Qt::WindowModal);
+        this->progress->show();
+
         this->doc->load(file_name);
-        updateWindowTitle();
-        addToRecentFiles(file_name);
-        buildRecentFilesMenu();
     }
 }
 
@@ -350,4 +355,31 @@ MainWindow::onSettings()
     if (this->prefs_dlg == nullptr)
         this->prefs_dlg = new SettingsDialog(this->settings, this);
     this->prefs_dlg->show();
+}
+
+void
+MainWindow::hideProgressBar()
+{
+    this->progress->hide();
+    delete this->progress;
+    this->progress = nullptr;
+}
+
+void
+MainWindow::onLoadFinished()
+{
+    hideProgressBar();
+    if (this->doc->hasFile()) {
+        auto file_name = this->doc->getFileName();
+        updateWindowTitle();
+        addToRecentFiles(file_name);
+        buildRecentFilesMenu();
+        showNormal();
+    }
+    else {
+        // TODO
+        // auto fi = QFileInfo(this->doc->getFileName());
+        // showNotification(QString("Unsupported file '%1'.").arg(fi.fileName()));
+    }
+    this->updateMenuBar();
 }

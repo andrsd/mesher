@@ -14,6 +14,7 @@ class QSplitter;
 class QTreeWidget;
 class View;
 class SettingsDialog;
+class QProgressDialog;
 class Document;
 
 class MainWindow : public QMainWindow {
@@ -46,6 +47,7 @@ protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
     void closeEvent(QCloseEvent * event) override;
+    void hideProgressBar();
 
 public slots:
     void onClose();
@@ -59,6 +61,7 @@ public slots:
     void onShowMainWindow();
     void onAbout();
     void onSettings();
+    void onLoadFinished();
 
 protected:
     QSettings * settings;
@@ -81,6 +84,7 @@ protected:
     QTreeWidget * left;
     View * view;
     SettingsDialog * prefs_dlg;
+    QProgressDialog * progress;
 
     Document * doc;
 };
