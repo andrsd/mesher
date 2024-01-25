@@ -32,6 +32,8 @@ find_package(Qt6 REQUIRED
         SvgWidgets
 )
 
+add_compile_definitions(GL_SILENCE_DEPRECATION)
+
 add_subdirectory(common)
 add_subdirectory(gmsh)
 add_subdirectory(src)
