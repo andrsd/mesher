@@ -13,6 +13,7 @@ class AboutDialog;
 class QSplitter;
 class QTreeWidget;
 class View;
+class LeftView;
 class SettingsDialog;
 class QProgressDialog;
 class Document;
@@ -81,7 +82,7 @@ protected:
 
     AboutDialog * about_dlg;
     QSplitter * splitter;
-    QTreeWidget * left;
+    LeftView * left;
     View * view;
     SettingsDialog * prefs_dlg;
     QProgressDialog * progress;

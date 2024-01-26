@@ -16,11 +16,10 @@
 #include <QFileInfo>
 #include <QApplication>
 #include <QShortcut>
-#include <QTreeWidget>
 #include <QSplitter>
 #include <QFileDialog>
-#include <QProgressDialog>
 #include "aboutdlg.h"
+#include "leftview.h"
 #include "view.h"
 #include "settingsdlg.h"
 #include "document.h"
@@ -80,8 +79,7 @@ MainWindow::getSettings()
 void
 MainWindow::setupWidgets()
 {
-    this->left = new QTreeWidget(this);
-    this->left->setHeaderHidden(true);
+    this->left = new LeftView(this);
 
     this->view = new View(this);
 
