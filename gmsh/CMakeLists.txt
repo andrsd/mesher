@@ -83,6 +83,9 @@ if(DLFCN_H)
     set(HAVE_DLOPEN TRUE)
 endif()
 
+find_program(BISON bison REQUIRED)
+find_program(FLEX flex REQUIRED)
+
 find_package(BLAS)
 
 find_package(ZLIB)
@@ -157,7 +160,23 @@ file(GLOB MESH_SRCS CONFIGURE_DEPENDS ${GMSH_DIR}/src/mesh/*.cpp)
 file(GLOB NUMERIC_SRCS CONFIGURE_DEPENDS ${GMSH_DIR}/src/numeric/*.cpp)
 list(REMOVE_ITEM NUMERIC_SRCS ${GMSH_DIR}/src/numeric/hausdorffDistance.cpp)
 
-file(GLOB PARSER_SRCS CONFIGURE_DEPENDS ${GMSH_DIR}/src/parser/*.cpp)
+set(PARSER_SRCS
+    ${GMSH_DIR}/src/parser/FunctionManager.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/Gmsh.tab.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/Gmsh.yy.cpp
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Gmsh.yy.cpp
+    COMMAND ${FLEX} -P gmsh_yy -o ${CMAKE_CURRENT_BINARY_DIR}/Gmsh.yy.cpp ${GMSH_DIR}/src/parser/Gmsh.l
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Gmsh.tab.cpp
+    COMMAND ${BISON} -p gmsh_yy --output ${CMAKE_CURRENT_BINARY_DIR}/Gmsh.tab.cpp -d ${GMSH_DIR}/src/parser/Gmsh.y
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 file(GLOB PLUGIN_SRCS CONFIGURE_DEPENDS ${GMSH_DIR}/src/plugin/*.cpp)
 
