@@ -7,6 +7,8 @@
     #include "Parser.h"
     #include "FunctionManager.h"
 #endif
+#include "Context.h"
+#include "OpenFile.h"
 
 class LoadThread : public QThread {
 public:
@@ -27,6 +29,47 @@ protected:
 void
 LoadThread::run()
 {
+    auto fname = this->file_name.toStdString();
+
+    Msg::StatusBar(true, "Reading '%s'...", fname.c_str());
+
+    // don't draw the model while reading
+    CTX::instance()->geom.draw = 0;
+
+    auto gmodel = GModel::current();
+
+    gmodel->setFileName(fname);
+    gmodel->setName("ASDF");
+
+    auto status = GModel::readGEO(fname);
+
+    auto geo_internals = gmodel->getGEOInternals();
+    geo_internals->setMaxTag(
+        0,
+        std::max(geo_internals->getMaxTag(0), gmodel->getMaxElementaryNumber(0)));
+    geo_internals->setMaxTag(
+        1,
+        std::max(geo_internals->getMaxTag(1), gmodel->getMaxElementaryNumber(1)));
+    geo_internals->setMaxTag(
+        2,
+        std::max(geo_internals->getMaxTag(2), gmodel->getMaxElementaryNumber(2)));
+    geo_internals->setMaxTag(
+        3,
+        std::max(geo_internals->getMaxTag(3), gmodel->getMaxElementaryNumber(3)));
+
+    SetBoundingBox();
+
+    CTX::instance()->geom.draw = 1;
+    CTX::instance()->mesh.changed = ENT_ALL;
+
+    if (status)
+        Msg::StatusBar(true, "Done reading '%s'", fname.c_str());
+    else
+        Msg::Error("Error loading '%s'", fname.c_str());
+
+    CTX::instance()->fileread = true;
+
+    // TODO: merge the associated option file if there is one
 }
 
 //
