@@ -1,6 +1,5 @@
 #include "settingsdlg.h"
 #include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QTreeWidget>
 #include <QStackedWidget>
 #include <QLabel>
@@ -71,9 +70,9 @@ SettingsDialog::~SettingsDialog()
 }
 
 QTreeWidgetItem *
-SettingsDialog::addPane(QWidget * pane, const QString & name, QTreeWidgetItem * parent)
+SettingsDialog::addPane(QWidget * pane_widget, const QString & name, QTreeWidgetItem * parent)
 {
-    auto idx = this->pane->addWidget(pane);
+    auto idx = this->pane->addWidget(pane_widget);
     auto ti = new QTreeWidgetItem(parent, QStringList(name));
     ti->setData(0, Qt::UserRole, idx);
     return ti;
@@ -101,18 +100,18 @@ SettingsDialog::createPanes()
 std::tuple<QWidget *, QFormLayout *>
 SettingsDialog::createPane()
 {
-    auto layout = new QFormLayout();
-    layout->setContentsMargins(0, 10, 0, 0);
+    auto form_layout = new QFormLayout();
+    form_layout->setContentsMargins(0, 10, 0, 0);
 
-    auto pane = new QWidget();
-    pane->setLayout(layout);
+    auto pane_widget = new QWidget();
+    pane_widget->setLayout(form_layout);
 
     auto area = new QScrollArea();
     area->setFrameShape(QFrame::NoFrame);
     area->setWidgetResizable(true);
-    area->setWidget(pane);
+    area->setWidget(pane_widget);
 
-    return { area, layout };
+    return { area, form_layout };
 }
 
 QWidget *
@@ -301,7 +300,7 @@ SettingsDialog::createAppearanceMeshPane()
 
     auto elem_shrink_fact = new FloatWidget("");
     elem_shrink_fact->bindToSettings(this->settings, "appearance/mesh/element_shrink_fact", 1.0);
-    QLabel * w1 = new QLabel("Element shrinking factor");
+    auto * w1 = new QLabel("Element shrinking factor");
     w1->setWordWrap(true);
     layout->addRow(w1, elem_shrink_fact);
 
@@ -322,7 +321,7 @@ SettingsDialog::createAppearanceMeshPane()
                                             "appearance/mesh/high_order_elem_subdivs",
                                             2);
 
-    QLabel * w = new QLabel("High-order elements subdivisions");
+    auto * w = new QLabel("High-order elements subdivisions");
     w->setWordWrap(true);
     layout->addRow(w, high_order_elem_subdivs);
 
@@ -352,7 +351,7 @@ SettingsDialog::createAppearanceMeshPane()
     smooth_theshold_angle->bindToSettings(this->settings,
                                           "appearance/mesh/smooth_theshold_angle",
                                           30.0);
-    QLabel * w2 = new QLabel("Smoothing threshold angle");
+    auto * w2 = new QLabel("Smoothing threshold angle");
     w2->setWordWrap(true);
     layout->addRow(w2, smooth_theshold_angle);
 
@@ -641,7 +640,7 @@ SettingsDialog::createAppearanceGeometryPane()
 QWidget *
 SettingsDialog::createOpenCASCADEPane()
 {
-    auto [pane, layout] = createPane();
+    auto [cat_pane, pane_layout] = createPane();
 
     auto vert_layout = new QVBoxLayout();
 
@@ -670,18 +669,18 @@ SettingsDialog::createOpenCASCADEPane()
     auto global_model_scaling = new FloatWidget("");
     global_model_scaling->bindToSettings(this->settings, "open_cascasde/global_model_scaling", 1.);
 
-    layout->addRow(lbl, vert_layout);
+    pane_layout->addRow(lbl, vert_layout);
 
-    layout->addRow("Global model scaling", global_model_scaling);
+    pane_layout->addRow("Global model scaling", global_model_scaling);
 
-    return pane;
+    return cat_pane;
 }
 
 void
 SettingsDialog::onCategorySelected()
 {
     auto selected = this->categories->selectedItems();
-    if (selected.length() > 0) {
+    if (!selected.empty()) {
         const int column = 0;
         auto first = selected.first();
         auto pane_index = first->data(column, Qt::UserRole).value<int>();

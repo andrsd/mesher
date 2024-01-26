@@ -26,9 +26,9 @@ TextBoxDialog::~TextBoxDialog()
 void
 TextBoxDialog::loadTextFromFile(const QString & file_name)
 {
-    QString text;
+    QString str;
     QFile file(file_name);
     if (file.open(QIODevice::ReadOnly))
-        text = file.readAll();
-    this->text->setText(text);
+        str = file.readAll();
+    this->text->setText(str);
 }

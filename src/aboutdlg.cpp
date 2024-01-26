@@ -1,6 +1,5 @@
 #include "aboutdlg.h"
 #include <QHBoxLayout>
-#include <QVBoxLayout>
 #include <QLabel>
 #include <QApplication>
 #include <QPalette>

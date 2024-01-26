@@ -43,6 +43,10 @@ MainWindow::MainWindow(QWidget * parent) :
     windows_action_group(nullptr),
     about_dlg(nullptr),
     splitter(nullptr),
+    left(nullptr),
+    view(nullptr),
+    prefs_dlg(nullptr),
+    progress(nullptr),
     doc(new Document()),
     logger(new LoggerDialog(this))
 {
@@ -155,7 +159,7 @@ MainWindow::updateWindowTitle()
 {
     if (this->doc->hasFile()) {
         QFileInfo fi(this->doc->getFileName());
-        QString title = QString("%1 \u2014 %2").arg(MESHER_APP_NAME).arg(fi.fileName());
+        QString title = QString("%1 \u2014 %2").arg(MESHER_APP_NAME, fi.fileName());
         setWindowTitle(title);
     }
     else
@@ -195,7 +199,7 @@ MainWindow::buildRecentFilesMenu()
 {
     assert(this->recent_menu != nullptr);
     this->recent_menu->clear();
-    if (this->recent_files.length() > 0) {
+    if (!this->recent_files.empty()) {
         for (auto it = this->recent_files.rbegin(); it != this->recent_files.rend(); ++it) {
             QString f = *it;
             QFileInfo fi(f);
@@ -257,7 +261,7 @@ MainWindow::dropEvent(QDropEvent * event)
         QStringList file_names;
         for (auto & url : event->mimeData()->urls())
             file_names.append(url.toLocalFile());
-        if (file_names.length() > 0)
+        if (!file_names.empty())
             loadFile(file_names[0]);
     }
     else
