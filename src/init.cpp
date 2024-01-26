@@ -6,6 +6,7 @@
 #endif
 #include "robustPredicates.h"
 #include "BasisFactory.h"
+#include "Options.h"
 
 #if defined(HAVE_PARSER)
     #include "Parser.h"
@@ -15,6 +16,7 @@ Init::Init(int argc, char * argv[])
 {
     Msg::Initialize(argc, argv);
 
+    InitOptions(0);
     CheckResources();
 
 #if defined(HAVE_PLUGINS)
