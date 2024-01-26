@@ -4,5 +4,5 @@
 
 class LeftView : public QTreeWidget {
 public:
-    LeftView(QWidget *parent = nullptr);
+    LeftView(QWidget * parent = nullptr);
 };
