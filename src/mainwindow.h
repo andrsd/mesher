@@ -17,6 +17,7 @@ class LeftView;
 class SettingsDialog;
 class QProgressDialog;
 class Document;
+class LoggerDialog;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -63,6 +64,7 @@ public slots:
     void onAbout();
     void onSettings();
     void onLoadFinished();
+    void onShowMessages();
 
 protected:
     QSettings * settings;
@@ -88,4 +90,6 @@ protected:
     QProgressDialog * progress;
 
     Document * doc;
+
+    LoggerDialog * logger;
 };

@@ -23,6 +23,8 @@
 #include "view.h"
 #include "settingsdlg.h"
 #include "document.h"
+#include "loggerdialog.h"
+#include "GmshMessage.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -41,8 +43,11 @@ MainWindow::MainWindow(QWidget * parent) :
     windows_action_group(nullptr),
     about_dlg(nullptr),
     splitter(nullptr),
-    doc(new Document())
+    doc(new Document()),
+    logger(new LoggerDialog(this))
 {
+    Msg::SetCallback(this->logger);
+
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
     if (!this->restoreGeometry(geom.toByteArray()))
@@ -64,10 +69,10 @@ MainWindow::MainWindow(QWidget * parent) :
 
 MainWindow::~MainWindow()
 {
-    clear();
     delete this->settings;
     delete this->menu_bar;
     delete this->windows_action_group;
+    delete this->logger;
 }
 
 QSettings *
@@ -128,6 +133,8 @@ MainWindow::setupMenuBar()
     window_menu->addSeparator();
     this->bring_all_to_front =
         window_menu->addAction("Bring All to Front", this, &MainWindow::onBringAllToFront);
+    window_menu->addSeparator();
+    window_menu->addAction("Messages", this, &MainWindow::onShowMessages);
     window_menu->addSeparator();
     this->show_main_window = window_menu->addAction("Mesher", this, &MainWindow::onShowMainWindow);
     this->show_main_window->setCheckable(true);
@@ -380,4 +387,10 @@ MainWindow::onLoadFinished()
         // showNotification(QString("Unsupported file '%1'.").arg(fi.fileName()));
     }
     this->updateMenuBar();
+}
+
+void
+MainWindow::onShowMessages()
+{
+    this->logger->show();
 }
