@@ -12,7 +12,7 @@
 
 class LoadThread : public QThread {
 public:
-    explicit LoadThread(const QString & file_name) : file_name(file_name), QThread() {}
+    explicit LoadThread(QString file_name) : QThread(), file_name(file_name) {}
 
     const QString &
     fileName() const
@@ -76,7 +76,7 @@ LoadThread::run()
 
 class SaveThread : public QThread {
 public:
-    explicit SaveThread(const QString & file_name) : file_name(file_name), QThread() {}
+    explicit SaveThread(QString file_name) : QThread(), file_name(file_name) {}
 
     const QString &
     fileName() const
@@ -97,7 +97,14 @@ SaveThread::run()
 
 //
 
-Document::Document() : has_file(false), gmodel(new GModel()) {}
+Document::Document() :
+    QObject(),
+    load_thread(nullptr),
+    save_thread(nullptr),
+    has_file(false),
+    gmodel(new GModel())
+{
+}
 
 Document::~Document()
 {

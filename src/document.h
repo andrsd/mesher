@@ -12,7 +12,7 @@ class Document : public QObject {
 
 public:
     Document();
-    ~Document();
+    ~Document() override;
 
     void destroy();
     void create();
