@@ -16,6 +16,16 @@ LoggerDialog::LoggerDialog(MainWindow * parent) :
     this->layout->addWidget(this->messages);
 
     setLayout(this->layout);
+
+    connect(this, &LoggerDialog::newMessage, this, &LoggerDialog::onNewMessage);
+}
+
+void
+LoggerDialog::onNewMessage(const QString & msg)
+{
+    auto * item = new QListWidgetItem(msg);
+    this->messages->addItem(item);
+    this->messages->scrollToItem(item);
 }
 
 void
@@ -24,7 +34,5 @@ LoggerDialog::operator()(std::string level, std::string message)
     qDebug() << QString(level.c_str()) << ": " << QString(message.c_str());
 
     QString msg = QString("%1: %2").arg(level.c_str(), message.c_str());
-    auto * item = new QListWidgetItem(msg);
-    this->messages->addItem(item);
-    this->messages->scrollToItem(item);
+    emit newMessage(msg);
 }
