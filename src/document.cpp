@@ -41,7 +41,16 @@ LoadThread::run()
     gmodel->setFileName(fname);
     gmodel->setName("ASDF");
 
-    auto status = GModel::readGEO(fname);
+    int status;
+    if (this->file_name.endsWith(".geo"))
+        status = GModel::readGEO(fname);
+    else if (this->file_name.endsWith(".msh"))
+        status = gmodel->readMSH(fname);
+    else {
+        Msg::Error("Unknown format of '%s' file", fname.c_str());
+        CTX::instance()->geom.draw = 1;
+        return;
+    }
 
     auto geo_internals = gmodel->getGEOInternals();
     geo_internals->setMaxTag(
@@ -170,14 +179,6 @@ Document::load(const QString & file_name)
 void
 Document::onLoadFinished()
 {
-    auto & file_name = this->load_thread->fileName();
-    this->gmodel->setFileName(file_name.toStdString());
-    this->gmodel->setName("ASDF");
-
-    // FIXME: merge the file
-    // MergeFile(fileName, errorIfMissing);
-
-    qDebug() << "load file" << file_name;
     this->has_file = true;
 
     delete this->load_thread;
