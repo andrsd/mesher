@@ -49,6 +49,7 @@ protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
     void closeEvent(QCloseEvent * event) override;
+    void showProgressDialog(const QString & text);
     void hideProgressBar();
 
 public slots:
@@ -58,6 +59,7 @@ public slots:
     void onClearRecentFiles();
     void onNewFile();
     void onFileSave();
+    void onFileSaveAs();
     void onUpdateWindow();
     void onMinimize();
     void onBringAllToFront();
@@ -65,6 +67,7 @@ public slots:
     void onAbout();
     void onSettings();
     void onLoadFinished();
+    void onSaveFinished();
     void onShowMessages();
 
 protected:
@@ -76,6 +79,7 @@ protected:
     QAction * new_action;
     QAction * open_action;
     QAction * save_action;
+    QAction * save_as_action;
     QAction * close_action;
     QAction * clear_recent_file;
     QAction * minimize;

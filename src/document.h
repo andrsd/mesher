@@ -18,6 +18,7 @@ public:
     void create();
     void load(const QString & file_name);
     void save();
+    void saveAs(const QString & file_name);
 
     bool hasFile() const;
     QString getFileName() const;

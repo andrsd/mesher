@@ -38,9 +38,6 @@ LoadThread::run()
 
     auto gmodel = GModel::current();
 
-    gmodel->setFileName(fname);
-    gmodel->setName("ASDF");
-
     int status;
     if (this->file_name.endsWith(".geo"))
         status = GModel::readGEO(fname);
@@ -186,6 +183,9 @@ Document::load(const QString & file_name)
     FunctionManager::Instance()->clear();
 #endif
 
+    this->gmodel->setFileName(file_name.toStdString());
+    this->gmodel->setName("");
+
     this->load_thread = new LoadThread(file_name);
     connect(this->load_thread, &LoadThread::finished, this, &Document::onLoadFinished);
     this->load_thread->start(QThread::IdlePriority);
@@ -211,8 +211,19 @@ Document::save()
 }
 
 void
+Document::saveAs(const QString & file_name)
+{
+    this->save_thread = new SaveThread(file_name);
+    connect(this->save_thread, &SaveThread::finished, this, &Document::onSaveFinished);
+    this->save_thread->start(QThread::IdlePriority);
+}
+
+void
 Document::onSaveFinished()
 {
+    this->gmodel->setFileName(this->save_thread->fileName().toStdString());
+    this->gmodel->setName("");
+
     delete this->save_thread;
     this->save_thread = nullptr;
     emit saveFinished();

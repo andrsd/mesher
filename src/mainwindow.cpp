@@ -119,6 +119,7 @@ MainWindow::setupMenuBar()
     file_menu->addSeparator();
     this->save_action =
         file_menu->addAction("Save", this, &MainWindow::onFileSave, QKeySequence("Ctrl+S"));
+    this->save_as_action = file_menu->addAction("Save as...", this, &MainWindow::onFileSaveAs);
     file_menu->addSeparator();
     this->close_action =
         file_menu->addAction("Close", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
@@ -176,6 +177,7 @@ void
 MainWindow::connectSignals()
 {
     connect(this->doc, &Document::loadFinished, this, &MainWindow::onLoadFinished);
+    connect(this->doc, &Document::saveFinished, this, &MainWindow::onSaveFinished);
 }
 
 void
@@ -185,17 +187,20 @@ MainWindow::clear()
 }
 
 void
+MainWindow::showProgressDialog(const QString & text)
+{
+    this->progress = new QProgressDialog(text, QString(), 0, 0, this);
+    this->progress->setWindowModality(Qt::WindowModal);
+    this->progress->show();
+}
+
+void
 MainWindow::loadFile(const QString & file_name)
 {
     QFileInfo fi(file_name);
     if (fi.exists()) {
         this->clear();
-
-        this->progress =
-            new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this);
-        this->progress->setWindowModality(Qt::WindowModal);
-        this->progress->show();
-
+        showProgressDialog(QString("Loading %1...").arg(fi.fileName()));
         this->doc->load(file_name);
     }
 }
@@ -333,8 +338,28 @@ MainWindow::onNewFile()
 void
 MainWindow::onFileSave()
 {
+    QFileInfo fi(this->doc->getFileName());
+    showProgressDialog(QString("Writing %1...").arg(fi.fileName()));
     this->doc->save();
     this->updateWindowTitle();
+}
+
+void
+MainWindow::onFileSaveAs()
+{
+    QString file_name = QFileDialog::getSaveFileName(this,
+                                                     "Save File As",
+                                                     "",
+                                                     "Supported files (*.msh *.geo);;"
+                                                     "All files (*);;"
+                                                     "GMSH mesh file (*.msh);;"
+                                                     "GMSH geometry files (*.geo)");
+    if (!file_name.isNull()) {
+        QFileInfo fi(file_name);
+        showProgressDialog(QString("Writing %1...").arg(fi.fileName()));
+        this->doc->saveAs(file_name);
+        this->updateWindowTitle();
+    }
 }
 
 void
@@ -402,6 +427,22 @@ MainWindow::onLoadFinished()
         // TODO
         // auto fi = QFileInfo(this->doc->getFileName());
         // showNotification(QString("Unsupported file '%1'.").arg(fi.fileName()));
+    }
+    this->updateMenuBar();
+}
+
+void
+MainWindow::onSaveFinished()
+{
+    hideProgressBar();
+    // TODO: check that file was actually saved
+    if (true) {
+        auto file_name = this->doc->getFileName();
+        updateWindowTitle();
+        showNormal();
+    }
+    else {
+        // TODO: report that save failed
     }
     this->updateMenuBar();
 }
