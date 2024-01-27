@@ -102,6 +102,21 @@ protected:
 void
 SaveThread::run()
 {
+    auto gmodel = GModel::current();
+    auto fname = this->file_name.toStdString();
+
+    int status = 0;
+    if (this->file_name.endsWith(".geo")) {
+        status = gmodel->writeGEO(fname);
+    }
+    else if (this->file_name.endsWith(".msh")) {
+        status = gmodel->writeMSH(fname);
+    }
+
+    if (status)
+        Msg::StatusBar(true, "Done writing '%s'", fname.c_str());
+    else
+        Msg::Error("Error writing '%s'", fname.c_str());
 }
 
 //
@@ -187,9 +202,10 @@ Document::onLoadFinished()
 }
 
 void
-Document::save(const QString & file_name)
+Document::save()
 {
-    this->save_thread = new LoadThread(file_name);
+    QString file_name(gmodel->getFileName().c_str());
+    this->save_thread = new SaveThread(file_name);
     connect(this->save_thread, &SaveThread::finished, this, &Document::onSaveFinished);
     this->save_thread->start(QThread::IdlePriority);
 }

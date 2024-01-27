@@ -57,6 +57,7 @@ public slots:
     void onOpenRecentFile();
     void onClearRecentFiles();
     void onNewFile();
+    void onFileSave();
     void onUpdateWindow();
     void onMinimize();
     void onBringAllToFront();
@@ -74,6 +75,7 @@ protected:
 
     QAction * new_action;
     QAction * open_action;
+    QAction * save_action;
     QAction * close_action;
     QAction * clear_recent_file;
     QAction * minimize;

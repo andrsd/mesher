@@ -17,7 +17,7 @@ public:
     void destroy();
     void create();
     void load(const QString & file_name);
-    void save(const QString & file_name);
+    void save();
 
     bool hasFile() const;
     QString getFileName() const;
@@ -32,7 +32,7 @@ public slots:
 
 protected:
     LoadThread * load_thread;
-    LoadThread * save_thread;
+    SaveThread * save_thread;
 
     bool has_file;
     GModel * gmodel;

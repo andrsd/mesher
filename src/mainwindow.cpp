@@ -117,6 +117,9 @@ MainWindow::setupMenuBar()
     this->recent_menu = file_menu->addMenu("Open Recent");
     buildRecentFilesMenu();
     file_menu->addSeparator();
+    this->save_action =
+        file_menu->addAction("Save", this, &MainWindow::onFileSave, QKeySequence("Ctrl+S"));
+    file_menu->addSeparator();
     this->close_action =
         file_menu->addAction("Close", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
 
@@ -152,6 +155,9 @@ MainWindow::updateMenuBar()
 {
     auto * active_window = QApplication::activeWindow();
     this->show_main_window->setChecked(active_window == this);
+
+    auto has_file = this->doc->hasFile();
+    this->save_action->setEnabled(has_file);
 }
 
 void
@@ -321,6 +327,13 @@ MainWindow::onNewFile()
     this->clear();
     showNormal();
     this->doc->create();
+    this->updateWindowTitle();
+}
+
+void
+MainWindow::onFileSave()
+{
+    this->doc->save();
     this->updateWindowTitle();
 }
 
