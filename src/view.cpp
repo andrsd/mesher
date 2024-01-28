@@ -1,11 +1,373 @@
 #include "view.h"
 #include "mainwindow.h"
 #include "gl2ps.h"
-#include "Context.h"
 #include "GModel.h"
+#include "VertexArray.h"
 #include "Trackball.h"
 #include <QOpenGLFunctions>
 #include <QPainter>
+
+template <class T>
+static void
+drawBarycentricDual(std::vector<T *> & elements)
+{
+    glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
+    glEnable(GL_LINE_STIPPLE);
+    glLineStipple(1, 0x0F0F);
+    gl2psEnable(GL2PS_LINE_STIPPLE);
+    glBegin(GL_LINES);
+    for (std::size_t i = 0; i < elements.size(); i++) {
+        MElement * ele = elements[i];
+        if (!isElementVisible(ele))
+            continue;
+        SPoint3 pc = ele->barycenter();
+        if (ele->getDim() == 2) {
+            for (int j = 0; j < ele->getNumEdges(); j++) {
+                MEdge e = ele->getEdge(j);
+                SPoint3 p = e.barycenter();
+                glVertex3d(pc.x(), pc.y(), pc.z());
+                glVertex3d(p.x(), p.y(), p.z());
+            }
+        }
+        else if (ele->getDim() == 3) {
+            for (int j = 0; j < ele->getNumFaces(); j++) {
+                MFace f = ele->getFace(j);
+                SPoint3 p = f.barycenter();
+                glVertex3d(pc.x(), pc.y(), pc.z());
+                glVertex3d(p.x(), p.y(), p.z());
+                for (std::size_t k = 0; k < f.getNumVertices(); k++) {
+                    MEdge e(f.getVertex(k),
+                            (k == f.getNumVertices() - 1) ? f.getVertex(0) : f.getVertex(k + 1));
+                    SPoint3 pe = e.barycenter();
+                    glVertex3d(p.x(), p.y(), p.z());
+                    glVertex3d(pe.x(), pe.y(), pe.z());
+                }
+            }
+        }
+    }
+    glEnd();
+    glDisable(GL_LINE_STIPPLE);
+    gl2psDisable(GL2PS_LINE_STIPPLE);
+}
+
+template <class T>
+static void
+drawVoronoiDual(std::vector<T *> & elements)
+{
+    glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
+    glEnable(GL_LINE_STIPPLE);
+    glLineStipple(1, 0x0F0F);
+    gl2psEnable(GL2PS_LINE_STIPPLE);
+    glBegin(GL_LINES);
+    for (std::size_t i = 0; i < elements.size(); i++) {
+        T * ele = elements[i];
+        if (!isElementVisible(ele))
+            continue;
+        SPoint3 pc = ele->circumcenter();
+        if (ele->getDim() == 2) {
+            for (int j = 0; j < ele->getNumEdges(); j++) {
+                MEdge e = ele->getEdge(j);
+                SVector3 p2p1(e.getVertex(1)->x() - e.getVertex(0)->x(),
+                              e.getVertex(1)->y() - e.getVertex(0)->y(),
+                              e.getVertex(1)->z() - e.getVertex(0)->z());
+                SVector3 pcp1(pc.x() - e.getVertex(0)->x(),
+                              pc.y() - e.getVertex(0)->y(),
+                              pc.z() - e.getVertex(0)->z());
+                double alpha = dot(pcp1, p2p1) / dot(p2p1, p2p1);
+                SPoint3 p((1 - alpha) * e.getVertex(0)->x() + alpha * e.getVertex(1)->x(),
+                          (1 - alpha) * e.getVertex(0)->y() + alpha * e.getVertex(1)->y(),
+                          (1 - alpha) * e.getVertex(0)->z() + alpha * e.getVertex(1)->z());
+                glVertex3d(pc.x(), pc.y(), pc.z());
+                glVertex3d(p.x(), p.y(), p.z());
+            }
+        }
+        else if (ele->getDim() == 3) {
+            for (int j = 0; j < ele->getNumFaces(); j++) {
+                MFace f = ele->getFace(j);
+                SPoint3 p = f.barycenter();
+                glVertex3d(pc.x(), pc.y(), pc.z());
+                glVertex3d(p.x(), p.y(), p.z());
+                for (std::size_t k = 0; k < f.getNumVertices(); k++) {
+                    MEdge e(f.getVertex(k),
+                            (k == f.getNumVertices() - 1) ? f.getVertex(0) : f.getVertex(k + 1));
+                    SPoint3 pe = e.barycenter();
+                    glVertex3d(p.x(), p.y(), p.z());
+                    glVertex3d(pe.x(), pe.y(), pe.z());
+                }
+            }
+        }
+    }
+    glEnd();
+    glDisable(GL_LINE_STIPPLE);
+    gl2psDisable(GL2PS_LINE_STIPPLE);
+}
+
+//
+
+View::DrawMeshGVertex::DrawMeshGVertex(View * view) : view(view) {}
+
+void
+View::DrawMeshGVertex::operator()(GVertex * v)
+{
+    if (!v->getVisibility())
+        return;
+
+    auto ctx = CTX::instance();
+
+    bool select = (view->renderMode() == View::GMSH_SELECT && v->model() == GModel::current());
+    if (select) {
+        glPushName(0);
+        glPushName(v->tag());
+    }
+
+    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+
+    if (ctx->mesh.nodes || ctx->mesh.nodeLabels)
+        this->view->drawVerticesPerEntity(v);
+
+    if (select) {
+        glPopName();
+        glPopName();
+    }
+}
+
+//
+
+View::DrawMeshGEdge::DrawMeshGEdge(View * view) : view(view) {}
+
+void
+View::DrawMeshGEdge::operator()(GEdge * e)
+{
+    if (!e->getVisibility())
+        return;
+
+    auto ctx = CTX::instance();
+
+    bool select =
+        (this->view->renderMode() == View::GMSH_SELECT && e->model() == GModel::current());
+    if (select) {
+        glPushName(1);
+        glPushName(e->tag());
+    }
+
+    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+
+    if (ctx->mesh.lines)
+        this->view->drawArrays(e, e->va_lines, GL_LINES, false);
+
+    if (ctx->mesh.lineLabels)
+        this->view->drawElementLabels(e, e->lines);
+
+    if (ctx->mesh.nodes || ctx->mesh.nodeLabels) {
+        if (e->getAllElementsVisible())
+            this->view->drawVerticesPerEntity(e);
+        else
+            this->view->drawVerticesPerElement(e, e->lines);
+    }
+
+    if (ctx->mesh.tangents)
+        this->view->drawTangents(e->lines);
+
+    if (select) {
+        glPopName();
+        glPopName();
+    }
+}
+
+//
+
+View::DrawMeshGFace::DrawMeshGFace(View * view) : view(view) {}
+
+void
+View::DrawMeshGFace::operator()(GFace * f)
+{
+    if (!f->getVisibility())
+        return;
+
+    auto ctx = CTX::instance();
+
+    bool select =
+        (this->view->renderMode() == View::GMSH_SELECT && f->model() == GModel::current());
+    if (select) {
+        glPushName(2);
+        glPushName(f->tag());
+    }
+
+    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+
+    this->view->drawArrays(f,
+                           f->va_lines,
+                           GL_LINES,
+                           ctx->mesh.light && ctx->mesh.lightLines,
+                           ctx->mesh.surfaceFaces,
+                           ctx->color.mesh.line);
+
+    if (ctx->mesh.lightTwoSide)
+        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+
+    this->view->drawArrays(f, f->va_triangles, GL_TRIANGLES, ctx->mesh.light);
+
+    if (ctx->mesh.surfaceLabels) {
+        if (ctx->mesh.triangles)
+            this->view->drawElementLabels(f,
+                                          f->triangles,
+                                          ctx->mesh.surfaceFaces,
+                                          ctx->color.mesh.line);
+        if (ctx->mesh.quadrangles)
+            this->view->drawElementLabels(f,
+                                          f->quadrangles,
+                                          ctx->mesh.surfaceFaces,
+                                          ctx->color.mesh.line);
+        this->view->drawElementLabels(f, f->polygons, ctx->mesh.surfaceFaces, ctx->color.mesh.line);
+    }
+
+    if (ctx->mesh.nodes || ctx->mesh.nodeLabels) {
+        if (f->getAllElementsVisible())
+            this->view->drawVerticesPerEntity(f);
+        else {
+            if (ctx->mesh.triangles)
+                this->view->drawVerticesPerElement(f, f->triangles);
+            if (ctx->mesh.quadrangles)
+                this->view->drawVerticesPerElement(f, f->quadrangles);
+            this->view->drawVerticesPerElement(f, f->polygons);
+        }
+    }
+
+    if (ctx->mesh.normals) {
+        if (ctx->mesh.triangles)
+            this->view->drawNormals(f->triangles);
+        if (ctx->mesh.quadrangles)
+            this->view->drawNormals(f->quadrangles);
+        this->view->drawNormals(f->polygons);
+    }
+
+    if (ctx->mesh.dual) {
+        if (ctx->mesh.triangles)
+            drawBarycentricDual(f->triangles);
+        if (ctx->mesh.quadrangles)
+            drawBarycentricDual(f->quadrangles);
+        drawBarycentricDual(f->polygons);
+    }
+    else if (ctx->mesh.voronoi) {
+        if (ctx->mesh.triangles)
+            drawVoronoiDual(f->triangles);
+    }
+
+    if (select) {
+        glPopName();
+        glPopName();
+    }
+}
+
+//
+
+View::DrawMeshGRegion::DrawMeshGRegion(View * view) : view(view) {}
+
+void
+View::DrawMeshGRegion::operator()(GRegion * rgn)
+{
+    if (!rgn->getVisibility())
+        return;
+
+    auto ctx = CTX::instance();
+
+    bool select =
+        (this->view->renderMode() == View::GMSH_SELECT && rgn->model() == GModel::current());
+    if (select) {
+        glPushName(3);
+        glPushName(rgn->tag());
+    }
+
+    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+
+    this->view->drawArrays(rgn,
+                           rgn->va_lines,
+                           GL_LINES,
+                           ctx->mesh.light && (ctx->mesh.lightLines > 1),
+                           ctx->mesh.volumeFaces,
+                           ctx->color.mesh.line);
+
+    if (ctx->mesh.lightTwoSide)
+        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+
+    this->view->drawArrays(rgn, rgn->va_triangles, GL_TRIANGLES, ctx->mesh.light);
+
+    if (ctx->mesh.volumeLabels) {
+        if (ctx->mesh.tetrahedra)
+            this->view->drawElementLabels(rgn,
+                                          rgn->tetrahedra,
+                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
+                                          ctx->color.mesh.line);
+        if (ctx->mesh.hexahedra)
+            this->view->drawElementLabels(rgn,
+                                          rgn->hexahedra,
+                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
+                                          ctx->color.mesh.line);
+        if (ctx->mesh.prisms)
+            this->view->drawElementLabels(rgn,
+                                          rgn->prisms,
+                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
+                                          ctx->color.mesh.line);
+        if (ctx->mesh.pyramids)
+            this->view->drawElementLabels(rgn,
+                                          rgn->pyramids,
+                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
+                                          ctx->color.mesh.line);
+        if (ctx->mesh.trihedra)
+            this->view->drawElementLabels(rgn,
+                                          rgn->trihedra,
+                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
+                                          ctx->color.mesh.line);
+        this->view->drawElementLabels(rgn,
+                                      rgn->polyhedra,
+                                      ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
+                                      ctx->color.mesh.line);
+    }
+
+    if (ctx->mesh.nodes || ctx->mesh.nodeLabels) {
+        if (rgn->getAllElementsVisible())
+            this->view->drawVerticesPerEntity(rgn);
+        else {
+            if (ctx->mesh.tetrahedra)
+                this->view->drawVerticesPerElement(rgn, rgn->tetrahedra);
+            if (ctx->mesh.hexahedra)
+                this->view->drawVerticesPerElement(rgn, rgn->hexahedra);
+            if (ctx->mesh.prisms)
+                this->view->drawVerticesPerElement(rgn, rgn->prisms);
+            if (ctx->mesh.pyramids)
+                this->view->drawVerticesPerElement(rgn, rgn->pyramids);
+            if (ctx->mesh.trihedra)
+                this->view->drawVerticesPerElement(rgn, rgn->trihedra);
+            this->view->drawVerticesPerElement(rgn, rgn->polyhedra);
+        }
+    }
+
+    if (ctx->mesh.dual) {
+        if (ctx->mesh.tetrahedra)
+            drawBarycentricDual(rgn->tetrahedra);
+        if (ctx->mesh.hexahedra)
+            drawBarycentricDual(rgn->hexahedra);
+        if (ctx->mesh.prisms)
+            drawBarycentricDual(rgn->prisms);
+        if (ctx->mesh.pyramids)
+            drawBarycentricDual(rgn->pyramids);
+        if (ctx->mesh.trihedra)
+            drawBarycentricDual(rgn->trihedra);
+        drawBarycentricDual(rgn->polyhedra);
+    }
+
+    if (ctx->mesh.voronoi) {
+        if (ctx->mesh.tetrahedra)
+            drawVoronoiDual(rgn->tetrahedra);
+    }
+
+    if (select) {
+        glPopName();
+        glPopName();
+    }
+}
+
+//
 
 static int
 needPolygonOffset()
@@ -54,6 +416,50 @@ View::~View()
     invalidateQuadricsAndDisplayLists();
 }
 
+View::RenderMode
+View::renderMode() const
+{
+    return this->render_mode;
+}
+
+void
+View::hide(GModel * m)
+{
+    this->hidden_models.insert(m);
+}
+
+void
+View::show(GModel * m)
+{
+    auto it = this->hidden_models.find(m);
+    if (it != this->hidden_models.end())
+        this->hidden_models.erase(it);
+}
+
+void
+View::showAll()
+{
+    this->hidden_models.clear();
+}
+
+// std::array<double, 3>
+// View::getScale() const
+//{
+//     return this->s;
+// }
+//
+// double
+// View::getPixelEquivX() const
+//{
+//     return this->pixel_equiv_x;
+// }
+//
+// double
+// View::getPixelEquivY() const
+//{
+//     return this->pixel_equiv_y;
+// }
+
 int
 View::getWidth() const
 {
@@ -81,6 +487,12 @@ View::viewport2World(double vp[3], double xyz[3]) const
     glGetDoublev(GL_PROJECTION_MATRIX, proj);
     glGetDoublev(GL_MODELVIEW_MATRIX, model);
     gluUnProject(vp[0], vp[1], vp[2], model, proj, viewport, &xyz[0], &xyz[1], &xyz[2]);
+}
+
+bool
+View::isVisible(GModel * m) const
+{
+    return (this->hidden_models.find(m) == this->hidden_models.end());
 }
 
 void
@@ -508,10 +920,248 @@ View::drawGeom()
 }
 
 void
+View::drawArrays(GEntity * e,
+                 VertexArray * va,
+                 GLint type,
+                 bool use_normal_array,
+                 int force_color,
+                 unsigned int color)
+{
+    if (!va || !va->getNumVertices())
+        return;
+
+    auto ctx = CTX::instance();
+    // If we want to be enable picking of individual elements we need to
+    // draw each one separately
+    bool select =
+        (this->render_mode == GMSH_SELECT && ctx->pickElements && e->model() == GModel::current());
+    if (select) {
+        if (va->getNumElementPointers() == va->getNumVertices()) {
+            for (int i = 0; i < va->getNumVertices(); i += va->getNumVerticesPerElement()) {
+                glPushName(va->getNumVerticesPerElement());
+                glPushName(i);
+                glBegin(type);
+                for (int j = 0; j < va->getNumVerticesPerElement(); j++)
+                    glVertex3fv(va->getVertexArray(3 * (i + j)));
+                glEnd();
+                glPopName();
+                glPopName();
+            }
+            return;
+        }
+    }
+
+    glVertexPointer(3, GL_FLOAT, 0, va->getVertexArray());
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    if (use_normal_array) {
+        glEnable(GL_LIGHTING);
+        glNormalPointer(NORMAL_GLTYPE, 0, va->getNormalArray());
+        glEnableClientState(GL_NORMAL_ARRAY);
+    }
+    else
+        glDisableClientState(GL_NORMAL_ARRAY);
+
+    if (force_color) {
+        glDisableClientState(GL_COLOR_ARRAY);
+        glColor4ubv((GLubyte *) &color);
+    }
+    else if (ctx->pickElements || (!e->getSelection() && (ctx->mesh.colorCarousel == 0 ||
+                                                          ctx->mesh.colorCarousel == 3))) {
+        glColorPointer(4, GL_UNSIGNED_BYTE, 0, va->getColorArray());
+        glEnableClientState(GL_COLOR_ARRAY);
+    }
+    else {
+        glDisableClientState(GL_COLOR_ARRAY);
+        color = getColorByEntity(e);
+        glColor4ubv((GLubyte *) &color);
+    }
+
+    if (va->getNumVerticesPerElement() > 2 && ctx->polygonOffset)
+        glEnable(GL_POLYGON_OFFSET_FILL);
+
+    glDrawArrays(type, 0, va->getNumVertices());
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glDisable(GL_LIGHTING);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+}
+
+void
+View::drawVertexLabel(GEntity * e, MVertex * v, int partition)
+{
+    if (!v->getVisibility())
+        return;
+
+    auto ctx = CTX::instance();
+    int np = e->physicals.size();
+    int physical = np ? e->physicals[np - 1] : 0;
+    char str[256];
+    if (ctx->mesh.labelType == 4)
+        snprintf(str, 256, "(%.16g,%.16g,%.16g)", v->x(), v->y(), v->z());
+    else if (ctx->mesh.labelType == 3) {
+        if (partition < 0)
+            snprintf(str, 256, "NA");
+        else
+            snprintf(str, 256, "%d", partition);
+    }
+    else if (ctx->mesh.labelType == 2)
+        snprintf(str, 256, "%d", physical);
+    else if (ctx->mesh.labelType == 1)
+        snprintf(str, 256, "%d", e->tag());
+    else
+        snprintf(str, 256, "%lu", v->getNum());
+
+    if (ctx->mesh.colorCarousel == 0 || ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces) {
+        // by element type
+        if (v->getPolynomialOrder() > 1)
+            glColor4ubv((GLubyte *) &ctx->color.mesh.nodeSup);
+        else
+            glColor4ubv((GLubyte *) &ctx->color.mesh.node);
+    }
+    else {
+        unsigned int col = getColorByEntity(e);
+        glColor4ubv((GLubyte *) &col);
+    }
+    double offset = (0.5 * ctx->mesh.nodeSize + 0.1 * ctx->glFontSize) * this->pixel_equiv_x;
+    drawString(str,
+               v->x() + offset / this->s[0],
+               v->y() + offset / this->s[1],
+               v->z() + offset / this->s[2]);
+}
+
+void
+View::drawVerticesPerEntity(GEntity * e)
+{
+    auto ctx = CTX::instance();
+    if (ctx->mesh.nodes) {
+        if (ctx->mesh.nodeType) {
+            for (std::size_t i = 0; i < e->mesh_vertices.size(); i++) {
+                MVertex * v = e->mesh_vertices[i];
+                if (!v->getVisibility())
+                    continue;
+                if (ctx->mesh.colorCarousel == 0 || ctx->mesh.volumeFaces ||
+                    ctx->mesh.surfaceFaces) {
+                    // by element type
+                    if (v->getPolynomialOrder() > 1)
+                        glColor4ubv((GLubyte *) &ctx->color.mesh.nodeSup);
+                    else
+                        glColor4ubv((GLubyte *) &ctx->color.mesh.node);
+                }
+                else {
+                    unsigned int col = getColorByEntity(e);
+                    glColor4ubv((GLubyte *) &col);
+                }
+                drawSphere(ctx->mesh.nodeSize, v->x(), v->y(), v->z(), ctx->mesh.light);
+            }
+        }
+        else {
+            glBegin(GL_POINTS);
+            for (std::size_t i = 0; i < e->mesh_vertices.size(); i++) {
+                MVertex * v = e->mesh_vertices[i];
+                if (!v->getVisibility())
+                    continue;
+                if (ctx->mesh.colorCarousel == 0 || ctx->mesh.volumeFaces ||
+                    ctx->mesh.surfaceFaces) {
+                    // by element type
+                    if (v->getPolynomialOrder() > 1)
+                        glColor4ubv((GLubyte *) &ctx->color.mesh.nodeSup);
+                    else
+                        glColor4ubv((GLubyte *) &ctx->color.mesh.node);
+                }
+                else {
+                    unsigned int col = getColorByEntity(e);
+                    glColor4ubv((GLubyte *) &col);
+                }
+                glVertex3d(v->x(), v->y(), v->z());
+            }
+            glEnd();
+        }
+    }
+    if (ctx->mesh.nodeLabels) {
+        int labelStep = ctx->mesh.labelSampling;
+        if (labelStep <= 0)
+            labelStep = 1;
+        for (std::size_t i = 0; i < e->mesh_vertices.size(); i++)
+            if (i % labelStep == 0)
+                drawVertexLabel(e, e->mesh_vertices[i]);
+    }
+}
+
+static void
+beginFakeTransparency()
+{
+}
+
+static void
+endFakeTransparency()
+{
+}
+
+void
 View::drawMesh()
 {
-    // TODO: move drawContext::drawMesh() here
+    auto ctx = CTX::instance();
+
+    if (!ctx->mesh.draw)
+        return;
+
+    /*
+    // make sure to flag any model-dependent post-processing view as
+    // changed if the underlying mesh has, before resetting the changed
+    // flag
+    if(CTX::instance()->mesh.changed) {
+        for(std::size_t i = 0; i < GModel::list.size(); i++)
+            for(std::size_t j = 0; j < PView::list.size(); j++)
+                if(PView::list[j]->getData()->hasModel(GModel::list[i]))
+                    PView::list[j]->setChanged(true);
+    }
+    */
+
+    glPointSize((float) ctx->mesh.nodeSize);
+    // gl2psPointSize((float) (ctx->mesh.nodeSize * ctx->print.epsPointSizeFactor));
+
+    glLineWidth((float) ctx->mesh.lineWidth);
+    // gl2psLineWidth((float) (ctx->mesh.lineWidth * ctx->print.epsLineWidthFactor));
+
+    if (!ctx->clipWholeElements) {
+        for (int i = 0; i < 6; i++)
+            if (ctx->mesh.clip & (1 << i))
+                glEnable((GLenum) (GL_CLIP_PLANE0 + i));
+            else
+                glDisable((GLenum) (GL_CLIP_PLANE0 + i));
+    }
+
+    for (auto & m : GModel::list) {
+        bool changed = m->fillVertexArrays();
+        if (changed)
+            Msg::Debug("mesh vertex arrays have changed");
+        if (m->getVisibility() && isVisible(m)) {
+            int status = m->getMeshStatus();
+            if (status >= 0)
+                std::for_each(m->firstVertex(), m->lastVertex(), DrawMeshGVertex(this));
+            if (status >= 1)
+                std::for_each(m->firstEdge(), m->lastEdge(), DrawMeshGEdge(this));
+            if (status >= 2) {
+                beginFakeTransparency();
+                std::for_each(m->firstFace(), m->lastFace(), DrawMeshGFace(this));
+                endFakeTransparency();
+            }
+            if (status >= 3)
+                std::for_each(m->firstRegion(), m->lastRegion(), DrawMeshGRegion(this));
+        }
+    }
+
+    ctx->mesh.changed = 0;
+
+    for (int i = 0; i < 6; i++)
+        glDisable((GLenum) (GL_CLIP_PLANE0 + i));
 }
+
+//
 
 void
 View::drawAxes()
@@ -765,6 +1415,32 @@ View::fix2dCoordinates(double * x, double * y)
 }
 
 void
+View::drawSphere(double size, double x, double y, double z, int light)
+{
+    double ss = size * this->pixel_equiv_x / this->s[0]; // size is in pixels
+    if (light)
+        glEnable(GL_LIGHTING);
+    glPushMatrix();
+    glTranslated(x, y, z);
+    glScaled(ss, ss, ss);
+    glCallList(this->display_lists + 0);
+    glPopMatrix();
+    glDisable(GL_LIGHTING);
+}
+
+void
+View::drawSphere(double R, double x, double y, double z, int n1, int n2, int light)
+{
+    if (light)
+        glEnable(GL_LIGHTING);
+    glPushMatrix();
+    glTranslated(x, y, z);
+    gluSphere(this->quadric, R, n1, n2);
+    glPopMatrix();
+    glDisable(GL_LIGHTING);
+}
+
+void
 View::drawString(const std::string & s,
                  double x,
                  double y,
@@ -912,4 +1588,270 @@ View::transformPoint(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]
     out[2] = M(2, 0) * in[0] + M(2, 1) * in[1] + M(2, 2) * in[2] + M(2, 3) * in[3];
     out[3] = M(3, 0) * in[0] + M(3, 1) * in[1] + M(3, 2) * in[2] + M(3, 3) * in[3];
 #undef M
+}
+
+static void
+drawSimpleVector(int arrow,
+                 int fill,
+                 double x,
+                 double y,
+                 double z,
+                 double dx,
+                 double dy,
+                 double dz,
+                 double d,
+                 int light)
+{
+    double n[3], t[3], u[3];
+
+    n[0] = dx / d;
+    n[1] = dy / d;
+    n[2] = dz / d;
+
+    if ((fabs(n[0]) >= fabs(n[1]) && fabs(n[0]) >= fabs(n[2])) ||
+        (fabs(n[1]) >= fabs(n[0]) && fabs(n[1]) >= fabs(n[2]))) {
+        t[0] = n[1];
+        t[1] = -n[0];
+        t[2] = 0.;
+    }
+    else {
+        t[0] = 0.;
+        t[1] = n[2];
+        t[2] = -n[1];
+    }
+
+    double l = sqrt(t[0] * t[0] + t[1] * t[1] + t[2] * t[2]);
+    t[0] /= l;
+    t[1] /= l;
+    t[2] /= l;
+
+    u[0] = n[1] * t[2] - n[2] * t[1];
+    u[1] = n[2] * t[0] - n[0] * t[2];
+    u[2] = n[0] * t[1] - n[1] * t[0];
+
+    l = sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
+    u[0] /= l;
+    u[1] /= l;
+    u[2] /= l;
+
+    double b = CTX::instance()->arrowRelHeadRadius * d;
+
+    if (arrow) {
+        double f1 = CTX::instance()->arrowRelStemLength;
+        double f2 = (1 - 2. * CTX::instance()->arrowRelStemRadius) * f1; // hack :-)
+
+        if (fill) {
+            glBegin(GL_LINES);
+            glVertex3d(x, y, z);
+            glVertex3d(x + f1 * dx, y + f1 * dy, z + f1 * dz);
+            glEnd();
+
+            if (light && fill)
+                glEnable(GL_LIGHTING);
+            glBegin(GL_TRIANGLES);
+            if (light)
+                glNormal3dv(u);
+            glVertex3d(x + dx, y + dy, z + dz);
+            glVertex3d(x + f2 * dx + b * (t[0]),
+                       y + f2 * dy + b * (t[1]),
+                       z + f2 * dz + b * (t[2]));
+            glVertex3d(x + f1 * dx, y + f1 * dy, z + f1 * dz);
+
+            glVertex3d(x + f1 * dx, y + f1 * dy, z + f1 * dz);
+            glVertex3d(x + f2 * dx + b * (-t[0]),
+                       y + f2 * dy + b * (-t[1]),
+                       z + f2 * dz + b * (-t[2]));
+            glVertex3d(x + dx, y + dy, z + dz);
+
+            if (light)
+                glNormal3dv(t);
+            glVertex3d(x + dx, y + dy, z + dz);
+            glVertex3d(x + f2 * dx + b * (-u[0]),
+                       y + f2 * dy + b * (-u[1]),
+                       z + f2 * dz + b * (-u[2]));
+            glVertex3d(x + f1 * dx, y + f1 * dy, z + f1 * dz);
+
+            glVertex3d(x + f1 * dx, y + f1 * dy, z + f1 * dz);
+            glVertex3d(x + f2 * dx + b * (u[0]),
+                       y + f2 * dy + b * (u[1]),
+                       z + f2 * dz + b * (u[2]));
+            glVertex3d(x + dx, y + dy, z + dz);
+            glEnd();
+            glDisable(GL_LIGHTING);
+        }
+        else {
+            glBegin(GL_LINE_STRIP);
+            glVertex3d(x, y, z);
+            glVertex3d(x + dx, y + dy, z + dz);
+            glVertex3d(x + f2 * dx + b * (t[0]),
+                       y + f2 * dy + b * (t[1]),
+                       z + f2 * dz + b * (t[2]));
+            glVertex3d(x + f1 * dx, y + f1 * dy, z + f1 * dz);
+            glVertex3d(x + f2 * dx + b * (-t[0]),
+                       y + f2 * dy + b * (-t[1]),
+                       z + f2 * dz + b * (-t[2]));
+            glVertex3d(x + dx, y + dy, z + dz);
+            glVertex3d(x + f2 * dx + b * (-u[0]),
+                       y + f2 * dy + b * (-u[1]),
+                       z + f2 * dz + b * (-u[2]));
+            glVertex3d(x + f1 * dx, y + f1 * dy, z + f1 * dz);
+            glVertex3d(x + f2 * dx + b * (u[0]),
+                       y + f2 * dy + b * (u[1]),
+                       z + f2 * dz + b * (u[2]));
+            glVertex3d(x + dx, y + dy, z + dz);
+            glEnd();
+        }
+    }
+    else {
+        // simple pyramid
+        if (fill) {
+            double top[3] = { x + dx, y + dy, z + dz };
+            double tp[3] = { x + b * t[0], y + b * t[1], z + b * t[2] };
+            double tm[3] = { x - b * t[0], y - b * t[1], z - b * t[2] };
+            double up[3] = { x + b * u[0], y + b * u[1], z + b * u[2] };
+            double um[3] = { x - b * u[0], y - b * u[1], z - b * u[2] };
+            double nn[3];
+
+            if (light && fill)
+                glEnable(GL_LIGHTING);
+            glBegin(GL_TRIANGLES);
+            if (light) {
+                normal3points(tm[0], tm[1], tm[2], um[0], um[1], um[2], top[0], top[1], top[2], nn);
+                glNormal3dv(nn);
+            }
+            glVertex3d(tm[0], tm[1], tm[2]);
+            glVertex3d(um[0], um[1], um[2]);
+            glVertex3d(top[0], top[1], top[2]);
+
+            if (light) {
+                normal3points(um[0], um[1], um[2], tp[0], tp[1], tp[2], top[0], top[1], top[2], nn);
+                glNormal3dv(nn);
+            }
+            glVertex3d(um[0], um[1], um[2]);
+            glVertex3d(tp[0], tp[1], tp[2]);
+            glVertex3d(top[0], top[1], top[2]);
+
+            if (light) {
+                normal3points(tp[0], tp[1], tp[2], up[0], up[1], up[2], top[0], top[1], top[2], nn);
+                glNormal3dv(nn);
+            }
+            glVertex3d(tp[0], tp[1], tp[2]);
+            glVertex3d(up[0], up[1], up[2]);
+            glVertex3d(top[0], top[1], top[2]);
+
+            if (light) {
+                normal3points(up[0], up[1], up[2], tm[0], tm[1], tm[2], top[0], top[1], top[2], nn);
+                glNormal3dv(nn);
+            }
+            glVertex3d(up[0], up[1], up[2]);
+            glVertex3d(tm[0], tm[1], tm[2]);
+            glVertex3d(top[0], top[1], top[2]);
+            glEnd();
+            glDisable(GL_LIGHTING);
+        }
+        else {
+            glBegin(GL_LINE_LOOP);
+            glVertex3d(x + b * (t[0]), y + b * (t[1]), z + b * (t[2]));
+            glVertex3d(x + b * (-u[0]), y + b * (-u[1]), z + b * (-u[2]));
+            glVertex3d(x + b * (-t[0]), y + b * (-t[1]), z + b * (-t[2]));
+            glVertex3d(x + b * (u[0]), y + b * (u[1]), z + b * (u[2]));
+            glEnd();
+
+            glBegin(GL_LINES);
+            glVertex3d(x + b * (t[0]), y + b * (t[1]), z + b * (t[2]));
+            glVertex3d(x + dx, y + dy, z + dz);
+
+            glVertex3d(x + b * (-u[0]), y + b * (-u[1]), z + b * (-u[2]));
+            glVertex3d(x + dx, y + dy, z + dz);
+
+            glVertex3d(x + b * (-t[0]), y + b * (-t[1]), z + b * (-t[2]));
+            glVertex3d(x + dx, y + dy, z + dz);
+
+            glVertex3d(x + b * (u[0]), y + b * (u[1]), z + b * (u[2]));
+            glVertex3d(x + dx, y + dy, z + dz);
+            glEnd();
+        }
+    }
+}
+
+void
+View::drawArrow3D(double x,
+                  double y,
+                  double z,
+                  double dx,
+                  double dy,
+                  double dz,
+                  double length,
+                  int light)
+{
+    double zdir[3] = { 0., 0., 1. };
+    double vdir[3] = { dx / length, dy / length, dz / length };
+    double axis[3];
+    prodve(zdir, vdir, axis);
+    double const cosphi = prosca(zdir, vdir);
+    if (!norme(axis)) {
+        axis[0] = 0.;
+        axis[1] = 1.;
+        axis[2] = 0.;
+    }
+    double phi = 180. * myacos(cosphi) / M_PI;
+
+    if (light)
+        glEnable(GL_LIGHTING);
+    glPushMatrix();
+    glTranslated(x, y, z);
+    glScaled(length, length, length);
+    glRotated(phi, axis[0], axis[1], axis[2]);
+    glCallList(this->display_lists + 1);
+    glPopMatrix();
+    glDisable(GL_LIGHTING);
+}
+
+void
+View::drawVector(int Type,
+                 int Fill,
+                 double x,
+                 double y,
+                 double z,
+                 double dx,
+                 double dy,
+                 double dz,
+                 int light)
+{
+    double length = sqrt(dx * dx + dy * dy + dz * dz);
+
+    if (length == 0.0)
+        return;
+
+    switch (Type) {
+    case 1:
+        glBegin(GL_LINES);
+        glVertex3d(x, y, z);
+        glVertex3d(x + dx, y + dy, z + dz);
+        glEnd();
+        break;
+    case 6:
+        if (CTX::instance()->arrowRelHeadRadius) {
+            glBegin(GL_POINTS);
+            glVertex3d(x + dx, y + dy, z + dz);
+            glEnd();
+        }
+        glBegin(GL_LINES);
+        glVertex3d(x + dx, y + dy, z + dz);
+        // color gradient
+        glColor4ubv((GLubyte *) &CTX::instance()->color.bg);
+        glVertex3d(x, y, z);
+        glEnd();
+        break;
+    case 2:
+        drawSimpleVector(1, Fill, x, y, z, dx, dy, dz, length, light);
+        break;
+    case 3:
+        drawSimpleVector(0, Fill, x, y, z, dx, dy, dz, length, light);
+        break;
+    case 4:
+    default:
+        drawArrow3D(x, y, z, dx, dy, dz, length, light);
+        break;
+    }
 }

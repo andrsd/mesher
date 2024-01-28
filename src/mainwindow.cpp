@@ -333,6 +333,7 @@ MainWindow::onNewFile()
     showNormal();
     this->doc->create();
     this->updateWindowTitle();
+    this->view->update();
 }
 
 void
