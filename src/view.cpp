@@ -110,6 +110,17 @@ View::viewport2World(double vp[3], double xyz[3]) const
     gluUnProject(vp[0], vp[1], vp[2], model, proj, viewport, &xyz[0], &xyz[1], &xyz[2]);
 }
 
+void
+View::world2Viewport(double xyz[3], double vp[3]) const
+{
+    GLint viewport[4];
+    GLdouble model[16], proj[16];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    glGetDoublev(GL_PROJECTION_MATRIX, proj);
+    glGetDoublev(GL_MODELVIEW_MATRIX, model);
+    gluProject(xyz[0], xyz[1], xyz[2], model, proj, viewport, &vp[0], &vp[1], &vp[2]);
+}
+
 bool
 View::isVisible(GModel * m) const
 {
@@ -871,14 +882,6 @@ View::drawMesh()
 
     for (int i = 0; i < 6; i++)
         glDisable((GLenum) (GL_CLIP_PLANE0 + i));
-}
-
-//
-
-void
-View::drawAxes()
-{
-    // TODO: move drawContext::drawAxes() here
 }
 
 void
@@ -1667,4 +1670,181 @@ View::transformTwoForm(double & x, double & y, double & z)
 {
     if (this->_transform)
         this->_transform->transformTwoForm(x, y, z);
+}
+
+void
+View::drawBox(double xmin,
+              double ymin,
+              double zmin,
+              double xmax,
+              double ymax,
+              double zmax,
+              bool labels)
+{
+    glBegin(GL_LINE_LOOP);
+    glVertex3d(xmin, ymin, zmin);
+    glVertex3d(xmax, ymin, zmin);
+    glVertex3d(xmax, ymax, zmin);
+    glVertex3d(xmin, ymax, zmin);
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+    glVertex3d(xmin, ymin, zmax);
+    glVertex3d(xmax, ymin, zmax);
+    glVertex3d(xmax, ymax, zmax);
+    glVertex3d(xmin, ymax, zmax);
+    glEnd();
+    glBegin(GL_LINES);
+    glVertex3d(xmin, ymin, zmin);
+    glVertex3d(xmin, ymin, zmax);
+    glVertex3d(xmax, ymin, zmin);
+    glVertex3d(xmax, ymin, zmax);
+    glVertex3d(xmax, ymax, zmin);
+    glVertex3d(xmax, ymax, zmax);
+    glVertex3d(xmin, ymax, zmin);
+    glVertex3d(xmin, ymax, zmax);
+    glEnd();
+    if (labels) {
+        char label[256];
+        double offset = 0.3 * CTX::instance()->glFontSize * pixel_equiv_x;
+        snprintf(label, 256, "(%g,%g,%g)", xmin, ymin, zmin);
+        drawString(label, xmin + offset / s[0], ymin + offset / s[1], zmin + offset / s[2]);
+        snprintf(label, 256, "(%g,%g,%g)", xmax, ymax, zmax);
+        drawString(label, xmax + offset / s[0], ymax + offset / s[1], zmax + offset / s[2]);
+    }
+}
+
+namespace {
+class point {
+public:
+    double x, y, z;
+    bool valid;
+    point() : x(0.), y(0.), z(0.), valid(false) {}
+    point(double xi, double yi, double zi) : x(xi), y(yi), z(zi), valid(true) {}
+};
+
+class plane {
+private:
+    double _a, _b, _c, _d;
+
+public:
+    plane(double a, double b, double c, double d) : _a(a), _b(b), _c(c), _d(d) {}
+    double
+    val(point & p)
+    {
+        return _a * p.x + _b * p.y + _c * p.z + _d;
+    };
+    point
+    intersect(point & p1, point & p2)
+    {
+        double v1 = val(p1), v2 = val(p2);
+        if (fabs(v1) < 1.e-12) {
+            if (fabs(v2) < 1.e-12)
+                return point();
+            else
+                return point(p1.x, p1.y, p1.z);
+        }
+        else if (fabs(v2) < 1.e-12) {
+            return point(p2.x, p2.y, p2.z);
+        }
+        else if (v1 * v2 < 0.) {
+            double coef = -v1 / (v2 - v1);
+            return point(coef * (p2.x - p1.x) + p1.x,
+                         coef * (p2.y - p1.y) + p1.y,
+                         coef * (p2.z - p1.z) + p1.z);
+        }
+        else
+            return point();
+    }
+};
+} // namespace
+
+void
+View::drawPlaneInBoundingBox(double xmin,
+                             double ymin,
+                             double zmin,
+                             double xmax,
+                             double ymax,
+                             double zmax,
+                             double a,
+                             double b,
+                             double c,
+                             double d,
+                             int shade)
+{
+    plane pl(a, b, c, d);
+    point p1(xmin, ymin, zmin), p2(xmax, ymin, zmin);
+    point p3(xmax, ymax, zmin), p4(xmin, ymax, zmin);
+    point p5(xmin, ymin, zmax), p6(xmax, ymin, zmax);
+    point p7(xmax, ymax, zmax), p8(xmin, ymax, zmax);
+
+    point edge[12];
+    edge[0] = pl.intersect(p1, p2);
+    edge[1] = pl.intersect(p1, p4);
+    edge[2] = pl.intersect(p1, p5);
+    edge[3] = pl.intersect(p2, p3);
+    edge[4] = pl.intersect(p2, p6);
+    edge[5] = pl.intersect(p3, p4);
+    edge[6] = pl.intersect(p3, p7);
+    edge[7] = pl.intersect(p4, p8);
+    edge[8] = pl.intersect(p5, p6);
+    edge[9] = pl.intersect(p5, p8);
+    edge[10] = pl.intersect(p6, p7);
+    edge[11] = pl.intersect(p7, p8);
+
+    int face[6][4] = { { 0, 2, 4, 8 },  { 0, 1, 3, 5 },  { 1, 2, 7, 9 },
+                       { 3, 4, 6, 10 }, { 5, 6, 7, 11 }, { 8, 9, 10, 11 } };
+
+    double n[3] = { a, b, c }, ll = 50;
+    norme(n);
+    if (CTX::instance()->arrowRelStemRadius)
+        ll = CTX::instance()->lineWidth / CTX::instance()->arrowRelStemRadius;
+    n[0] *= ll * pixel_equiv_x / s[0];
+    n[1] *= ll * pixel_equiv_x / s[1];
+    n[2] *= ll * pixel_equiv_x / s[2];
+    double length = sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+
+    int n_shade = 0;
+    point p_shade[24];
+
+    for (int i = 0; i < 6; i++) {
+        int nb = 0;
+        point p[4];
+        for (int j = 0; j < 4; j++) {
+            if (edge[face[i][j]].valid == true)
+                p[nb++] = edge[face[i][j]];
+        }
+        if (nb > 1) {
+            for (int j = 1; j < nb; j++) {
+                double xx[2] = { p[j].x, p[j - 1].x };
+                double yy[2] = { p[j].y, p[j - 1].y };
+                double zz[2] = { p[j].z, p[j - 1].z };
+                drawCylinder(CTX::instance()->lineWidth, xx, yy, zz, 1);
+            }
+            for (int j = 0; j < nb; j++) {
+                drawArrow3D(p[j].x, p[j].y, p[j].z, n[0], n[1], n[2], length, 1);
+                if (shade) {
+                    p_shade[n_shade].x = p[j].x;
+                    p_shade[n_shade].y = p[j].y;
+                    p_shade[n_shade].z = p[j].z;
+                    n_shade++;
+                }
+            }
+        }
+    }
+
+    if (shade) {
+        // disable two-side lighting beacuse polygon can overlap itself
+        GLboolean twoside;
+        glGetBooleanv(GL_LIGHT_MODEL_TWO_SIDE, &twoside);
+        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+        glEnable(GL_LIGHTING);
+        glBegin(GL_POLYGON);
+        glNormal3d(n[0], n[1], n[2]);
+        for (int j = 0; j < n_shade; j++) {
+            glVertex3d(p_shade[j].x, p_shade[j].y, p_shade[j].z);
+        }
+        glEnd();
+        glDisable(GL_LIGHTING);
+        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, twoside);
+    }
 }

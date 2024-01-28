@@ -214,6 +214,24 @@ protected:
     void drawSphere(double size, double x, double y, double z, int light);
     void drawSphere(double R, double x, double y, double z, int n1, int n2, int light);
     void drawCylinder(double width, double * x, double * y, double * z, int light);
+    void drawBox(double xmin,
+                 double ymin,
+                 double zmin,
+                 double xmax,
+                 double ymax,
+                 double zmax,
+                 bool labels = true);
+    void drawPlaneInBoundingBox(double xmin,
+                                double ymin,
+                                double zmin,
+                                double xmax,
+                                double ymax,
+                                double zmax,
+                                double a,
+                                double b,
+                                double c,
+                                double d,
+                                int shade = 0);
 
     template <class T>
     void drawElementLabels(GEntity * e,
@@ -258,6 +276,7 @@ protected:
     void drawEntityLabel(GEntity * e, double x, double y, double z, double offset);
 
     void viewport2World(double vp[3], double xyz[3]) const;
+    void world2Viewport(double xyz[3], double vp[3]) const;
     std::array<int, 4> getViewport();
     int getWidth() const;
     int getHeight() const;
@@ -278,6 +297,40 @@ protected:
     void transform(double & x, double & y, double & z);
     void transformOneForm(double & x, double & y, double & z);
     void transformTwoForm(double & x, double & y, double & z);
+
+    void drawAxis(double xmin,
+                  double ymin,
+                  double zmin,
+                  double xmax,
+                  double ymax,
+                  double zmax,
+                  int ntics,
+                  int mikado);
+    void drawAxes(int mode,
+                  double tics[3],
+                  std::string format[3],
+                  std::string label[3],
+                  double bb[6],
+                  int mikado,
+                  double value_bb[6]);
+    void drawAxes(int mode,
+                  double tics[3],
+                  std::string format[3],
+                  std::string label[3],
+                  SBoundingBox3d & bb,
+                  int mikado,
+                  SBoundingBox3d & value_bb);
+    int drawTics(int comp,
+                 double n,
+                 std::string & format,
+                 std::string & label,
+                 double p1[3],
+                 double p2[3],
+                 double perp[3],
+                 int mikado,
+                 double pixelfact,
+                 double value_p1[3],
+                 double value_p2[3]);
 
     MainWindow * main_window;
 
