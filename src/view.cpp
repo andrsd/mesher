@@ -1030,12 +1030,6 @@ View::drawText2D()
 }
 
 void
-View::drawScales()
-{
-    // TODO: move drawContext::drawScales() here
-}
-
-void
 View::drawSmallAxes()
 {
     auto ctx = CTX::instance();
