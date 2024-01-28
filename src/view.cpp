@@ -300,7 +300,73 @@ View::initProjection(int xpick, int ypick, int wpick, int hpick)
 void
 View::initRenderModel()
 {
-    // TODO: move drawContext::initRenderModel() here
+    auto ctx = CTX::instance();
+
+    glPushMatrix();
+    glLoadIdentity();
+    glScaled(this->s[0], this->s[1], this->s[2]);
+    glTranslated(this->t[0], this->t[1], this->t[2]);
+
+    for (int i = 0; i < 6; i++) {
+        if (ctx->light[i]) {
+            GLfloat position[4] = { (GLfloat) ctx->lightPosition[i][0],
+                                    (GLfloat) ctx->lightPosition[i][1],
+                                    (GLfloat) ctx->lightPosition[i][2],
+                                    (GLfloat) ctx->lightPosition[i][3] };
+            glLightfv((GLenum) (GL_LIGHT0 + i), GL_POSITION, position);
+
+            GLfloat r = (GLfloat) (ctx->unpackRed(ctx->color.ambientLight[i]) / 255.);
+            GLfloat g = (GLfloat) (ctx->unpackGreen(ctx->color.ambientLight[i]) / 255.);
+            GLfloat b = (GLfloat) (ctx->unpackBlue(ctx->color.ambientLight[i]) / 255.);
+            GLfloat ambient[4] = { r, g, b, 1.0F };
+            glLightfv((GLenum) (GL_LIGHT0 + i), GL_AMBIENT, ambient);
+
+            r = (GLfloat) (ctx->unpackRed(ctx->color.diffuseLight[i]) / 255.);
+            g = (GLfloat) (ctx->unpackGreen(ctx->color.diffuseLight[i]) / 255.);
+            b = (GLfloat) (ctx->unpackBlue(ctx->color.diffuseLight[i]) / 255.);
+            GLfloat diffuse[4] = { r, g, b, 1.0F };
+            glLightfv((GLenum) (GL_LIGHT0 + i), GL_DIFFUSE, diffuse);
+
+            r = (GLfloat) (ctx->unpackRed(ctx->color.specularLight[i]) / 255.);
+            g = (GLfloat) (ctx->unpackGreen(ctx->color.specularLight[i]) / 255.);
+            b = (GLfloat) (ctx->unpackBlue(ctx->color.specularLight[i]) / 255.);
+            GLfloat specular[4] = { r, g, b, 1.0F };
+            glLightfv((GLenum) (GL_LIGHT0 + i), GL_SPECULAR, specular);
+
+            glEnable((GLenum) (GL_LIGHT0 + i));
+        }
+        else {
+            glDisable((GLenum) (GL_LIGHT0 + i));
+        }
+    }
+
+    glPopMatrix();
+
+    // ambient and diffuse material colors track glColor automatically
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+    glEnable(GL_COLOR_MATERIAL);
+    // "white"-only specular material reflection color
+    GLfloat spec[4] = { (GLfloat) ctx->shine, (GLfloat) ctx->shine, (GLfloat) ctx->shine, 1.0F };
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    // specular exponent in [0,128] (larger means more "focused"
+    // reflection)
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, (GLfloat) ctx->shineExponent);
+
+    glShadeModel(GL_SMOOTH);
+
+    // Normalize the normals automatically. Using glEnable(GL_RESCALE_NORMAL)
+    // instead of glEnable(GL_NORMALIZE) (since we initially specify unit normals)
+    // is more efficient, but will only work with isotropic scalings (and we allow
+    // anistotropic scalings in myZoom...). Note that GL_RESCALE_NORMAL is only
+    // available in GL_VERSION_1_2.
+#if defined(WIN32)
+    glEnable(GL_NORMALIZE);
+#else
+    glEnable(GL_RESCALE_NORMAL);
+#endif
+
+    // lighting is enabled/disabled for each particular primitive later
+    glDisable(GL_LIGHTING);
 }
 
 void
