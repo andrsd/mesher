@@ -421,3 +421,77 @@ View::drawAxes()
                        ctx->geom.light);
     }
 }
+
+void
+View::drawSmallAxes()
+{
+    auto ctx = CTX::instance();
+
+    double l = HIDPI(ctx->smallAxesSize);
+    double o = ctx->glFontSize / 5;
+
+    double cx = HIDPI(ctx->smallAxesPos[0]);
+    double cy = HIDPI(ctx->smallAxesPos[1]);
+    fix2dCoordinates(&cx, &cy);
+
+    double xx, xy, yx, yy, zx, zy;
+
+    if (ctx->camera) {
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        gluLookAt(this->camera.position.x,
+                  this->camera.position.y,
+                  this->camera.position.z,
+                  this->camera.target.x,
+                  this->camera.target.y,
+                  this->camera.target.z,
+                  this->camera.up.x,
+                  this->camera.up.y,
+                  this->camera.up.z);
+        glPushMatrix();
+        glPopMatrix();
+        float fvViewMatrix[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, fvViewMatrix);
+        glLoadIdentity();
+        xx = l * fvViewMatrix[0];
+        xy = l * fvViewMatrix[1];
+        yx = l * fvViewMatrix[4];
+        yy = l * fvViewMatrix[5];
+        zx = l * fvViewMatrix[8];
+        zy = l * fvViewMatrix[9];
+    }
+    else {
+        xx = l * this->rot[0];
+        xy = l * this->rot[1];
+        yx = l * this->rot[4];
+        yy = l * this->rot[5];
+        zx = l * this->rot[8];
+        zy = l * this->rot[9];
+    }
+    glLineWidth(HIDPI<float>(ctx->lineWidth));
+    // gl2psLineWidth(HIDPI<float>(ctx->lineWidth * ctx->print.epsLineWidthFactor));
+
+    GLubyte red[4] = { 188, 39, 26, 0 };
+    glColor4ubv(red);
+    glBegin(GL_LINES);
+    glVertex2d(cx, cy);
+    glVertex2d(cx + xx, cy + xy);
+    glEnd();
+    drawString("X", cx + xx + o, cy + xy + o, 0.);
+
+    GLubyte green[4] = { 65, 147, 41, 0 };
+    glColor4ubv(green);
+    glBegin(GL_LINES);
+    glVertex2d(cx, cy);
+    glVertex2d(cx + yx, cy + yy);
+    glEnd();
+    drawString("Y", cx + yx + o, cy + yy + o, 0.);
+
+    GLubyte blue[4] = { 0, 0, 200, 0 };
+    glColor4ubv(blue);
+    glBegin(GL_LINES);
+    glVertex2d(cx, cy);
+    glVertex2d(cx + zx, cy + zy);
+    glEnd();
+    drawString("Z", cx + zx + o, cy + zy + o, 0.);
+}
