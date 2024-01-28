@@ -423,6 +423,7 @@ MainWindow::onLoadFinished()
         addToRecentFiles(file_name);
         buildRecentFilesMenu();
         showNormal();
+        this->view->update();
     }
     else {
         // TODO

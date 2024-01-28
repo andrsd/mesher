@@ -61,6 +61,46 @@ public:
     bool isVisible(GModel * m) const;
 
 protected:
+    class DrawGVertex {
+    private:
+        View * view;
+
+    public:
+        DrawGVertex(View * view);
+        void operator()(GVertex * v);
+    };
+
+    class DrawGEdge {
+    private:
+        View * view;
+
+    public:
+        DrawGEdge(View * view);
+        void operator()(GEdge * e);
+    };
+
+    class DrawGFace {
+    private:
+        View * view;
+        void _drawVertexArray(VertexArray * va,
+                              bool useNormalArray,
+                              int forceColor = 0,
+                              unsigned int color = 0);
+
+    public:
+        DrawGFace(View * view);
+        void operator()(GFace * f);
+    };
+
+    class DrawGRegion {
+    private:
+        View * view;
+
+    public:
+        DrawGRegion(View * view);
+        void operator()(GRegion * rgn);
+    };
+
     // GVertex drawing routines
     class DrawMeshGVertex {
     private:
@@ -108,6 +148,29 @@ protected:
         return devicePixelRatio() * value;
     }
 
+    //
+    class DrawTransform {
+    public:
+        DrawTransform() {}
+        virtual ~DrawTransform() {}
+        virtual void
+        transform(double & x, double & y, double & z)
+        {
+        }
+        virtual void
+        transformOneForm(double & x, double & y, double & z)
+        {
+        }
+        virtual void
+        transformTwoForm(double & x, double & y, double & z)
+        {
+        }
+        virtual void
+        setMatrix(double mat[3][3], double tra[3])
+        {
+        }
+    };
+
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
@@ -154,6 +217,7 @@ protected:
 
     void drawSphere(double size, double x, double y, double z, int light);
     void drawSphere(double R, double x, double y, double z, int n1, int n2, int light);
+    void drawCylinder(double width, double * x, double * y, double * z, int light);
 
     template <class T>
     void drawElementLabels(GEntity * e,
@@ -195,6 +259,8 @@ protected:
                     double dz,
                     int light);
 
+    void drawEntityLabel(GEntity * e, double x, double y, double z, double offset);
+
     void viewport2World(double vp[3], double xyz[3]) const;
     std::array<int, 4> getViewport();
     int getWidth() const;
@@ -213,8 +279,13 @@ protected:
                   GLdouble * winz);
     void transformPoint(GLdouble out[4], const GLdouble m[16], const GLdouble in[4]);
 
+    void transform(double & x, double & y, double & z);
+    void transformOneForm(double & x, double & y, double & z);
+    void transformTwoForm(double & x, double & y, double & z);
+
     MainWindow * main_window;
 
+    DrawTransform * _transform;
     GLUquadricObj * quadric;
     GLuint display_lists;
     std::set<GModel *> hidden_models;
