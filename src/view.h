@@ -51,10 +51,6 @@ public:
 
     RenderMode renderMode() const;
 
-    //    std::array<double, 3> getScale() const;
-    //    double getPixelEquivX() const;
-    //    double getPixelEquivY() const;
-
     void hide(GModel * m);
     void show(GModel * m);
     void showAll();
