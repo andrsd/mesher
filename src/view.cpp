@@ -8,16 +8,21 @@
 #include <QOpenGLFunctions>
 #include <QPainter>
 #include <QWheelEvent>
+#include <QSettings>
 
 static int
 needPolygonOffset()
 {
     GModel * m = GModel::current();
-    auto ctx = CTX::instance();
-    if (m->getMeshStatus() == 2 &&
-        (ctx->mesh.surfaceEdges || ctx->geom.curves || ctx->geom.surfaces))
+    auto settings = MainWindow::getSettings();
+    auto show_curves = settings->value("visibility/geom/curves").toBool();
+    auto show_surfaces = settings->value("visibility/geom/surfaces").toBool();
+    auto show_surface_edges = settings->value("visibility/mesh/2d_edges").toBool();
+    auto show_volume_edges = settings->value("visibility/mesh/3d_edges").toBool();
+
+    if (m->getMeshStatus() == 2 && (show_surface_edges || show_curves || show_surfaces))
         return 1;
-    if (m->getMeshStatus() == 3 && (ctx->mesh.surfaceEdges || ctx->mesh.volumeEdges))
+    if (m->getMeshStatus() == 3 && (show_surface_edges || show_volume_edges))
         return 1;
     /*
     for (std::size_t i = 0; i < PView::list.size(); i++) {
@@ -733,6 +738,10 @@ View::drawVertexLabel(GEntity * e, MVertex * v, int partition)
         return;
 
     auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto show_surface_faces = settings->value("visibility/mesh/2d_faces").toBool();
+    auto show_volume_faces = settings->value("visibility/mesh/3d_faces").toBool();
+
     int np = e->physicals.size();
     int physical = np ? e->physicals[np - 1] : 0;
     char str[256];
@@ -751,7 +760,7 @@ View::drawVertexLabel(GEntity * e, MVertex * v, int partition)
     else
         snprintf(str, 256, "%lu", v->getNum());
 
-    if (ctx->mesh.colorCarousel == 0 || ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces) {
+    if (ctx->mesh.colorCarousel == 0 || show_volume_faces || show_surface_faces) {
         // by element type
         if (v->getPolynomialOrder() > 1)
             glColor4ubv((GLubyte *) &ctx->color.mesh.nodeSup);
@@ -773,14 +782,19 @@ void
 View::drawVerticesPerEntity(GEntity * e)
 {
     auto ctx = CTX::instance();
-    if (ctx->mesh.nodes) {
+    auto settings = MainWindow::getSettings();
+    auto show_nodes = settings->value("visibility/mesh/nodes").toBool();
+    auto show_node_labels = settings->value("visibility/mesh/node_labels").toBool();
+    auto show_surface_faces = settings->value("visibility/mesh/2d_faces").toBool();
+    auto show_volume_faces = settings->value("visibility/mesh/3d_faces").toBool();
+
+    if (show_nodes) {
         if (ctx->mesh.nodeType) {
             for (std::size_t i = 0; i < e->mesh_vertices.size(); i++) {
                 MVertex * v = e->mesh_vertices[i];
                 if (!v->getVisibility())
                     continue;
-                if (ctx->mesh.colorCarousel == 0 || ctx->mesh.volumeFaces ||
-                    ctx->mesh.surfaceFaces) {
+                if (ctx->mesh.colorCarousel == 0 || show_volume_faces || show_surface_faces) {
                     // by element type
                     if (v->getPolynomialOrder() > 1)
                         glColor4ubv((GLubyte *) &ctx->color.mesh.nodeSup);
@@ -800,8 +814,7 @@ View::drawVerticesPerEntity(GEntity * e)
                 MVertex * v = e->mesh_vertices[i];
                 if (!v->getVisibility())
                     continue;
-                if (ctx->mesh.colorCarousel == 0 || ctx->mesh.volumeFaces ||
-                    ctx->mesh.surfaceFaces) {
+                if (ctx->mesh.colorCarousel == 0 || show_volume_faces || show_surface_faces) {
                     // by element type
                     if (v->getPolynomialOrder() > 1)
                         glColor4ubv((GLubyte *) &ctx->color.mesh.nodeSup);
@@ -817,7 +830,7 @@ View::drawVerticesPerEntity(GEntity * e)
             glEnd();
         }
     }
-    if (ctx->mesh.nodeLabels) {
+    if (show_node_labels) {
         int labelStep = ctx->mesh.labelSampling;
         if (labelStep <= 0)
             labelStep = 1;

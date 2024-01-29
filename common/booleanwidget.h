@@ -20,6 +20,9 @@ public:
                         const QString & key,
                         const QVariant & default_value) override;
 
+signals:
+    void changed();
+
 protected:
     void onStateChanged(int state);
 };

@@ -24,6 +24,8 @@
 #include "settingsdlg.h"
 #include "document.h"
 #include "loggerdialog.h"
+#include "common/toolbar.h"
+#include "visibilitysettingsdialog.h"
 #include "GmshMessage.h"
 
 static const int MAX_RECENT_FILES = 10;
@@ -49,7 +51,8 @@ MainWindow::MainWindow(QWidget * parent) :
     prefs_dlg(nullptr),
     progress(nullptr),
     doc(new Document()),
-    logger(new LoggerDialog(this))
+    logger(new LoggerDialog(this)),
+    visibility_settings_dialog(new VisibilitySettingsDialog(this))
 {
     Msg::SetCallback(this->logger);
 
@@ -61,6 +64,7 @@ MainWindow::MainWindow(QWidget * parent) :
 
     setupWidgets();
     setupMenuBar();
+    setupToolBar();
     updateMenuBar();
 
     setAcceptDrops(true);
@@ -77,6 +81,7 @@ MainWindow::~MainWindow()
     delete this->menu_bar;
     delete this->windows_action_group;
     delete this->logger;
+    delete this->visibility_settings_dialog;
 }
 
 QSettings *
@@ -154,6 +159,21 @@ MainWindow::setupMenuBar()
 }
 
 void
+MainWindow::setupToolBar()
+{
+    this->tool_bar = new ToolBar(this);
+    this->tool_bar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    this->tool_bar->setFloatable(false);
+    this->tool_bar->setMovable(false);
+    this->tool_bar->setAllowedAreas(Qt::TopToolBarArea);
+
+    auto visible_action = new QAction("V");
+    visible_action->setCheckable(true);
+    connect(visible_action, &QAction::toggled, this, &MainWindow::onToggleVisibilitySettings);
+    this->tool_bar->addAction(visible_action);
+}
+
+void
 MainWindow::updateMenuBar()
 {
     auto * active_window = QApplication::activeWindow();
@@ -180,6 +200,11 @@ MainWindow::connectSignals()
 {
     connect(this->doc, &Document::loadFinished, this, &MainWindow::onLoadFinished);
     connect(this->doc, &Document::saveFinished, this, &MainWindow::onSaveFinished);
+
+    connect(this->visibility_settings_dialog,
+            &VisibilitySettingsDialog::changed,
+            this,
+            &MainWindow::onVisibilitySettingsChanged);
 }
 
 void
@@ -455,4 +480,19 @@ void
 MainWindow::onShowMessages()
 {
     this->logger->show();
+}
+
+void
+MainWindow::onToggleVisibilitySettings(bool checked)
+{
+    if (checked)
+        this->visibility_settings_dialog->show();
+    else
+        this->visibility_settings_dialog->hide();
+}
+
+void
+MainWindow::onVisibilitySettingsChanged()
+{
+    this->view->update();
 }

@@ -3,6 +3,8 @@
 #include "GVertex.h"
 #include "GEdge.h"
 #include "VertexArray.h"
+#include "mainwindow.h"
+#include <QSettings>
 
 View::DrawGVertex::DrawGVertex(View * view) : view(view) {}
 
@@ -15,6 +17,9 @@ View::DrawGVertex::operator()(GVertex * v)
         return;
 
     auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto show_points = settings->value("visibility/geo/points").toBool();
+    auto show_point_labels = settings->value("visibility/geo/point_labels").toBool();
 
     bool select = (this->view->render_mode == View::GMSH_SELECT && v->model() == GModel::current());
     if (select) {
@@ -50,7 +55,7 @@ View::DrawGVertex::operator()(GVertex * v)
     double x = v->x(), y = v->y(), z = v->z();
     this->view->transform(x, y, z);
 
-    if (ctx->geom.points || v->getSelection() > 1) {
+    if (show_points || v->getSelection() > 1) {
         if (ctx->geom.pointType > 0) {
             if (v->getSelection())
                 this->view->drawSphere(sps, x, y, z, ctx->geom.light);
@@ -64,7 +69,7 @@ View::DrawGVertex::operator()(GVertex * v)
         }
     }
 
-    if (CTX::instance()->geom.pointLabels || v->getSelection() > 1) {
+    if (show_point_labels || v->getSelection() > 1) {
         double offset = (0.5 * ps + 0.1 * CTX::instance()->glFontSize) * this->view->pixel_equiv_x;
         if (v->getSelection() > 1)
             glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
@@ -94,6 +99,9 @@ View::DrawGEdge::operator()(GEdge * e)
         return;
 
     auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto show_curves = settings->value("visibility/geo/curves").toBool();
+    auto show_curve_labels = settings->value("visibility/geo/curve_labels").toBool();
 
     bool select = (this->view->render_mode == View::GMSH_SELECT && e->model() == GModel::current());
     if (select) {
@@ -128,7 +136,7 @@ View::DrawGEdge::operator()(GEdge * e)
     double t_min = t_bounds.low();
     double t_max = t_bounds.high();
 
-    if (ctx->geom.curves || e->getSelection() > 1) {
+    if (show_curves || e->getSelection() > 1) {
         int N = e->minimumDrawSegments() + 1;
         if (ctx->geom.curveType > 0) {
             for (int i = 0; i < N - 1; i++) {
@@ -162,7 +170,7 @@ View::DrawGEdge::operator()(GEdge * e)
         }
     }
 
-    if (ctx->geom.curveLabels || e->getSelection() > 1) {
+    if (show_curve_labels || e->getSelection() > 1) {
         GPoint p = e->point(t_min + 0.5 * (t_max - t_min));
         double offset =
             (0.5 * ctx->geom.curveWidth + 0.1 * ctx->glFontSize) * this->view->pixel_equiv_x;
@@ -257,6 +265,10 @@ View::DrawGFace::operator()(GFace * f)
         return;
 
     auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto show_surfaces = settings->value("visibility/geo/surfaces").toBool();
+    auto show_surface_labels = settings->value("visibility/geo/surface_labels").toBool();
+    auto surface_type = ctx->geom.surfaceType;
 
     bool select = (this->view->render_mode == View::GMSH_SELECT && f->model() == GModel::current());
     if (select) {
@@ -289,15 +301,15 @@ View::DrawGFace::operator()(GFace * f)
     else
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
-    if ((ctx->geom.surfaces || f->getSelection() > 1) && ctx->geom.surfaceType > 0)
+    if ((show_surfaces || f->getSelection() > 1) && surface_type > 0)
         f->fillVertexArray();
 
-    if (((ctx->geom.surfaces || f->getSelection() > 1) && ctx->geom.surfaceType == 0) ||
-        ctx->geom.surfaceLabels || ctx->geom.normals)
+    if (((show_surfaces || f->getSelection() > 1) && surface_type == 0) ||
+        show_surface_labels || ctx->geom.normals)
         f->buildRepresentationCross();
 
-    if (ctx->geom.surfaces || f->getSelection() > 1) {
-        if (ctx->geom.surfaceType > 0 && f->va_geom_triangles) {
+    if (show_surfaces || f->getSelection() > 1) {
+        if (surface_type > 0 && f->va_geom_triangles) {
             bool selected = false;
             if (f->getSelection())
                 selected = true;
@@ -332,7 +344,7 @@ View::DrawGFace::operator()(GFace * f)
 
     if (f->cross[0].size() && f->cross[0][0].size()) {
         int idx = f->cross[0][0].size() / 2;
-        if (ctx->geom.surfaceLabels || f->getSelection() > 1) {
+        if (show_surface_labels || f->getSelection() > 1) {
             double offset = 0.1 * ctx->glFontSize * this->view->pixel_equiv_x;
             double x = f->cross[0][0][idx].x();
             double y = f->cross[0][0][idx].y();
@@ -372,6 +384,10 @@ View::DrawGRegion::operator()(GRegion * rgn)
         return;
 
     auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto show_volumes = settings->value("visibility/geo/volumes").toBool();
+    auto show_volume_labels = settings->value("visibility/geo/volume_labels").toBool();
+    auto volume_repr = ctx->geom.volumeType;
 
     bool select =
         (this->view->render_mode == View::GMSH_SELECT && rgn->model() == GModel::current());
@@ -400,7 +416,7 @@ View::DrawGRegion::operator()(GRegion * rgn)
     const double size = 8.;
     double x = 0., y = 0., z = 0., d = 0.;
 
-    if (ctx->geom.volumes || ctx->geom.volumeLabels || rgn->getSelection() > 1) {
+    if (show_volumes || show_volume_labels || rgn->getSelection() > 1) {
         SBoundingBox3d bb = rgn->bounds(true); // fast approx if mesh-based
         SPoint3 p = bb.center();
         x = p.x();
@@ -410,8 +426,8 @@ View::DrawGRegion::operator()(GRegion * rgn)
         this->view->transform(x, y, z);
     }
 
-    if (ctx->geom.volumes || rgn->getSelection() > 1) {
-        if (ctx->geom.volumeType == 0) {
+    if (show_volumes || rgn->getSelection() > 1) {
+        if (volume_repr == 0) {
             this->view->drawSphere(size, x, y, z, ctx->geom.light);
         }
         else {
@@ -436,7 +452,7 @@ View::DrawGRegion::operator()(GRegion * rgn)
         }
     }
 
-    if (ctx->geom.volumeLabels || rgn->getSelection() > 1) {
+    if (show_volume_labels || rgn->getSelection() > 1) {
         double offset = (1. * size + 0.1 * CTX::instance()->glFontSize) * this->view->pixel_equiv_x;
         if (rgn->getSelection() > 1)
             glColor4ubv((GLubyte *) &CTX::instance()->color.fg);

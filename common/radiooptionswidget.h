@@ -25,10 +25,11 @@ public:
     void enableOption(int idx, bool state);
 
 signals:
-    void changed(int id);
+    void changed();
+    void valueChanged(int id);
 
 protected slots:
-    void onChanged(int id);
+    void onValueChanged(int id);
 
 private:
     QVBoxLayout * layout;

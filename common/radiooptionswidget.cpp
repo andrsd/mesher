@@ -20,7 +20,10 @@ RadioOptionsWidget::RadioOptionsWidget(const QStringList & str_options, QWidget 
         this->options.append(rb);
         this->layout->addWidget(rb);
     }
-    connect(this->signal_mapper, &QSignalMapper::mappedInt, this, &RadioOptionsWidget::onChanged);
+    connect(this->signal_mapper,
+            &QSignalMapper::mappedInt,
+            this,
+            &RadioOptionsWidget::onValueChanged);
 }
 
 RadioOptionsWidget::~RadioOptionsWidget()
@@ -56,10 +59,12 @@ RadioOptionsWidget::bindToSettings(QSettings * settings,
 }
 
 void
-RadioOptionsWidget::onChanged(int id)
+RadioOptionsWidget::onValueChanged(int id)
 {
-    if (this->options[id]->isChecked())
+    if (this->options[id]->isChecked()) {
         storeSetting(id);
+        emit changed();
+    }
 }
 
 void

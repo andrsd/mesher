@@ -18,6 +18,8 @@ class SettingsDialog;
 class QProgressDialog;
 class Document;
 class LoggerDialog;
+class ToolBar;
+class VisibilitySettingsDialog;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -35,6 +37,7 @@ public:
 protected:
     void setupWidgets();
     void setupMenuBar();
+    void setupToolBar();
     void updateMenuBar();
     void updateWindowTitle();
     void connectSignals();
@@ -68,11 +71,14 @@ public slots:
     void onLoadFinished();
     void onSaveFinished();
     void onShowMessages();
+    void onToggleVisibilitySettings(bool checked);
+    void onVisibilitySettingsChanged();
 
 protected:
     static QSettings * settings;
     QMenuBar * menu_bar;
     QMenu * recent_menu;
+    ToolBar * tool_bar;
     QStringList recent_files;
 
     QAction * new_action;
@@ -93,6 +99,7 @@ protected:
     View * view;
     SettingsDialog * prefs_dlg;
     QProgressDialog * progress;
+    VisibilitySettingsDialog * visibility_settings_dialog;
 
     Document * doc;
 

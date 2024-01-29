@@ -1,6 +1,8 @@
 #include "view.h"
 #include "GModel.h"
 #include "GVertex.h"
+#include "mainwindow.h"
+#include <QSettings>
 
 template <class T>
 static void
@@ -105,7 +107,9 @@ View::DrawMeshGVertex::operator()(GVertex * v)
     if (!v->getVisibility())
         return;
 
-    auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto show_nodes = settings->value("visibility/mesh/nodes").toBool();
+    auto show_node_labels = settings->value("visibility/mesh/node_labels").toBool();
 
     bool select = (view->renderMode() == View::GMSH_SELECT && v->model() == GModel::current());
     if (select) {
@@ -115,7 +119,7 @@ View::DrawMeshGVertex::operator()(GVertex * v)
 
     glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
-    if (ctx->mesh.nodes || ctx->mesh.nodeLabels)
+    if (show_nodes || show_node_labels)
         this->view->drawVerticesPerEntity(v);
 
     if (select) {
@@ -135,6 +139,11 @@ View::DrawMeshGEdge::operator()(GEdge * e)
         return;
 
     auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto show_nodes = settings->value("visibility/mesh/nodes").toBool();
+    auto show_node_labels = settings->value("visibility/mesh/node_labels").toBool();
+    auto show_lines = settings->value("visibility/mesh/1d_elements").toBool();
+    auto show_line_labels = settings->value("visibility/mesh/one_d_labels").toBool();
 
     bool select =
         (this->view->renderMode() == View::GMSH_SELECT && e->model() == GModel::current());
@@ -145,13 +154,13 @@ View::DrawMeshGEdge::operator()(GEdge * e)
 
     glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
-    if (ctx->mesh.lines)
+    if (show_lines)
         this->view->drawArrays(e, e->va_lines, GL_LINES, false);
 
-    if (ctx->mesh.lineLabels)
+    if (show_line_labels)
         this->view->drawElementLabels(e, e->lines);
 
-    if (ctx->mesh.nodes || ctx->mesh.nodeLabels) {
+    if (show_nodes || show_node_labels) {
         if (e->getAllElementsVisible())
             this->view->drawVerticesPerEntity(e);
         else
@@ -178,6 +187,15 @@ View::DrawMeshGFace::operator()(GFace * f)
         return;
 
     auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto show_nodes = settings->value("visibility/mesh/nodes").toBool();
+    auto show_node_labels = settings->value("visibility/mesh/node_labels").toBool();
+    auto show_surface_labels = settings->value("visibility/mesh/two_d_labels").toBool();
+    auto show_surface_faces = settings->value("visibility/mesh/2d_faces").toBool();
+    auto show_triangles = ctx->mesh.triangles;
+    auto show_quadrangles = ctx->mesh.quadrangles;
+    auto light = ctx->mesh.light;
+    auto color_mesh_line = ctx->color.mesh.line;
 
     bool select =
         (this->view->renderMode() == View::GMSH_SELECT && f->model() == GModel::current());
@@ -191,58 +209,58 @@ View::DrawMeshGFace::operator()(GFace * f)
     this->view->drawArrays(f,
                            f->va_lines,
                            GL_LINES,
-                           ctx->mesh.light && ctx->mesh.lightLines,
-                           ctx->mesh.surfaceFaces,
-                           ctx->color.mesh.line);
+                           light && ctx->mesh.lightLines,
+                           show_surface_faces,
+                           color_mesh_line);
 
     if (ctx->mesh.lightTwoSide)
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
-    this->view->drawArrays(f, f->va_triangles, GL_TRIANGLES, ctx->mesh.light);
+    this->view->drawArrays(f, f->va_triangles, GL_TRIANGLES, light);
 
-    if (ctx->mesh.surfaceLabels) {
-        if (ctx->mesh.triangles)
+    if (show_surface_labels) {
+        if (show_triangles)
             this->view->drawElementLabels(f,
                                           f->triangles,
-                                          ctx->mesh.surfaceFaces,
-                                          ctx->color.mesh.line);
-        if (ctx->mesh.quadrangles)
+                                          show_surface_faces,
+                                          color_mesh_line);
+        if (show_quadrangles)
             this->view->drawElementLabels(f,
                                           f->quadrangles,
-                                          ctx->mesh.surfaceFaces,
-                                          ctx->color.mesh.line);
-        this->view->drawElementLabels(f, f->polygons, ctx->mesh.surfaceFaces, ctx->color.mesh.line);
+                                          show_surface_faces,
+                                          color_mesh_line);
+        this->view->drawElementLabels(f, f->polygons, show_surface_faces, color_mesh_line);
     }
 
-    if (ctx->mesh.nodes || ctx->mesh.nodeLabels) {
+    if (show_nodes || show_node_labels) {
         if (f->getAllElementsVisible())
             this->view->drawVerticesPerEntity(f);
         else {
-            if (ctx->mesh.triangles)
+            if (show_triangles)
                 this->view->drawVerticesPerElement(f, f->triangles);
-            if (ctx->mesh.quadrangles)
+            if (show_quadrangles)
                 this->view->drawVerticesPerElement(f, f->quadrangles);
             this->view->drawVerticesPerElement(f, f->polygons);
         }
     }
 
     if (ctx->mesh.normals) {
-        if (ctx->mesh.triangles)
+        if (show_triangles)
             this->view->drawNormals(f->triangles);
-        if (ctx->mesh.quadrangles)
+        if (show_quadrangles)
             this->view->drawNormals(f->quadrangles);
         this->view->drawNormals(f->polygons);
     }
 
     if (ctx->mesh.dual) {
-        if (ctx->mesh.triangles)
+        if (show_triangles)
             drawBarycentricDual(f->triangles);
-        if (ctx->mesh.quadrangles)
+        if (show_quadrangles)
             drawBarycentricDual(f->quadrangles);
         drawBarycentricDual(f->polygons);
     }
     else if (ctx->mesh.voronoi) {
-        if (ctx->mesh.triangles)
+        if (show_triangles)
             drawVoronoiDual(f->triangles);
     }
 
@@ -263,6 +281,13 @@ View::DrawMeshGRegion::operator()(GRegion * rgn)
         return;
 
     auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto show_nodes = settings->value("visibility/mesh/nodes").toBool();
+    auto show_node_labels = settings->value("visibility/mesh/node_labels").toBool();
+    auto show_surface_faces = settings->value("visibility/mesh/2d_faces").toBool();
+    auto show_volume_faces = settings->value("visibility/mesh/3d_faces").toBool();
+    auto show_volume_labels = settings->value("visibility/mesh/three_d_labels").toBool();
+    auto color_mesh_line = ctx->color.mesh.line;
 
     bool select =
         (this->view->renderMode() == View::GMSH_SELECT && rgn->model() == GModel::current());
@@ -277,47 +302,47 @@ View::DrawMeshGRegion::operator()(GRegion * rgn)
                            rgn->va_lines,
                            GL_LINES,
                            ctx->mesh.light && (ctx->mesh.lightLines > 1),
-                           ctx->mesh.volumeFaces,
-                           ctx->color.mesh.line);
+                           show_volume_faces,
+                           color_mesh_line);
 
     if (ctx->mesh.lightTwoSide)
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
     this->view->drawArrays(rgn, rgn->va_triangles, GL_TRIANGLES, ctx->mesh.light);
 
-    if (ctx->mesh.volumeLabels) {
+    if (show_volume_labels) {
         if (ctx->mesh.tetrahedra)
             this->view->drawElementLabels(rgn,
                                           rgn->tetrahedra,
-                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
-                                          ctx->color.mesh.line);
+                                          show_volume_faces || show_surface_faces,
+                                          color_mesh_line);
         if (ctx->mesh.hexahedra)
             this->view->drawElementLabels(rgn,
                                           rgn->hexahedra,
-                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
-                                          ctx->color.mesh.line);
+                                          show_volume_faces || show_surface_faces,
+                                          color_mesh_line);
         if (ctx->mesh.prisms)
             this->view->drawElementLabels(rgn,
                                           rgn->prisms,
-                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
-                                          ctx->color.mesh.line);
+                                          show_volume_faces || show_surface_faces,
+                                          color_mesh_line);
         if (ctx->mesh.pyramids)
             this->view->drawElementLabels(rgn,
                                           rgn->pyramids,
-                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
-                                          ctx->color.mesh.line);
+                                          show_volume_faces || show_surface_faces,
+                                          color_mesh_line);
         if (ctx->mesh.trihedra)
             this->view->drawElementLabels(rgn,
                                           rgn->trihedra,
-                                          ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
-                                          ctx->color.mesh.line);
+                                          show_volume_faces || show_surface_faces,
+                                          color_mesh_line);
         this->view->drawElementLabels(rgn,
                                       rgn->polyhedra,
-                                      ctx->mesh.volumeFaces || ctx->mesh.surfaceFaces,
-                                      ctx->color.mesh.line);
+                                      show_volume_faces || show_surface_faces,
+                                      color_mesh_line);
     }
 
-    if (ctx->mesh.nodes || ctx->mesh.nodeLabels) {
+    if (show_nodes || show_node_labels) {
         if (rgn->getAllElementsVisible())
             this->view->drawVerticesPerEntity(rgn);
         else {

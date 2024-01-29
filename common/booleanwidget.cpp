@@ -37,4 +37,5 @@ BooleanWidget::onStateChanged(int state)
 {
     bool checked = state == Qt::CheckState::Checked;
     storeSetting(checked);
+    emit changed();
 }
