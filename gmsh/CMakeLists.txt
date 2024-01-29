@@ -101,6 +101,7 @@ find_package(Eigen3 QUIET)
 if (Eigen3_FOUND)
     set(HAVE_EIGEN TRUE)
 endif()
+set(HAVE_EIGEN FALSE)
 
 find_package(OpenCASCADE 6.9.1 REQUIRED)
 set(HAVE_OCC TRUE)
