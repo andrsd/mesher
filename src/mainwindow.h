@@ -33,7 +33,6 @@ public:
     }
 
 protected:
-    QSettings * getSettings();
     void setupWidgets();
     void setupMenuBar();
     void updateMenuBar();
@@ -71,7 +70,7 @@ public slots:
     void onShowMessages();
 
 protected:
-    QSettings * settings;
+    static QSettings * settings;
     QMenuBar * menu_bar;
     QMenu * recent_menu;
     QStringList recent_files;
@@ -98,4 +97,7 @@ protected:
     Document * doc;
 
     LoggerDialog * logger;
+
+public:
+    static QSettings * getSettings();
 };

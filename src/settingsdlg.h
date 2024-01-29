@@ -13,7 +13,7 @@ class QLabel;
 
 class SettingsDialog : public QDialog {
 public:
-    explicit SettingsDialog(QSettings * settings, QWidget * parent = nullptr);
+    explicit SettingsDialog(QWidget * parent = nullptr);
     ~SettingsDialog() override;
 
 protected slots:
@@ -29,7 +29,6 @@ private:
     QWidget * createAppearanceGeometryPane();
     QWidget * createOpenCASCADEPane();
 
-    QSettings * settings;
     QHBoxLayout * layout;
     QTreeWidget * categories;
     QLabel * pane_title;

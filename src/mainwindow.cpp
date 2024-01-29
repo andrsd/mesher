@@ -28,9 +28,10 @@
 
 static const int MAX_RECENT_FILES = 10;
 
+QSettings * MainWindow::settings = nullptr;
+
 MainWindow::MainWindow(QWidget * parent) :
     QMainWindow(parent),
-    settings(new QSettings("David Andrs", "Mesher")),
     menu_bar(new QMenuBar(nullptr)),
     recent_menu(nullptr),
     new_action(nullptr),
@@ -73,7 +74,6 @@ MainWindow::MainWindow(QWidget * parent) :
 
 MainWindow::~MainWindow()
 {
-    delete this->settings;
     delete this->menu_bar;
     delete this->windows_action_group;
     delete this->logger;
@@ -82,7 +82,9 @@ MainWindow::~MainWindow()
 QSettings *
 MainWindow::getSettings()
 {
-    return this->settings;
+    if (settings == nullptr)
+        settings = new QSettings("David Andrs", "Mesher");
+    return settings;
 }
 
 void
@@ -401,7 +403,7 @@ void
 MainWindow::onSettings()
 {
     if (this->prefs_dlg == nullptr)
-        this->prefs_dlg = new SettingsDialog(this->settings, this);
+        this->prefs_dlg = new SettingsDialog(this);
     this->prefs_dlg->show();
 }
 

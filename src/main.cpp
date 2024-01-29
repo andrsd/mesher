@@ -12,6 +12,7 @@ main(int argc, char * argv[])
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName(MESHER_APP_NAME);
     QCoreApplication::setApplicationVersion(MESHER_VERSION);
+    MainWindow::getSettings();
 
 #ifdef __APPLE__
     app.setQuitOnLastWindowClosed(false);
