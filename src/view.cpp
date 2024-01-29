@@ -7,6 +7,7 @@
 #include "StringUtils.h"
 #include <QOpenGLFunctions>
 #include <QPainter>
+#include <QWheelEvent>
 
 static int
 needPolygonOffset()
@@ -87,10 +88,22 @@ View::getWidth() const
     return this->width;
 }
 
+double
+View::getWidthF() const
+{
+    return (double) this->width;
+}
+
 int
 View::getHeight() const
 {
     return this->height;
+}
+
+double
+View::getHeightF() const
+{
+    return (double) this->height;
 }
 
 std::array<int, 4>
@@ -1766,5 +1779,51 @@ View::drawPlaneInBoundingBox(double xmin,
         glEnd();
         glDisable(GL_LIGHTING);
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, twoside);
+    }
+}
+
+void
+View::zoomToPoint(const QPointF & pt, double zoomFactor)
+{
+    double wnr[2];
+    double prev_s[3];
+    double prev_t[3];
+
+    for (int i = 0; i < 3; i++) {
+        prev_s[i] = this->s[i];
+        prev_t[i] = this->t[i];
+    }
+
+    wnr[0] = (this->vxmin + pt.x() / getWidthF() * (this->vxmax - this->vxmin)) / this->s[0] -
+             this->t[0] + this->t_init[0] / this->s[0];
+    wnr[1] = (this->vymax - pt.y() / getHeightF() * (this->vymax - this->vymin)) / this->s[1] -
+             this->t[1] + this->t_init[1] / this->s[1];
+
+    this->s[0] *= zoomFactor;
+    this->s[1] = this->s[0];
+    this->s[2] = this->s[0];
+
+    // compute the equivalent translation to apply *after* the scaling so that
+    // the scaling is done around the point which was clicked
+    this->t[0] = prev_t[0] * (prev_s[0] / this->s[0]) - wnr[0] * (1. - (prev_s[0] / this->s[0]));
+    this->t[1] = prev_t[1] * (prev_s[1] / this->s[1]) - wnr[1] * (1. - (prev_s[1] / this->s[1]));
+}
+
+void
+View::wheelEvent(QWheelEvent * event)
+{
+    double dy = event->pixelDelta().y();
+    auto h = getHeightF();
+    double fact = (5. * CTX::instance()->zoomFactor * fabs(dy) + h) / h;
+    bool direction = (CTX::instance()->mouseInvertZoom) ? (dy <= 0) : (dy > 0);
+    fact = (direction ? fact : 1. / fact);
+    if (CTX::instance()->camera) {
+        this->camera.zoom(fact);
+        this->camera.update();
+        update();
+    }
+    else {
+        zoomToPoint(event->position(), fact);
+        update();
     }
 }

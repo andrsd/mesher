@@ -279,7 +279,9 @@ protected:
     void world2Viewport(double xyz[3], double vp[3]) const;
     std::array<int, 4> getViewport();
     int getWidth() const;
+    double getWidthF() const;
     int getHeight() const;
+    double getHeightF() const;
 
     void renderText(const QVector3D & text_pos_world, const QString & text);
 
@@ -331,6 +333,10 @@ protected:
                  double pixelfact,
                  double value_p1[3],
                  double value_p2[3]);
+
+    void zoomToPoint(const QPointF & pt, double zoomFactor);
+    //
+    void wheelEvent(QWheelEvent * event) override;
 
     MainWindow * main_window;
 
