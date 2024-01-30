@@ -304,8 +304,8 @@ View::DrawGFace::operator()(GFace * f)
     if ((show_surfaces || f->getSelection() > 1) && surface_type > 0)
         f->fillVertexArray();
 
-    if (((show_surfaces || f->getSelection() > 1) && surface_type == 0) ||
-        show_surface_labels || ctx->geom.normals)
+    if (((show_surfaces || f->getSelection() > 1) && surface_type == 0) || show_surface_labels ||
+        ctx->geom.normals)
         f->buildRepresentationCross();
 
     if (show_surfaces || f->getSelection() > 1) {

@@ -220,15 +220,9 @@ View::DrawMeshGFace::operator()(GFace * f)
 
     if (show_surface_labels) {
         if (show_triangles)
-            this->view->drawElementLabels(f,
-                                          f->triangles,
-                                          show_surface_faces,
-                                          color_mesh_line);
+            this->view->drawElementLabels(f, f->triangles, show_surface_faces, color_mesh_line);
         if (show_quadrangles)
-            this->view->drawElementLabels(f,
-                                          f->quadrangles,
-                                          show_surface_faces,
-                                          color_mesh_line);
+            this->view->drawElementLabels(f, f->quadrangles, show_surface_faces, color_mesh_line);
         this->view->drawElementLabels(f, f->polygons, show_surface_faces, color_mesh_line);
     }
 

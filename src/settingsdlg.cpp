@@ -15,8 +15,7 @@
 #include "common/pointwidget.h"
 #include "mainwindow.h"
 
-SettingsDialog::SettingsDialog(QWidget * parent) :
-    QDialog(parent)
+SettingsDialog::SettingsDialog(QWidget * parent) : QDialog(parent)
 {
     setWindowFlag(Qt::WindowMaximizeButtonHint, false);
     setWindowTitle("Settings");
@@ -275,9 +274,7 @@ SettingsDialog::createAppearancePane()
     color_layout->addWidget(clr_axes);
 
     auto clr_ambient_light = new LabelledColorWidget("Ambient light");
-    clr_ambient_light->bindToSettings(settings,
-                                      "appearance/clr_ambient_light",
-                                      QColor(25, 25, 25));
+    clr_ambient_light->bindToSettings(settings, "appearance/clr_ambient_light", QColor(25, 25, 25));
     color_layout->addWidget(clr_ambient_light);
 
     auto clr_diffuse_light = new LabelledColorWidget("Diffuse light");
@@ -323,9 +320,7 @@ SettingsDialog::createAppearanceMeshPane()
     layout->addRow("Line width", line_width);
 
     auto high_order_elem_subdivs = new IntegerWidget("");
-    high_order_elem_subdivs->bindToSettings(settings,
-                                            "appearance/mesh/high_order_elem_subdivs",
-                                            2);
+    high_order_elem_subdivs->bindToSettings(settings, "appearance/mesh/high_order_elem_subdivs", 2);
 
     auto * w = new QLabel("High-order elements subdivisions");
     w->setWordWrap(true);
@@ -354,9 +349,7 @@ SettingsDialog::createAppearanceMeshPane()
     layout->addWidget(smooth_normals);
 
     auto smooth_theshold_angle = new FloatWidget("");
-    smooth_theshold_angle->bindToSettings(settings,
-                                          "appearance/mesh/smooth_theshold_angle",
-                                          30.0);
+    smooth_theshold_angle->bindToSettings(settings, "appearance/mesh/smooth_theshold_angle", 30.0);
     auto * w2 = new QLabel("Smoothing threshold angle");
     w2->setWordWrap(true);
     layout->addRow(w2, smooth_theshold_angle);
@@ -379,9 +372,7 @@ SettingsDialog::createAppearanceMeshPane()
     color_layout->addWidget(clr_nodes);
 
     auto clr_nodes_sup = new LabelledColorWidget("NodesSup");
-    clr_nodes_sup->bindToSettings(settings,
-                                  "appearance/mesh/clr_nodes_sup",
-                                  QColor(255, 0, 255));
+    clr_nodes_sup->bindToSettings(settings, "appearance/mesh/clr_nodes_sup", QColor(255, 0, 255));
     color_layout->addWidget(clr_nodes_sup);
 
     auto clr_lines = new LabelledColorWidget("Lines");
@@ -409,21 +400,15 @@ SettingsDialog::createAppearanceMeshPane()
     color_layout->addWidget(clr_prisms);
 
     auto clr_pyramids = new LabelledColorWidget("Pyramids");
-    clr_pyramids->bindToSettings(settings,
-                                 "appearance/mesh/clr_pyramids",
-                                 QColor(217, 113, 38));
+    clr_pyramids->bindToSettings(settings, "appearance/mesh/clr_pyramids", QColor(217, 113, 38));
     color_layout->addWidget(clr_pyramids);
 
     auto clr_trihedra = new LabelledColorWidget("Trihedra");
-    clr_trihedra->bindToSettings(settings,
-                                 "appearance/mesh/clr_trihedra",
-                                 QColor(20, 255, 0));
+    clr_trihedra->bindToSettings(settings, "appearance/mesh/clr_trihedra", QColor(20, 255, 0));
     color_layout->addWidget(clr_trihedra);
 
     auto clr_tangents = new LabelledColorWidget("Tangents");
-    clr_tangents->bindToSettings(settings,
-                                 "appearance/mesh/clr_tangents",
-                                 QColor(255, 255, 0));
+    clr_tangents->bindToSettings(settings, "appearance/mesh/clr_tangents", QColor(255, 255, 0));
     color_layout->addWidget(clr_tangents);
 
     auto clr_normal = new LabelledColorWidget("Normals");
@@ -483,15 +468,11 @@ SettingsDialog::createAppearanceMeshPane()
     color_layout->addWidget(clr_twelve);
 
     auto clr_thirteen = new LabelledColorWidget("Thirteen");
-    clr_thirteen->bindToSettings(settings,
-                                 "appearance/mesh/clr_thirteen",
-                                 QColor(24, 0, 255));
+    clr_thirteen->bindToSettings(settings, "appearance/mesh/clr_thirteen", QColor(24, 0, 255));
     color_layout->addWidget(clr_thirteen);
 
     auto clr_fourteen = new LabelledColorWidget("Fourteen");
-    clr_fourteen->bindToSettings(settings,
-                                 "appearance/mesh/clr_fourteen",
-                                 QColor(108, 255, 0));
+    clr_fourteen->bindToSettings(settings, "appearance/mesh/clr_fourteen", QColor(108, 255, 0));
     color_layout->addWidget(clr_fourteen);
 
     auto clr_fifteen = new LabelledColorWidget("Fifteen");
@@ -503,21 +484,15 @@ SettingsDialog::createAppearanceMeshPane()
     color_layout->addWidget(clr_sixteen);
 
     auto clr_seventeen = new LabelledColorWidget("Seventeen");
-    clr_seventeen->bindToSettings(settings,
-                                  "appearance/mesh/clr_seventeen",
-                                  QColor(104, 0, 255));
+    clr_seventeen->bindToSettings(settings, "appearance/mesh/clr_seventeen", QColor(104, 0, 255));
     color_layout->addWidget(clr_seventeen);
 
     auto clr_eighteen = new LabelledColorWidget("Eighteen");
-    clr_eighteen->bindToSettings(settings,
-                                 "appearance/mesh/clr_eighteen",
-                                 QColor(0, 255, 52));
+    clr_eighteen->bindToSettings(settings, "appearance/mesh/clr_eighteen", QColor(0, 255, 52));
     color_layout->addWidget(clr_eighteen);
 
     auto clr_nineteen = new LabelledColorWidget("Nineteen");
-    clr_nineteen->bindToSettings(settings,
-                                 "appearance/mesh/clr_nineteen",
-                                 QColor(184, 0, 255));
+    clr_nineteen->bindToSettings(settings, "appearance/mesh/clr_nineteen", QColor(184, 0, 255));
     color_layout->addWidget(clr_nineteen);
 
     layout->addRow(color_layout);
@@ -556,9 +531,7 @@ SettingsDialog::createAppearanceGeometryPane()
     layout->addRow("Curve width", curve_width);
 
     auto selected_curve_width = new FloatWidget("");
-    selected_curve_width->bindToSettings(settings,
-                                         "appearance/geo/selected_curve_width",
-                                         3.0);
+    selected_curve_width->bindToSettings(settings, "appearance/geo/selected_curve_width", 3.0);
     layout->addRow("Selected curve width", selected_curve_width);
 
     auto curve_subdivs = new IntegerWidget("");
@@ -605,9 +578,7 @@ SettingsDialog::createAppearanceGeometryPane()
     color_layout->addWidget(clr_volumes);
 
     auto clr_selection = new LabelledColorWidget("Selection");
-    clr_selection->bindToSettings(settings,
-                                  "appearance/geo/clr_selection",
-                                  QColor(255, 0, 0));
+    clr_selection->bindToSettings(settings, "appearance/geo/clr_selection", QColor(255, 0, 0));
     color_layout->addWidget(clr_selection);
 
     auto clr_hilight0 = new LabelledColorWidget("Highlight 0");
@@ -615,21 +586,15 @@ SettingsDialog::createAppearanceGeometryPane()
     color_layout->addWidget(clr_hilight0);
 
     auto clr_hilight1 = new LabelledColorWidget("Highlight 1");
-    clr_hilight1->bindToSettings(settings,
-                                 "appearance/geo/clr_hilight1",
-                                 QColor(255, 150, 0));
+    clr_hilight1->bindToSettings(settings, "appearance/geo/clr_hilight1", QColor(255, 150, 0));
     color_layout->addWidget(clr_hilight1);
 
     auto clr_hilight2 = new LabelledColorWidget("Highlight 2");
-    clr_hilight2->bindToSettings(settings,
-                                 "appearance/geo/clr_hilight2",
-                                 QColor(255, 255, 0));
+    clr_hilight2->bindToSettings(settings, "appearance/geo/clr_hilight2", QColor(255, 255, 0));
     color_layout->addWidget(clr_hilight2);
 
     auto clr_tangents = new LabelledColorWidget("Tangents");
-    clr_tangents->bindToSettings(settings,
-                                 "appearance/geo/clr_tangents",
-                                 QColor(255, 255, 0));
+    clr_tangents->bindToSettings(settings, "appearance/geo/clr_tangents", QColor(255, 255, 0));
     color_layout->addWidget(clr_tangents);
 
     auto clr_normals = new LabelledColorWidget("Normals");
