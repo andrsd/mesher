@@ -34,7 +34,12 @@ needPolygonOffset()
     return 0;
 }
 
-View::View(MainWindow * main_wnd) : main_window(main_wnd), width(0), height(0), _transform(nullptr)
+View::View(MainWindow * main_wnd) :
+    main_window(main_wnd),
+    width(0),
+    height(0),
+    _transform(nullptr),
+    is_dragging(false)
 {
     auto ctx = CTX::instance();
     // initialize from temp values in global context
@@ -1839,4 +1844,83 @@ View::wheelEvent(QWheelEvent * event)
         zoomToPoint(event->position(), fact);
         update();
     }
+}
+
+void
+View::mousePressEvent(QMouseEvent * event)
+{
+    this->is_dragging = true;
+    this->event_btn = event->button();
+
+    if (event->buttons() & (Qt::RightButton | Qt::MiddleButton)) {
+        CTX::instance()->drawRotationCenter = 1;
+        if (CTX::instance()->fastRedraw) {
+            CTX::instance()->mesh.draw = 0;
+            CTX::instance()->post.draw = 0;
+        }
+        update();
+    }
+
+    this->_curr.set(this, event->pos());
+    this->_click.set(this, event->pos());
+    this->_prev.set(this, event->pos());
+}
+
+void
+View::mouseMoveEvent(QMouseEvent * event)
+{
+    if (this->is_dragging)
+        mouseDragEvent(event);
+    else
+        mouseHoverEvent(event);
+}
+
+void
+View::mouseDragEvent(QMouseEvent * event)
+{
+    this->_curr.set(this, event->pos());
+    double dx = this->_curr.win[0] - this->_prev.win[0];
+    double dy = this->_curr.win[1] - this->_prev.win[1];
+    if (this->event_btn == Qt::MiddleButton) {
+        // panning
+        this->t[0] += (this->_curr.wnr[0] - this->_click.wnr[0]);
+        this->t[1] += (this->_curr.wnr[1] - this->_click.wnr[1]);
+        this->t[2] = 0.;
+        update();
+    }
+    else if (this->event_btn == Qt::RightButton) {
+        // rotate
+        if (CTX::instance()->useTrackball) {
+            auto w = getWidthF();
+            auto h = getHeightF();
+            addQuaternion((2. * this->_prev.win[0] - w) / w,
+                          (h - 2. * this->_prev.win[1]) / h,
+                          (2. * this->_curr.win[0] - w) / w,
+                          (h - 2. * this->_curr.win[1]) / h);
+        }
+        else {
+            this->r[1] += ((fabs(dx) > fabs(dy)) ? 180. * dx / getWidthF() : 0.);
+            this->r[0] += ((fabs(dx) > fabs(dy)) ? 0. : 180. * dy / getHeightF());
+        }
+        update();
+    }
+    this->_prev.set(this, event->pos());
+}
+
+void
+View::mouseHoverEvent(QMouseEvent * event)
+{
+    // hover
+}
+
+void
+View::mouseReleaseEvent(QMouseEvent * event)
+{
+    this->is_dragging = false;
+    this->_curr.set(this, event->pos());
+    CTX::instance()->drawRotationCenter = 0;
+    CTX::instance()->mesh.draw = 1;
+    CTX::instance()->post.draw = 1;
+    update();
+    this->_prev.set(this, event->pos());
 }

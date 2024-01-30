@@ -167,6 +167,59 @@ protected:
         }
     };
 
+    //
+    class MousePosition {
+    public:
+        double win[3]; // window coordinates
+        double wnr[3]; // world coordinates BEFORE rotation
+        double s[3]; // scaling state when the event was recorded
+        double t[3]; // translation state when the event was recorded
+
+        MousePosition()
+        {
+            for (int i = 0; i < 3; i++)
+                win[i] = wnr[i] = s[i] = t[i] = 0.;
+        }
+
+        MousePosition(const MousePosition & instance)
+        {
+            for (int i = 0; i < 3; i++) {
+                win[i] = instance.win[i];
+                wnr[i] = instance.wnr[i];
+                s[i] = instance.s[i];
+                t[i] = instance.t[i];
+            }
+        }
+        void
+        set(View * view, const QPoint & pos)
+        {
+            for (int i = 0; i < 3; i++) {
+                s[i] = view->s[i];
+                t[i] = view->t[i];
+            }
+            win[0] = (double) pos.x();
+            win[1] = (double) pos.y();
+            win[2] = 0.;
+
+            wnr[0] = (view->vxmin + win[0] / view->getWidthF() * (view->vxmax - view->vxmin)) /
+                         view->s[0] -
+                     view->t[0] + view->t_init[0] / view->s[0];
+            wnr[1] = (view->vymax - win[1] / view->getHeightF() * (view->vymax - view->vymin)) /
+                         view->s[1] -
+                     view->t[1] + view->t_init[1] / view->s[1];
+            wnr[2] = 0.;
+        }
+
+        void
+        recenter(View * view)
+        {
+            // compute the equivalent translation to apply *after* the scaling so that
+            // the scaling is done around the point which was clicked:
+            view->t[0] = t[0] * (s[0] / view->s[0]) - wnr[0] * (1. - (s[0] / view->s[0]));
+            view->t[1] = t[1] * (s[1] / view->s[1]) - wnr[1] * (1. - (s[1] / view->s[1]));
+        }
+    };
+
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
@@ -337,6 +390,11 @@ protected:
     void zoomToPoint(const QPointF & pt, double zoomFactor);
     //
     void wheelEvent(QWheelEvent * event) override;
+    void mousePressEvent(QMouseEvent * event) override;
+    void mouseMoveEvent(QMouseEvent * event) override;
+    void mouseReleaseEvent(QMouseEvent * event) override;
+    void mouseDragEvent(QMouseEvent * event);
+    void mouseHoverEvent(QMouseEvent * event);
 
     MainWindow * main_window;
 
@@ -367,6 +425,9 @@ protected:
     double proj[16];
     // current rendering mode
     RenderMode render_mode;
+    bool is_dragging;
+    Qt::MouseButton event_btn;
+    MousePosition _click, _curr, _prev;
 };
 
 template <class T>
