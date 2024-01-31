@@ -520,7 +520,7 @@ MainWindow::onVisibilitySettingsChanged()
 void
 MainWindow::onSetX()
 {
-    this->view->setEulerAngles({-90, 0, -90});
+    this->view->setEulerAngles({ -90, 0, -90 });
     this->view->setQuaternionFromEulerAngles();
     this->view->update();
 }
@@ -528,7 +528,7 @@ MainWindow::onSetX()
 void
 MainWindow::onSetY()
 {
-    this->view->setEulerAngles({-90, 0, 180});
+    this->view->setEulerAngles({ -90, 0, 180 });
     this->view->setQuaternionFromEulerAngles();
     this->view->update();
 }
@@ -536,7 +536,7 @@ MainWindow::onSetY()
 void
 MainWindow::onSetZ()
 {
-    this->view->setEulerAngles({0, 0, 0});
+    this->view->setEulerAngles({ 0, 0, 0 });
     this->view->setQuaternionFromEulerAngles();
     this->view->update();
 }
@@ -544,7 +544,7 @@ MainWindow::onSetZ()
 void
 MainWindow::onSet1to1()
 {
-    this->view->setTranslation({0., 0., 0.});
-    this->view->setScale({1., 1., 1.});
+    this->view->setTranslation({ 0., 0., 0. });
+    this->view->setScale({ 1., 1., 1. });
     this->view->update();
 }
