@@ -57,10 +57,10 @@ add_custom_target(make-icon-iconset-dir ALL COMMAND ${CMAKE_COMMAND} -E make_dir
 
 add_custom_command(
     OUTPUT icon.iconset/icon_512x512.png
-    COMMAND sips -z 512 512 ${CMAKE_SOURCE_DIR}/resources/app-icon.png --out icon.iconset/icon_512x512.png
+    COMMAND sips -z 512 512 ${CMAKE_SOURCE_DIR}/resources/mesher.png --out icon.iconset/icon_512x512.png
     DEPENDS
         make-icon-iconset-dir
-        ${CMAKE_SOURCE_DIR}/resources/app-icon.png
+        ${CMAKE_SOURCE_DIR}/resources/mesher.png
 )
 
 add_custom_command(

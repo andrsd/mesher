@@ -1,7 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource>
-        <file alias="app-icon">../resources/app-icon.png</file>
+        <file alias="app-icon">../resources/mesher.png</file>
     </qresource>
     <qresource>
         <file alias="app-icon-svg">../resources/mesher.svg</file>

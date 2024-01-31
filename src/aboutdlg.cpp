@@ -34,16 +34,10 @@ AboutDialog::AboutDialog(QWidget * parent) :
     this->layout = new QHBoxLayout();
     this->layout->addSpacing(8);
 
-    QByteArray svg;
-    QString file_name(":/app-icon-svg");
-    QFile file(file_name);
-    if (file.open(QIODevice::ReadOnly))
-        svg = file.readAll();
-
-    this->icon = new QSvgWidget();
+    QIcon ico = QApplication::windowIcon();
+    this->icon = new QLabel();
     this->icon->setFixedSize(128, 128);
-    this->icon->setContentsMargins(16, 16, 16, 16);
-    this->icon->load(svg);
+    this->icon->setPixmap(ico.pixmap(128, 128));
     this->layout->addWidget(this->icon, 0, Qt::AlignTop);
 
     auto rside = new QVBoxLayout();

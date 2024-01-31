@@ -17,7 +17,7 @@ main(int argc, char * argv[])
 #ifdef __APPLE__
     app.setQuitOnLastWindowClosed(false);
 #endif
-    app.setWindowIcon(QIcon(":/resources/app-icon.png"));
+    app.setWindowIcon(QIcon(":/app-icon"));
     MainWindow w;
     w.show();
 

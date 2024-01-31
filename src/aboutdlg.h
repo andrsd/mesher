@@ -20,7 +20,7 @@ protected slots:
 
 protected:
     QHBoxLayout * layout;
-    QSvgWidget * icon;
+    QLabel * icon;
     QLabel * title;
     QLabel * version;
     ClickableLabel * homepage;
