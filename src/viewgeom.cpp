@@ -6,6 +6,11 @@
 #include "mainwindow.h"
 #include <QSettings>
 
+// TODO: move this into settings
+QColor SELECTION_CLR = QColor(255, 173, 79);
+QColor SELECTION_EDGE_CLR = QColor(179, 95, 0);
+QColor HIGHLIGHT_CLR = QColor(255, 211, 79);
+
 View::DrawGVertex::DrawGVertex(View * view) : view(view) {}
 
 void
@@ -32,15 +37,16 @@ View::DrawGVertex::operator()(GVertex * v)
     double ps = this->view->HIDPI(ctx->geom.pointSize);
     double sps = this->view->HIDPI(ctx->geom.selectedPointSize);
 
-    if (v->getSelection()) {
+    if (v->getSelection() == HIGHLIGHT) {
         glPointSize((float) sps);
-        // gl2psPointSize((float)(ctx->geom.selectedPointSize *
-        //                        ctx->print.epsPointSizeFactor));
+        glColor3f(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+    }
+    else if (v->getSelection() == SELECTED) {
+        glPointSize((float) sps);
         glColor4ubv((GLubyte *) &ctx->color.geom.selection);
     }
     else {
         glPointSize((float) ps);
-        // gl2psPointSize((float) (ctx->geom.pointSize * ctx->print.epsPointSizeFactor));
         unsigned int col = v->useColor() ? v->getColor() : ctx->color.geom.point;
         glColor4ubv((GLubyte *) &col);
     }
@@ -71,8 +77,7 @@ View::DrawGVertex::operator()(GVertex * v)
 
     if (show_point_labels || v->getSelection() > 1) {
         double offset = (0.5 * ps + 0.1 * CTX::instance()->glFontSize) * this->view->pixel_equiv_x;
-        if (v->getSelection() > 1)
-            glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
+        glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
         this->view->drawEntityLabel(v, x, y, z, offset);
     }
 
@@ -111,16 +116,16 @@ View::DrawGEdge::operator()(GEdge * e)
 
     glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
-    if (e->getSelection()) {
+    if (e->getSelection() == HIGHLIGHT) {
         glLineWidth((float) ctx->geom.selectedCurveWidth);
-        // gl2psLineWidth((float) (ctx->geom.selectedCurveWidth *
-        //                         ctx->print.epsLineWidthFactor));
+        glColor3f(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+    }
+    else if (e->getSelection() == SELECTED) {
+        glLineWidth((float) ctx->geom.selectedCurveWidth);
         glColor4ubv((GLubyte *) &ctx->color.geom.selection);
     }
     else {
         glLineWidth((float) ctx->geom.curveWidth);
-        // gl2psLineWidth(
-        //     (float) (ctx->geom.curveWidth * ctx->print.epsLineWidthFactor));
         unsigned int col = e->useColor() ? e->getColor() : ctx->color.geom.curve;
         glColor4ubv((GLubyte *) &col);
     }
@@ -176,8 +181,7 @@ View::DrawGEdge::operator()(GEdge * e)
             (0.5 * ctx->geom.curveWidth + 0.1 * ctx->glFontSize) * this->view->pixel_equiv_x;
         double x = p.x(), y = p.y(), z = p.z();
         this->view->transform(x, y, z);
-        if (e->getSelection() > 1)
-            glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
+        glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
         this->view->drawEntityLabel(e, x, y, z, offset);
     }
 
@@ -276,15 +280,16 @@ View::DrawGFace::operator()(GFace * f)
         glPushName(f->tag());
     }
 
-    if (f->getSelection()) {
+    if (f->getSelection() == HIGHLIGHT) {
         glLineWidth((float) (ctx->geom.selectedCurveWidth / 2.));
-        // gl2psLineWidth((float) (ctx->geom.selectedCurveWidth / 2. *
-        // ctx->print.epsLineWidthFactor));
+        glColor3f(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+    }
+    else if (f->getSelection() == SELECTED) {
+        glLineWidth((float) (ctx->geom.selectedCurveWidth / 2.));
         glColor4ubv((GLubyte *) &ctx->color.geom.selection);
     }
     else {
         glLineWidth((float) (ctx->geom.curveWidth / 2.));
-        // gl2psLineWidth((float) (ctx->geom.curveWidth / 2. * ctx->print.epsLineWidthFactor));
         unsigned int col = f->useColor() ? f->getColor() : ctx->color.geom.surface;
         glColor4ubv((GLubyte *) &col);
     }
@@ -321,7 +326,6 @@ View::DrawGFace::operator()(GFace * f)
         else {
             glEnable(GL_LINE_STIPPLE);
             glLineStipple(1, 0x0F0F);
-            // gl2psEnable(GL2PS_LINE_STIPPLE);
             for (int dim = 0; dim < 2; dim++) {
                 for (std::size_t i = 0; i < f->cross[dim].size(); i++) {
                     if (f->cross[dim][i].size() >= 2) {
@@ -338,7 +342,6 @@ View::DrawGFace::operator()(GFace * f)
                 }
             }
             glDisable(GL_LINE_STIPPLE);
-            // gl2psDisable(GL2PS_LINE_STIPPLE);
         }
     }
 
@@ -350,8 +353,7 @@ View::DrawGFace::operator()(GFace * f)
             double y = f->cross[0][0][idx].y();
             double z = f->cross[0][0][idx].z();
             this->view->transform(x, y, z);
-            if (f->getSelection() > 1)
-                glColor4ubv((GLubyte *) &ctx->color.fg);
+            glColor4ubv((GLubyte *) &ctx->color.fg);
             this->view->drawEntityLabel(f, x, y, z, offset);
         }
 
@@ -401,14 +403,16 @@ View::DrawGRegion::operator()(GRegion * rgn)
     else
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
-    if (rgn->getSelection()) {
+    if (rgn->getSelection() == HIGHLIGHT) {
         glLineWidth((float) ctx->geom.selectedCurveWidth);
-        // gl2psLineWidth((float) (ctx->geom.selectedCurveWidth * ctx->print.epsLineWidthFactor));
+        glColor3f(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+    }
+    else if (rgn->getSelection() == SELECTED) {
+        glLineWidth((float) ctx->geom.selectedCurveWidth);
         glColor4ubv((GLubyte *) &ctx->color.geom.selection);
     }
     else {
         glLineWidth((float) ctx->geom.curveWidth);
-        // gl2psLineWidth((float) (ctx->geom.curveWidth * ctx->print.epsLineWidthFactor));
         unsigned int col = rgn->useColor() ? rgn->getColor() : ctx->color.geom.volume;
         glColor4ubv((GLubyte *) &col);
     }
@@ -454,8 +458,7 @@ View::DrawGRegion::operator()(GRegion * rgn)
 
     if (show_volume_labels || rgn->getSelection() > 1) {
         double offset = (1. * size + 0.1 * CTX::instance()->glFontSize) * this->view->pixel_equiv_x;
-        if (rgn->getSelection() > 1)
-            glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
+        glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
         this->view->drawEntityLabel(rgn, x, y, z, offset);
     }
 

@@ -38,6 +38,7 @@ class GFace;
 class GRegion;
 class MVertex;
 class VertexArray;
+class PView;
 
 unsigned int getColorByEntity(GEntity * e);
 bool isElementVisible(MElement * ele);
@@ -45,6 +46,8 @@ bool isElementVisible(MElement * ele);
 class View : public QOpenGLWidget {
 public:
     enum RenderMode { GMSH_RENDER = 1, GMSH_SELECT = 2, GMSH_FEEDBACK = 3 };
+
+    enum SelectionType { NONE, HIGHLIGHT = 1, SELECTED = 2 };
 
     explicit View(MainWindow * main_wnd);
     ~View() override;
@@ -225,6 +228,28 @@ protected:
         }
     };
 
+    class Hit {
+    public:
+        GLuint type, ient, depth, type2, ient2;
+        Hit(GLuint t, GLuint i, GLuint d, GLuint t2 = 0, GLuint i2 = 0) :
+            type(t),
+            ient(i),
+            depth(d),
+            type2(t2),
+            ient2(i2)
+        {
+        }
+    };
+
+    class HitDepthLessThan {
+    public:
+        bool
+        operator()(const Hit & h1, const Hit & h2) const
+        {
+            return h1.depth < h2.depth;
+        }
+    };
+
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
@@ -335,6 +360,7 @@ protected:
     void viewport2World(double vp[3], double xyz[3]) const;
     void world2Viewport(double xyz[3], double vp[3]) const;
     std::array<int, 4> getViewport();
+    std::array<double, 4> getViewportF();
     int getWidth() const;
     double getWidthF() const;
     int getHeight() const;
@@ -391,6 +417,22 @@ protected:
                  double value_p1[3],
                  double value_p2[3]);
 
+    bool select(int type,
+                bool multiple,
+                bool mesh,
+                bool post,
+                int x,
+                int y,
+                int w,
+                int h,
+                std::vector<GVertex *> & vertices,
+                std::vector<GEdge *> & edges,
+                std::vector<GFace *> & faces,
+                std::vector<GRegion *> & regions,
+                std::vector<MElement *> & elements,
+                std::vector<SPoint2> & points,
+                std::vector<PView *> & views);
+
     void zoomToPoint(const QPointF & pt, double zoomFactor);
     //
     void wheelEvent(QWheelEvent * event) override;
@@ -399,6 +441,9 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
     void mouseDragEvent(QMouseEvent * event);
     void mouseHoverEvent(QMouseEvent * event);
+
+protected slots:
+    void onHighlight();
 
     MainWindow * main_window;
 
@@ -432,6 +477,7 @@ protected:
     bool is_dragging;
     Qt::MouseButton event_btn;
     MousePosition _click, _curr, _prev;
+    QTimer * hilight_timer;
 };
 
 template <class T>

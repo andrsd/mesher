@@ -5,6 +5,7 @@
 #include "VertexArray.h"
 #include "Trackball.h"
 #include "StringUtils.h"
+#include "PView.h"
 #include <QOpenGLFunctions>
 #include <QPainter>
 #include <QWheelEvent>
@@ -34,6 +35,24 @@ needPolygonOffset()
     return 0;
 }
 
+// returns the element at a given position in a vertex array (element pointers
+// are not always stored: returning 0 is not an error)
+static MElement *
+getElement(GEntity * e, int va_type, int index)
+{
+    switch (va_type) {
+    case 2:
+        if (e->va_lines && index < e->va_lines->getNumElementPointers())
+            return *e->va_lines->getElementPointerArray(index);
+        break;
+    case 3:
+        if (e->va_triangles && index < e->va_triangles->getNumElementPointers())
+            return *e->va_triangles->getElementPointerArray(index);
+        break;
+    }
+    return nullptr;
+}
+
 View::View(MainWindow * main_wnd) :
     main_window(main_wnd),
     width(0),
@@ -41,6 +60,8 @@ View::View(MainWindow * main_wnd) :
     _transform(nullptr),
     is_dragging(false)
 {
+    setMouseTracking(true);
+
     auto ctx = CTX::instance();
     // initialize from temp values in global context
     for (int i = 0; i < 3; i++) {
@@ -59,11 +80,16 @@ View::View(MainWindow * main_wnd) :
     // cannot create it here: needs valid opengl context
     this->quadric = nullptr;
     this->display_lists = 0;
+
+    this->hilight_timer = new QTimer;
+    this->hilight_timer->setSingleShot(true);
+    connect(this->hilight_timer, &QTimer::timeout, this, &View::onHighlight);
 }
 
 View::~View()
 {
     invalidateQuadricsAndDisplayLists();
+    delete this->hilight_timer;
 }
 
 View::RenderMode
@@ -120,6 +146,12 @@ std::array<int, 4>
 View::getViewport()
 {
     return { 0, 0, HIDPI(this->width), HIDPI(this->height) };
+}
+
+std::array<double, 4>
+View::getViewportF()
+{
+    return { 0., 0., HIDPI<double>(this->width), HIDPI<double>(this->height) };
 }
 
 void
@@ -314,10 +346,10 @@ View::initProjection(int xpick, int ypick, int wpick, int hpick)
         // restrict picking to a rectangular region around xpick,ypick
         auto viewport = getViewport();
         if (this->render_mode == GMSH_SELECT)
-            gluPickMatrix((GLdouble) xpick,
-                          (GLdouble) (this->height - ypick),
-                          (GLdouble) wpick,
-                          (GLdouble) hpick,
+            gluPickMatrix(HIDPI<GLdouble>(xpick),
+                          HIDPI<GLdouble>(this->height - ypick),
+                          HIDPI<GLdouble>(wpick),
+                          HIDPI<GLdouble>(hpick),
                           (GLint *) viewport.data());
 
         // draw background if not in selection mode
@@ -1887,6 +1919,10 @@ View::mousePressEvent(QMouseEvent * event)
 void
 View::mouseMoveEvent(QMouseEvent * event)
 {
+    GModel * m = GModel::current();
+    m->setSelection(0);
+    update();
+
     if (this->is_dragging)
         mouseDragEvent(event);
     else
@@ -1929,6 +1965,8 @@ void
 View::mouseHoverEvent(QMouseEvent * event)
 {
     // hover
+    this->_curr.set(this, event->pos());
+    this->hilight_timer->start(100);
 }
 
 void
@@ -1941,4 +1979,271 @@ View::mouseReleaseEvent(QMouseEvent * event)
     CTX::instance()->post.draw = 1;
     update();
     this->_prev.set(this, event->pos());
+}
+
+void
+View::onHighlight()
+{
+    std::vector<GVertex *> vertices;
+    std::vector<GEdge *> edges;
+    std::vector<GFace *> faces;
+    std::vector<GRegion *> regions;
+    std::vector<MElement *> elements;
+    std::vector<SPoint2> points;
+    std::vector<PView *> views;
+    bool res = select(ENT_ALL,
+                      true,
+                      CTX::instance()->mouseHoverMeshes,
+                      false,
+                      (int) _curr.win[0],
+                      (int) _curr.win[1],
+                      5,
+                      5,
+                      vertices,
+                      edges,
+                      faces,
+                      regions,
+                      elements,
+                      points,
+                      views);
+    if (res) {
+        if (!vertices.empty()) {
+            vertices[0]->setSelection(HIGHLIGHT);
+        }
+        else if (!edges.empty()) {
+            edges[0]->setSelection(HIGHLIGHT);
+        }
+        else if (!faces.empty()) {
+            faces[0]->setSelection(HIGHLIGHT);
+        }
+        else if (!regions.empty()) {
+            regions[0]->setSelection(HIGHLIGHT);
+        }
+        update();
+    }
+}
+
+bool
+View::select(int type,
+             bool multiple,
+             bool mesh,
+             bool post,
+             int x,
+             int y,
+             int w,
+             int h,
+             std::vector<GVertex *> & vertices,
+             std::vector<GEdge *> & edges,
+             std::vector<GFace *> & faces,
+             std::vector<GRegion *> & regions,
+             std::vector<MElement *> & elements,
+             std::vector<SPoint2> & points,
+             std::vector<PView *> & views)
+{
+    vertices.clear();
+    edges.clear();
+    faces.clear();
+    regions.clear();
+    elements.clear();
+    points.clear();
+    views.clear();
+
+    // in our case the selection buffer size is equal to between 5 and 7 times the
+    // maximum number of possible hits
+    GModel * m = GModel::current();
+    int eles = (mesh && CTX::instance()->pickElements) ? 4 * m->getNumMeshElements() : 0;
+    int nviews = PView::list.size() * 100;
+    int size = 7 * (m->getNumVertices() + m->getNumEdges() + m->getNumFaces() + m->getNumRegions() +
+                    eles) +
+               nviews;
+    if (size == 0)
+        return false; // the model is empty, don't bother!
+
+    // allocate selection buffer
+    size += 1000; // just to make sure
+    GLuint * selection_buffer = new GLuint[size];
+    glSelectBuffer(size, selection_buffer);
+
+    // do one rendering pass in select mode
+    this->render_mode = GMSH_SELECT;
+    glRenderMode(GL_SELECT);
+    glInitNames();
+    glPushMatrix();
+
+    // 3d stuff
+    initProjection(x, y, w, h);
+    initPosition(false);
+    drawGeom();
+    if (mesh)
+        drawMesh();
+    // if(post) drawPost();
+    // drawGraph2D(true);
+
+    auto viewport = getViewportF();
+    // 2d stuff
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPickMatrix(HIDPI<GLdouble>(x),
+                  viewport[3] - HIDPI<GLdouble>(y),
+                  HIDPI<GLdouble>(w),
+                  HIDPI<GLdouble>(h),
+                  (GLint *) viewport.data());
+    // in pixels, so we can draw some 3D glyphs
+    glOrtho(viewport[0], viewport[2], viewport[1], viewport[3], HIDPI(-100.), HIDPI(100.));
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    drawGraph2D(false);
+    drawText2D();
+
+    glPopMatrix();
+
+    GLint num_hits = glRenderMode(GL_RENDER);
+    this->render_mode = GMSH_RENDER;
+
+    if (!num_hits) {
+        // no hits
+        delete[] selection_buffer;
+        return false;
+    }
+    else if (num_hits < 0) {
+        // overflow
+        delete[] selection_buffer;
+        Msg::Warning("Too many entities selected");
+        return false;
+    }
+
+    // decode the hits
+    std::vector<Hit> hits;
+    GLuint * ptr = selection_buffer;
+    for (int i = 0; i < num_hits; i++) {
+        // in Gmsh 'names' should always be 0, 2 or 4:
+        // * names == 0 means that there is nothing on the stack
+        // * if names == 2, the first name is the type of the entity (0 for point, 1
+        //   for edge, 2 for face or 3 for volume) and the second is the entity
+        //   number;
+        // * if names == 4, the first name is the type of the entity, the second is
+        //   the entity number, the third is the type of vertex array (2 for line, 3
+        //   for triangle, 4 for quad) and the fourth is the index of the element in
+        //   the vertex array
+        GLuint names = *ptr++;
+        GLuint mindepth = *ptr++;
+        GLuint maxdepth = *ptr++;
+        if (names == 2) {
+            GLuint depth = maxdepth + 0 * mindepth; // could do something with mindepth
+            GLuint type = *ptr++;
+            GLuint ient = *ptr++;
+            hits.push_back(Hit(type, ient, depth));
+        }
+        else if (names == 4) {
+            GLuint depth = maxdepth + 0 * mindepth; // could do something with mindepth
+            GLuint type = *ptr++;
+            GLuint ient = *ptr++;
+            GLuint type2 = *ptr++;
+            GLuint ient2 = *ptr++;
+            hits.push_back(Hit(type, ient, depth, type2, ient2));
+        }
+    }
+
+    delete[] selection_buffer;
+
+    if (!hits.size()) {
+        // no entities
+        return false;
+    }
+
+    // sort hits to get closest entities first
+    std::sort(hits.begin(), hits.end(), HitDepthLessThan());
+
+    // filter result: if type == ENT_NONE, return the closest entity of "lowest
+    // dimension" (point < line < surface < volume). Otherwise, return the closest
+    // entity of type "type"
+    GLuint typmin = 10;
+    for (std::size_t i = 0; i < hits.size(); i++)
+        typmin = std::min(typmin, hits[i].type);
+
+    for (std::size_t i = 0; i < hits.size(); i++) {
+        if ((type == ENT_ALL) || (type == ENT_NONE && hits[i].type == typmin) ||
+            (type == ENT_POINT && hits[i].type == 0) || (type == ENT_CURVE && hits[i].type == 1) ||
+            (type == ENT_SURFACE && hits[i].type == 2) ||
+            (type == ENT_VOLUME && hits[i].type == 3)) {
+            switch (hits[i].type) {
+            case 0: {
+                GVertex * v = m->getVertexByTag(hits[i].ient);
+                if (!v) {
+                    Msg::Error("Problem in point selection processing");
+                    return false;
+                }
+                vertices.push_back(v);
+                if (!multiple)
+                    return true;
+            } break;
+            case 1: {
+                GEdge * e = m->getEdgeByTag(hits[i].ient);
+                if (!e) {
+                    Msg::Error("Problem in line selection processing");
+                    return false;
+                }
+                if (hits[i].type2) {
+                    MElement * ele = getElement(e, hits[i].type2, hits[i].ient2);
+                    if (ele)
+                        elements.push_back(ele);
+                }
+                edges.push_back(e);
+                if (!multiple)
+                    return true;
+            } break;
+            case 2: {
+                GFace * f = m->getFaceByTag(hits[i].ient);
+                if (!f) {
+                    Msg::Error("Problem in surface selection processing");
+                    return false;
+                }
+                if (hits[i].type2) {
+                    MElement * ele = getElement(f, hits[i].type2, hits[i].ient2);
+                    if (ele)
+                        elements.push_back(ele);
+                }
+                faces.push_back(f);
+                if (!multiple)
+                    return true;
+            } break;
+            case 3: {
+                GRegion * r = m->getRegionByTag(hits[i].ient);
+                if (!r) {
+                    Msg::Error("Problem in volume selection processing");
+                    return false;
+                }
+                if (hits[i].type2) {
+                    MElement * ele = getElement(r, hits[i].type2, hits[i].ient2);
+                    if (ele)
+                        elements.push_back(ele);
+                }
+                regions.push_back(r);
+                if (!multiple)
+                    return true;
+            } break;
+            case 4: {
+                // NOTE: we are not using 2D graphs
+                // int tag = hits[i].ient;
+                // SPoint2 p = getGraph2dDataPointForTag(tag);
+                // points.push_back(p);
+                // if (!multiple)
+                //     return true;
+            } break;
+            case 5: {
+                // NOTE: we are not using PViews
+                // int tag = hits[i].ient;
+                // if (tag >= 0 && tag < (int) PView::list.size())
+                //     views.push_back(PView::list[tag]);
+                // if (!multiple)
+                //     return true;
+            } break;
+            }
+        }
+    }
+
+    if (vertices.size() || edges.size() || faces.size() || regions.size() || elements.size() ||
+        points.size() || views.size())
+        return true;
+    return false;
 }
