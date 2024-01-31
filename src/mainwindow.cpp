@@ -171,6 +171,26 @@ MainWindow::setupToolBar()
     visible_action->setCheckable(true);
     connect(visible_action, &QAction::toggled, this, &MainWindow::onToggleVisibilitySettings);
     this->tool_bar->addAction(visible_action);
+
+    this->tool_bar->addSeparator();
+
+    auto set_x_action = new QAction("X");
+    connect(set_x_action, &QAction::triggered, this, &MainWindow::onSetX);
+    this->tool_bar->addAction(set_x_action);
+
+    auto set_y_action = new QAction("Y");
+    connect(set_y_action, &QAction::triggered, this, &MainWindow::onSetY);
+    this->tool_bar->addAction(set_y_action);
+
+    auto set_z_action = new QAction("Z");
+    connect(set_z_action, &QAction::triggered, this, &MainWindow::onSetZ);
+    this->tool_bar->addAction(set_z_action);
+
+    auto set_1to1_action = new QAction("1:1");
+    connect(set_1to1_action, &QAction::triggered, this, &MainWindow::onSet1to1);
+    this->tool_bar->addAction(set_1to1_action);
+
+    addToolBar(this->tool_bar);
 }
 
 void
@@ -494,5 +514,37 @@ MainWindow::onToggleVisibilitySettings(bool checked)
 void
 MainWindow::onVisibilitySettingsChanged()
 {
+    this->view->update();
+}
+
+void
+MainWindow::onSetX()
+{
+    this->view->setEulerAngles({-90, 0, -90});
+    this->view->setQuaternionFromEulerAngles();
+    this->view->update();
+}
+
+void
+MainWindow::onSetY()
+{
+    this->view->setEulerAngles({-90, 0, 180});
+    this->view->setQuaternionFromEulerAngles();
+    this->view->update();
+}
+
+void
+MainWindow::onSetZ()
+{
+    this->view->setEulerAngles({0, 0, 0});
+    this->view->setQuaternionFromEulerAngles();
+    this->view->update();
+}
+
+void
+MainWindow::onSet1to1()
+{
+    this->view->setTranslation({0., 0., 0.});
+    this->view->setScale({1., 1., 1.});
     this->view->update();
 }

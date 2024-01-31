@@ -151,6 +151,24 @@ View::isVisible(GModel * m) const
 }
 
 void
+View::setTranslation(const std::array<double, 3> & trans)
+{
+    this->t = trans;
+}
+
+void
+View::setScale(const std::array<double, 3> & scale)
+{
+    this->s = scale;
+}
+
+void
+View::setEulerAngles(const std::array<double, 3> & angles)
+{
+    this->r = angles;
+}
+
+void
 View::initializeGL()
 {
 }

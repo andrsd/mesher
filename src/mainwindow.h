@@ -73,6 +73,10 @@ public slots:
     void onShowMessages();
     void onToggleVisibilitySettings(bool checked);
     void onVisibilitySettingsChanged();
+    void onSetX();
+    void onSetY();
+    void onSetZ();
+    void onSet1to1();
 
 protected:
     static QSettings * settings;

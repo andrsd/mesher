@@ -56,6 +56,11 @@ public:
     void showAll();
     bool isVisible(GModel * m) const;
 
+    void setTranslation(const std::array<double, 3> & trans);
+    void setScale(const std::array<double, 3> & scale);
+    void setEulerAngles(const std::array<double, 3> & angles);
+    void setQuaternionFromEulerAngles();
+
 protected:
     class DrawGVertex {
     private:
@@ -234,7 +239,6 @@ protected:
     void addQuaternion(double p1x, double p1y, double p2x, double p2y);
     void addQuaternionFromAxisAndAngle(double axis[3], double angle);
     void setQuaternion(double q0, double q1, double q2, double q3);
-    void setQuaternionFromEulerAngles();
     void setEulerAnglesFromRotationMatrix();
     void drawGeom();
 
@@ -405,7 +409,7 @@ protected:
 
     Camera camera;
     // current Euler angles (in degrees)
-    double r[3];
+    std::array<double, 3> r;
     // current translation and scale
     std::array<double, 3> t, s;
     // current quaternion used for "trackball" rotation
