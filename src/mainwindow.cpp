@@ -69,6 +69,9 @@ MainWindow::MainWindow(QWidget * parent) :
 
     setAcceptDrops(true);
 
+    this->select_other_kbd = new QShortcut(QKeySequence(Qt::Key_QuoteLeft), this);
+    this->deselect_all_kbd = new QShortcut(QKeySequence(Qt::Key_Space), this);
+
     connectSignals();
 
     clear();
@@ -225,6 +228,9 @@ MainWindow::connectSignals()
             &VisibilitySettingsDialog::changed,
             this,
             &MainWindow::onVisibilitySettingsChanged);
+
+    connect(this->select_other_kbd, &QShortcut::activated, this->view, &View::onSelectOther);
+    connect(this->deselect_all_kbd, &QShortcut::activated, this->view, &View::onDeselectAll);
 }
 
 void

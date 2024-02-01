@@ -1,5 +1,6 @@
 #include "view.h"
 #include "mainwindow.h"
+#include "selectothersdialog.h"
 #include "gl2ps.h"
 #include "GModel.h"
 #include "VertexArray.h"
@@ -10,6 +11,8 @@
 #include <QPainter>
 #include <QWheelEvent>
 #include <QSettings>
+#include <QShortcut>
+#include "selectioninfowidget.h"
 
 static int
 needPolygonOffset()
@@ -58,7 +61,9 @@ View::View(MainWindow * main_wnd) :
     width(0),
     height(0),
     _transform(nullptr),
-    is_dragging(false)
+    is_dragging(false),
+    highlighted_entity(nullptr),
+    selection_info(nullptr)
 {
     setMouseTracking(true);
 
@@ -84,6 +89,14 @@ View::View(MainWindow * main_wnd) :
     this->hilight_timer = new QTimer;
     this->hilight_timer->setSingleShot(true);
     connect(this->hilight_timer, &QTimer::timeout, this, &View::onHighlight);
+
+    this->select_others_dlg = new SelectOthersDialog(this);
+
+    this->selection_info = new SelectionInfoWidget(this);
+    this->selection_info->setVisible(true);
+    this->selection_info->setText("");
+
+    connect(this, &View::selectionChanged, this, &View::onSelectionChanged);
 }
 
 View::~View()
@@ -1920,7 +1933,10 @@ void
 View::mouseMoveEvent(QMouseEvent * event)
 {
     GModel * m = GModel::current();
-    m->setSelection(0);
+    if (this->highlighted_entity)
+        this->highlighted_entity->setSelection(NONE);
+    for (auto & e : this->selected_entities)
+        e->setSelection(SELECTED);
     update();
 
     if (this->is_dragging)
@@ -1974,6 +1990,18 @@ View::mouseReleaseEvent(QMouseEvent * event)
 {
     this->is_dragging = false;
     this->_curr.set(this, event->pos());
+    if ((this->_curr.win[0] == this->_click.win[0]) &&
+        (this->_curr.win[1] == this->_click.win[1]) && this->highlighted_entity) {
+        if (this->selected_entities.find(this->highlighted_entity) ==
+            this->selected_entities.end()) {
+            selectEntity(this->highlighted_entity);
+        }
+        else {
+            this->highlighted_entity->setSelection(HIGHLIGHT);
+            this->selected_entities.erase(this->highlighted_entity);
+            emit selectionChanged();
+        }
+    }
     CTX::instance()->drawRotationCenter = 0;
     CTX::instance()->mesh.draw = 1;
     CTX::instance()->post.draw = 1;
@@ -1982,13 +2010,16 @@ View::mouseReleaseEvent(QMouseEvent * event)
 }
 
 void
+View::selectEntity(GEntity * entity)
+{
+    this->selected_entities.insert(entity);
+    entity->setSelection(SELECTED);
+    emit selectionChanged();
+}
+
+void
 View::onHighlight()
 {
-    std::vector<GVertex *> vertices;
-    std::vector<GEdge *> edges;
-    std::vector<GFace *> faces;
-    std::vector<GRegion *> regions;
-    std::vector<MElement *> elements;
     std::vector<SPoint2> points;
     std::vector<PView *> views;
     bool res = select(ENT_ALL,
@@ -1999,28 +2030,36 @@ View::onHighlight()
                       (int) _curr.win[1],
                       5,
                       5,
-                      vertices,
-                      edges,
-                      faces,
-                      regions,
-                      elements,
+                      this->hover_vertices,
+                      this->hover_edges,
+                      this->hover_faces,
+                      this->hover_regions,
+                      this->hover_elements,
                       points,
                       views);
     if (res) {
-        if (!vertices.empty()) {
-            vertices[0]->setSelection(HIGHLIGHT);
+        if (!this->hover_vertices.empty()) {
+            this->hover_vertices[0]->setSelection(HIGHLIGHT);
+            this->highlighted_entity = this->hover_vertices[0];
         }
-        else if (!edges.empty()) {
-            edges[0]->setSelection(HIGHLIGHT);
+        else if (!this->hover_edges.empty()) {
+            this->hover_edges[0]->setSelection(HIGHLIGHT);
+            this->highlighted_entity = this->hover_edges[0];
         }
-        else if (!faces.empty()) {
-            faces[0]->setSelection(HIGHLIGHT);
+        else if (!this->hover_faces.empty()) {
+            this->hover_faces[0]->setSelection(HIGHLIGHT);
+            this->highlighted_entity = this->hover_faces[0];
         }
-        else if (!regions.empty()) {
-            regions[0]->setSelection(HIGHLIGHT);
+        else if (!this->hover_regions.empty()) {
+            this->hover_regions[0]->setSelection(HIGHLIGHT);
+            this->highlighted_entity = this->hover_regions[0];
         }
+        else
+            this->highlighted_entity = nullptr;
         update();
     }
+    else
+        this->highlighted_entity = nullptr;
 }
 
 bool
@@ -2246,4 +2285,62 @@ View::select(int type,
         points.size() || views.size())
         return true;
     return false;
+}
+
+void
+View::onSelectOther()
+{
+    if (this->select_others_dlg->isVisible()) {
+        this->select_others_dlg->hide();
+    }
+    else {
+        std::vector<GEntity *> entities;
+        for (auto & e : this->hover_vertices)
+            entities.push_back(e);
+        for (auto & e : this->hover_edges)
+            entities.push_back(e);
+        for (auto & e : this->hover_faces)
+            entities.push_back(e);
+        for (auto & e : this->hover_regions)
+            entities.push_back(e);
+        this->select_others_dlg->setEntities(entities);
+
+        auto pos = QCursor::pos();
+        pos += QPoint(30, 20);
+        this->select_others_dlg->move(pos);
+        this->select_others_dlg->show();
+    }
+}
+
+void
+View::onDeselectAll()
+{
+    for (auto & e : this->selected_entities)
+        e->setSelection(NONE);
+    this->selected_entities.clear();
+    emit selectionChanged();
+    update();
+}
+
+void
+View::onSelectionChanged()
+{
+    QString text;
+    if (this->selected_entities.size() == 0) {
+        text = " ";
+    }
+    else if (this->selected_entities.size() == 1) {
+        auto ent = *this->selected_entities.begin();
+        text = QString("%1 %2").arg(ent->getTypeString().c_str(), QString::number(ent->tag()));
+    }
+    else {
+        text = QString("Selected entities: %1").arg(this->selected_entities.size());
+    }
+
+    this->selection_info->setText(text);
+    this->selection_info->adjustSize();
+    auto geom = this->geometry();
+    this->selection_info->move(geom.width() - this->selection_info->width() - 10 - 80,
+                               geom.height() - this->selection_info->height() - 5);
+    this->update();
 }

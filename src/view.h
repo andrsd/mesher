@@ -39,11 +39,15 @@ class GRegion;
 class MVertex;
 class VertexArray;
 class PView;
+class QShortcut;
+class SelectOthersDialog;
+class SelectionInfoWidget;
 
 unsigned int getColorByEntity(GEntity * e);
 bool isElementVisible(MElement * ele);
 
 class View : public QOpenGLWidget {
+    Q_OBJECT
 public:
     enum RenderMode { GMSH_RENDER = 1, GMSH_SELECT = 2, GMSH_FEEDBACK = 3 };
 
@@ -63,6 +67,7 @@ public:
     void setScale(const std::array<double, 3> & scale);
     void setEulerAngles(const std::array<double, 3> & angles);
     void setQuaternionFromEulerAngles();
+    void selectEntity(GEntity * entity);
 
 protected:
     class DrawGVertex {
@@ -442,9 +447,18 @@ protected:
     void mouseDragEvent(QMouseEvent * event);
     void mouseHoverEvent(QMouseEvent * event);
 
+signals:
+    void selectionChanged();
+
 protected slots:
     void onHighlight();
+    void onSelectionChanged();
 
+public slots:
+    void onSelectOther();
+    void onDeselectAll();
+
+protected:
     MainWindow * main_window;
 
     DrawTransform * _transform;
@@ -478,6 +492,17 @@ protected slots:
     Qt::MouseButton event_btn;
     MousePosition _click, _curr, _prev;
     QTimer * hilight_timer;
+    SelectOthersDialog * select_others_dlg;
+
+    // entities that are found under the mouse cursor when it stops
+    std::vector<GVertex *> hover_vertices;
+    std::vector<GEdge *> hover_edges;
+    std::vector<GFace *> hover_faces;
+    std::vector<GRegion *> hover_regions;
+    std::vector<MElement *> hover_elements;
+    GEntity * highlighted_entity;
+    std::set<GEntity *> selected_entities;
+    SelectionInfoWidget * selection_info;
 };
 
 template <class T>

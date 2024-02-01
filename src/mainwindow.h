@@ -20,6 +20,7 @@ class Document;
 class LoggerDialog;
 class ToolBar;
 class VisibilitySettingsDialog;
+class QShortcut;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -108,6 +109,8 @@ protected:
     Document * doc;
 
     LoggerDialog * logger;
+    QShortcut * select_other_kbd;
+    QShortcut * deselect_all_kbd;
 
 public:
     static QSettings * getSettings();
