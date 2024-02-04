@@ -1625,7 +1625,9 @@ View::drawEntityLabel(GEntity * e, double x, double y, double z, double offset)
 
     auto ctx = CTX::instance();
 
-    if (ctx->geom.labelType == 0) {
+    auto settings = MainWindow::getSettings();
+    auto label_type = settings->value("visibility/geo/label_type").toInt();
+    if (label_type == 0) {
         std::vector<std::string> info = SplitString(e->getInfoString(false, true), '\n');
         for (int line = 0; line < (int) info.size(); line++)
             drawString(info[line].c_str(), xx, yy, zz, line);
@@ -1633,10 +1635,10 @@ View::drawEntityLabel(GEntity * e, double x, double y, double z, double offset)
     }
 
     char str[1024];
-    if (ctx->geom.labelType == 1) {
+    if (label_type == 1) {
         snprintf(str, 1024, "%d", e->tag());
     }
-    else if (ctx->geom.labelType == 2) {
+    else if (label_type == 2) {
         strcpy(str, "");
         for (std::size_t i = 0; i < e->physicals.size(); i++) {
             char tmp[32];
@@ -1646,7 +1648,7 @@ View::drawEntityLabel(GEntity * e, double x, double y, double z, double offset)
             strcat(str, tmp);
         }
     }
-    else if (ctx->geom.labelType == 3) {
+    else if (label_type == 3) {
         strcpy(str, e->model()->getElementaryName(e->dim(), e->tag()).c_str());
     }
     else {
