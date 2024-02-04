@@ -21,6 +21,7 @@ class LoggerDialog;
 class ToolBar;
 class VisibilitySettingsDialog;
 class QShortcut;
+class BaseTool;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -79,8 +80,11 @@ public slots:
     void onSetZ();
     void onSet1to1();
     void onSettingsChanged();
+    void onPointTool();
 
 protected:
+    void moveToolToTopLeft(BaseTool * tool);
+
     static QSettings * settings;
     QMenuBar * menu_bar;
     QMenu * recent_menu;

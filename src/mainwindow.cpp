@@ -27,6 +27,7 @@
 #include "common/toolbar.h"
 #include "visibilitysettingsdialog.h"
 #include "GmshMessage.h"
+#include "tools/pointtool.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -192,6 +193,12 @@ MainWindow::setupToolBar()
     auto set_1to1_action = new QAction("1:1");
     connect(set_1to1_action, &QAction::triggered, this, &MainWindow::onSet1to1);
     this->tool_bar->addAction(set_1to1_action);
+
+    this->tool_bar->addSeparator();
+
+    auto point_tool_action = new QAction("Pt");
+    connect(point_tool_action, &QAction::triggered, this, &MainWindow::onPointTool);
+    this->tool_bar->addAction(point_tool_action);
 
     addToolBar(this->tool_bar);
 }
@@ -560,4 +567,27 @@ MainWindow::onSettingsChanged()
 {
     qDebug() << "onSettingsChanged()";
     this->view->update();
+}
+
+void
+MainWindow::moveToolToTopLeft(BaseTool * tool)
+{
+    auto geom = this->view->geometry();
+    auto pt = this->mapToGlobal(geom.topLeft());
+
+    auto tb_geom = this->tool_bar->geometry();
+    pt += QPoint(0, tb_geom.height());
+
+    tool->move(pt);
+}
+
+void
+MainWindow::onPointTool()
+{
+    auto dlg = new PointTool("Point 1", this);
+
+    this->left->add(dlg);
+
+    moveToolToTopLeft(dlg);
+    dlg->show();
 }

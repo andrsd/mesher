@@ -2,7 +2,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(APP_ICON_MACOSX icon.icns)
 endif()
 
-file(GLOB SRCS CONFIGURE_DEPENDS *.cpp)
+file(GLOB SRCS CONFIGURE_DEPENDS *.cpp tools/*.cpp)
 
 add_executable(
     ${PROJECT_NAME}
