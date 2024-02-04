@@ -1896,10 +1896,12 @@ View::wheelEvent(QWheelEvent * event)
 {
     auto settings = MainWindow::getSettings();
     auto mouse_invert_zoom = settings->value("general/invert_zoom_direction").toBool();
+    // Should this be a user setting
+    double zoom_factor = 4.0;
 
     double dy = event->pixelDelta().y();
     auto h = getHeightF();
-    double fact = (5. * CTX::instance()->zoomFactor * fabs(dy) + h) / h;
+    double fact = (5. * zoom_factor * fabs(dy) + h) / h;
     bool direction = (mouse_invert_zoom) ? (dy <= 0) : (dy > 0);
     fact = (direction ? fact : 1. / fact);
     if (CTX::instance()->camera) {
