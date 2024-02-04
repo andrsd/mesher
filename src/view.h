@@ -69,6 +69,8 @@ public:
     void setQuaternionFromEulerAngles();
     void selectEntity(GEntity * entity);
 
+    GEntity * getHighlightedEntity() const;
+
 protected:
     class DrawGVertex {
     private:

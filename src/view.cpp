@@ -2033,6 +2033,12 @@ View::selectEntity(GEntity * entity)
     emit selectionChanged();
 }
 
+GEntity *
+View::getHighlightedEntity() const
+{
+    return this->highlighted_entity;
+}
+
 void
 View::onHighlight()
 {

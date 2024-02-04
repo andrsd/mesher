@@ -45,11 +45,16 @@ SelectOthersDialog::setEntities(const std::vector<GEntity *> & ents)
 {
     this->entities->clear();
 
+    auto bold_fnt = this->font();
+    bold_fnt.setWeight(QFont::Bold);
+
     for (auto & e : ents) {
         QListWidgetItem * item = new QListWidgetItem(this->entities);
         auto text = QString("%1 %2").arg(e->getTypeString().c_str(), QString::number(e->tag()));
         item->setText(text);
         item->setData(Qt::UserRole, QVariant::fromValue(e));
+        if (e == this->view->getHighlightedEntity())
+            item->setFont(bold_fnt);
         this->entities->addItem(item);
     }
 }
