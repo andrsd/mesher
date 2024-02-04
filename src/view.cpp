@@ -1954,6 +1954,9 @@ View::mouseMoveEvent(QMouseEvent * event)
 void
 View::mouseDragEvent(QMouseEvent * event)
 {
+    auto settings = MainWindow::getSettings();
+    auto use_track_ball = settings->value("general/rotation").toInt();
+
     this->_curr.set(this, event->pos());
     double dx = this->_curr.win[0] - this->_prev.win[0];
     double dy = this->_curr.win[1] - this->_prev.win[1];
@@ -1966,7 +1969,7 @@ View::mouseDragEvent(QMouseEvent * event)
     }
     else if (this->event_btn == Qt::RightButton) {
         // rotate
-        if (CTX::instance()->useTrackball) {
+        if (use_track_ball) {
             auto w = getWidthF();
             auto h = getHeightF();
             addQuaternion((2. * this->_prev.win[0] - w) / w,
