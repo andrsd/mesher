@@ -529,12 +529,12 @@ View::createQuadricsAndDisplayLists()
         return;
     }
 
+    auto settings = MainWindow::getSettings();
+    auto quadric_subdivisions = settings->value("appearance/quadric_subdivs").toInt();
+
     // display list 0 (sphere)
     glNewList(this->display_lists + 0, GL_COMPILE);
-    gluSphere(this->quadric,
-              1.,
-              CTX::instance()->quadricSubdivisions,
-              CTX::instance()->quadricSubdivisions);
+    gluSphere(this->quadric, 1., quadric_subdivisions, quadric_subdivisions);
     glEndList();
 
     // display list 1 (arrow)
@@ -545,19 +545,19 @@ View::createQuadricsAndDisplayLists()
                     CTX::instance()->arrowRelHeadRadius,
                     0.,
                     (1. - CTX::instance()->arrowRelStemLength),
-                    CTX::instance()->quadricSubdivisions,
+                    quadric_subdivisions,
                     1);
     if (CTX::instance()->arrowRelHeadRadius > CTX::instance()->arrowRelStemRadius)
         gluDisk(this->quadric,
                 CTX::instance()->arrowRelStemRadius,
                 CTX::instance()->arrowRelHeadRadius,
-                CTX::instance()->quadricSubdivisions,
+                quadric_subdivisions,
                 1);
     else
         gluDisk(this->quadric,
                 CTX::instance()->arrowRelHeadRadius,
                 CTX::instance()->arrowRelStemRadius,
-                CTX::instance()->quadricSubdivisions,
+                quadric_subdivisions,
                 1);
     glTranslated(0., 0., -CTX::instance()->arrowRelStemLength);
     if (CTX::instance()->arrowRelStemRadius > 0 && CTX::instance()->arrowRelStemLength > 0) {
@@ -565,19 +565,15 @@ View::createQuadricsAndDisplayLists()
                     CTX::instance()->arrowRelStemRadius,
                     CTX::instance()->arrowRelStemRadius,
                     CTX::instance()->arrowRelStemLength,
-                    CTX::instance()->quadricSubdivisions,
+                    quadric_subdivisions,
                     1);
-        gluDisk(this->quadric,
-                0,
-                CTX::instance()->arrowRelStemRadius,
-                CTX::instance()->quadricSubdivisions,
-                1);
+        gluDisk(this->quadric, 0, CTX::instance()->arrowRelStemRadius, quadric_subdivisions, 1);
     }
     glEndList();
 
     // display list 2 (disk)
     glNewList(this->display_lists + 2, GL_COMPILE);
-    gluDisk(this->quadric, 0, 1, CTX::instance()->quadricSubdivisions, 1);
+    gluDisk(this->quadric, 0, 1, quadric_subdivisions, 1);
     glEndList();
 }
 
@@ -1175,6 +1171,9 @@ View::drawCylinder(double width, double * x, double * y, double * z, int light)
     if (light)
         glEnable(GL_LIGHTING);
 
+    auto settings = MainWindow::getSettings();
+    auto quadric_subdivisions = settings->value("appearance/quadric_subdivs").toInt();
+
     double dx = x[1] - x[0];
     double dy = y[1] - y[0];
     double dz = z[1] - z[0];
@@ -1195,7 +1194,7 @@ View::drawCylinder(double width, double * x, double * y, double * z, int light)
     glPushMatrix();
     glTranslated(x[0], y[0], z[0]);
     glRotated(phi, axis[0], axis[1], axis[2]);
-    gluCylinder(this->quadric, radius, radius, length, CTX::instance()->quadricSubdivisions, 1);
+    gluCylinder(this->quadric, radius, radius, length, quadric_subdivisions, 1);
     glPopMatrix();
 
     glDisable(GL_LIGHTING);
