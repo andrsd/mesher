@@ -22,6 +22,9 @@ public:
                         const QString & key,
                         const QVariant & default_value) override;
 
+signals:
+    void changed();
+
 protected slots:
     void onXTextChanged(const QString & text);
     void onYTextChanged(const QString & text);

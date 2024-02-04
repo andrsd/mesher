@@ -92,6 +92,7 @@ PointWidget::onXTextChanged(const QString & text)
     auto y = this->y_edit->text().toDouble();
     auto z = this->z_edit->text().toDouble();
     storeSetting(QVector3D(x, y, z));
+    emit changed();
 }
 
 void
@@ -101,6 +102,7 @@ PointWidget::onYTextChanged(const QString & text)
     auto y = text.toDouble();
     auto z = this->z_edit->text().toDouble();
     storeSetting(QVector3D(x, y, z));
+    emit changed();
 }
 
 void
@@ -110,4 +112,5 @@ PointWidget::onZTextChanged(const QString & text)
     auto y = this->y_edit->text().toDouble();
     auto z = text.toDouble();
     storeSetting(QVector3D(x, y, z));
+    emit changed();
 }
