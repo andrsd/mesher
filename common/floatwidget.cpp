@@ -23,6 +23,12 @@ FloatWidget::setLabelText(const QString & txt)
 {
 }
 
+bool
+FloatWidget::hasValue() const
+{
+    return !text().isEmpty();
+}
+
 double
 FloatWidget::value() const
 {

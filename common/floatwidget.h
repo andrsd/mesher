@@ -16,6 +16,7 @@ public:
 
     void setLabelText(const QString & txt);
 
+    bool hasValue() const;
     double value() const;
     void setValue(double value);
 
