@@ -38,7 +38,7 @@ View::DrawGVertex::operator()(GVertex * v)
     auto clr_hilight0 = settings->value("appearance/geo/clr_hilight0").value<QColor>();
     auto clr_hilight1 = settings->value("appearance/geo/clr_hilight1").value<QColor>();
     auto clr_foregnd = settings->value("appearance/clr_foregnd").value<QColor>();
-    auto clr_geom_point = settings->value("appearance/clr_foregnd").value<QColor>();
+    auto clr_point = settings->value("appearance/geo/clr_points").value<QColor>();
     auto enable_lighting = settings->value("appearance/geo/enable_lighting").toBool();
     // FIXME: pull this from settings when font settings is implemented
     int font_size = 15;
@@ -69,7 +69,7 @@ View::DrawGVertex::operator()(GVertex * v)
             glColor4ubv((GLubyte *) &col);
         }
         else
-            glColorQColor(clr_geom_point);
+            glColorQColor(clr_point);
     }
 
     if (hilight_orphans) {
