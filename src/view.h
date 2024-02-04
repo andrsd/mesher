@@ -94,7 +94,7 @@ protected:
         void _drawVertexArray(VertexArray * va,
                               bool useNormalArray,
                               int forceColor = 0,
-                              unsigned int color = 0);
+                              const QColor & color = QColor());
 
     public:
         DrawGFace(View * view);

@@ -169,7 +169,7 @@ SettingsDialog::createGeneralPane()
     layout->addWidget(remove_duplicates);
 
     auto hilight_orphans = new BooleanWidget("Highlight orphan entities");
-    hilight_orphans->bindToSettings(settings, "general/hilight_orphans", true);
+    hilight_orphans->bindToSettings(settings, "general/hilight_orphans", false);
     layout->addWidget(hilight_orphans);
 
     return pane;
@@ -565,16 +565,16 @@ SettingsDialog::createAppearanceGeometryPane()
     clr_point->bindToSettings(settings, "appearance/geo/clr_points", QColor(90, 90, 90));
     color_layout->addWidget(clr_point);
 
-    auto clr_surfaces = new LabelledColorWidget("Surfaces");
-    clr_surfaces->bindToSettings(settings, "appearance/geo/clr_surfaces", QColor(0, 0, 255));
-    color_layout->addWidget(clr_surfaces);
-
     auto clr_curves = new LabelledColorWidget("Curves");
-    clr_curves->bindToSettings(settings, "appearance/geo/clr_curves", QColor(128, 128, 128));
+    clr_curves->bindToSettings(settings, "appearance/geo/clr_curves", QColor(0, 0, 255));
     color_layout->addWidget(clr_curves);
 
+    auto clr_surfaces = new LabelledColorWidget("Surfaces");
+    clr_surfaces->bindToSettings(settings, "appearance/geo/clr_surfaces", QColor(128, 128, 128));
+    color_layout->addWidget(clr_surfaces);
+
     auto clr_volumes = new LabelledColorWidget("Volumes");
-    clr_volumes->bindToSettings(settings, "appearance/geo/clr_volumes", QColor(255, 255, 0));
+    clr_volumes->bindToSettings(settings, "appearance/geo/clr_volumes", QColor(200, 200, 0));
     color_layout->addWidget(clr_volumes);
 
     auto clr_selection = new LabelledColorWidget("Selection");

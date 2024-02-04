@@ -11,6 +11,12 @@ QColor SELECTION_CLR = QColor(255, 173, 79);
 QColor SELECTION_EDGE_CLR = QColor(179, 95, 0);
 QColor HIGHLIGHT_CLR = QColor(255, 211, 79);
 
+void
+glColorQColor(const QColor & clr)
+{
+    glColor4f(clr.redF(), clr.greenF(), clr.blueF(), clr.alphaF());
+}
+
 View::DrawGVertex::DrawGVertex(View * view) : view(view) {}
 
 void
@@ -21,10 +27,21 @@ View::DrawGVertex::operator()(GVertex * v)
     if (v->geomType() == GEntity::BoundaryLayerPoint)
         return;
 
-    auto ctx = CTX::instance();
     auto settings = MainWindow::getSettings();
+    auto point_display = settings->value("appearance/geo/point_display").toInt();
+    auto point_size = settings->value("appearance/geo/point_size").toDouble();
+    auto sel_point_size = settings->value("appearance/geo/selected_point_size").toDouble();
     auto show_points = settings->value("visibility/geo/points").toBool();
     auto show_point_labels = settings->value("visibility/geo/point_labels").toBool();
+    auto hilight_orphans = settings->value("general/hilight_orphans").toBool();
+    auto clr_selection = settings->value("appearance/geo/clr_selection").value<QColor>();
+    auto clr_hilight0 = settings->value("appearance/geo/clr_hilight0").value<QColor>();
+    auto clr_hilight1 = settings->value("appearance/geo/clr_hilight1").value<QColor>();
+    auto clr_foregnd = settings->value("appearance/clr_foregnd").value<QColor>();
+    auto clr_geom_point = settings->value("appearance/clr_foregnd").value<QColor>();
+    auto enable_lighting = settings->value("appearance/geo/enable_lighting").toBool();
+    // FIXME: pull this from settings when font settings is implemented
+    int font_size = 15;
 
     bool select = (this->view->render_mode == View::GMSH_SELECT && v->model() == GModel::current());
     if (select) {
@@ -34,39 +51,43 @@ View::DrawGVertex::operator()(GVertex * v)
 
     glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
-    double ps = this->view->HIDPI(ctx->geom.pointSize);
-    double sps = this->view->HIDPI(ctx->geom.selectedPointSize);
+    double ps = this->view->HIDPI(point_size);
+    double sps = this->view->HIDPI(sel_point_size);
 
     if (v->getSelection() == HIGHLIGHT) {
         glPointSize((float) sps);
-        glColor3f(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+        glColorQColor(HIGHLIGHT_CLR);
     }
     else if (v->getSelection() == SELECTED) {
         glPointSize((float) sps);
-        glColor4ubv((GLubyte *) &ctx->color.geom.selection);
+        glColorQColor(clr_selection);
     }
     else {
         glPointSize((float) ps);
-        unsigned int col = v->useColor() ? v->getColor() : ctx->color.geom.point;
-        glColor4ubv((GLubyte *) &col);
+        if (v->useColor()) {
+            auto col = v->getColor();
+            glColor4ubv((GLubyte *) &col);
+        }
+        else
+            glColorQColor(clr_geom_point);
     }
 
-    if (ctx->geom.highlightOrphans) {
+    if (hilight_orphans) {
         if (v->isOrphan())
-            glColor4ubv((GLubyte *) &ctx->color.geom.highlight[0]);
+            glColorQColor(clr_hilight0);
         else if (v->numEdges() == 1)
-            glColor4ubv((GLubyte *) &ctx->color.geom.highlight[1]);
+            glColorQColor(clr_hilight1);
     }
 
     double x = v->x(), y = v->y(), z = v->z();
     this->view->transform(x, y, z);
 
     if (show_points || v->getSelection() > 1) {
-        if (ctx->geom.pointType > 0) {
+        if (point_display > 0) {
             if (v->getSelection())
-                this->view->drawSphere(sps, x, y, z, ctx->geom.light);
+                this->view->drawSphere(sps, x, y, z, enable_lighting);
             else
-                this->view->drawSphere(ps, x, y, z, ctx->geom.light);
+                this->view->drawSphere(ps, x, y, z, enable_lighting);
         }
         else {
             glBegin(GL_POINTS);
@@ -76,8 +97,8 @@ View::DrawGVertex::operator()(GVertex * v)
     }
 
     if (show_point_labels || v->getSelection() > 1) {
-        double offset = (0.5 * ps + 0.1 * CTX::instance()->glFontSize) * this->view->pixel_equiv_x;
-        glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
+        double offset = (0.5 * ps + 0.1 * font_size) * this->view->pixel_equiv_x;
+        glColorQColor(clr_foregnd);
         this->view->drawEntityLabel(v, x, y, z, offset);
     }
 
@@ -103,10 +124,26 @@ View::DrawGEdge::operator()(GEdge * e)
     if (e->geomType() == GEntity::BoundaryLayerCurve)
         return;
 
-    auto ctx = CTX::instance();
     auto settings = MainWindow::getSettings();
     auto show_curves = settings->value("visibility/geo/curves").toBool();
     auto show_curve_labels = settings->value("visibility/geo/curve_labels").toBool();
+    auto curve_type = settings->value("appearance/geo/curve_display").toInt();
+    auto curve_width = settings->value("appearance/geo/curve_width").toInt();
+    auto sel_curve_width = settings->value("appearance/geo/selected_curve_width").toInt();
+    auto clr_curve = settings->value("appearance/geo/clr_curves").value<QColor>();
+    auto clr_foregnd = settings->value("appearance/clr_foregnd").value<QColor>();
+    auto clr_selection = settings->value("appearance/geo/clr_selection").value<QColor>();
+    auto clr_hilight0 = settings->value("appearance/geo/clr_hilight0").value<QColor>();
+    auto clr_hilight1 = settings->value("appearance/geo/clr_hilight1").value<QColor>();
+    auto clr_tangents = settings->value("appearance/geo/clr_tangents").value<QColor>();
+    auto enable_lighting = settings->value("appearance/geo/enable_lighting").toBool();
+    auto hilight_orphans = settings->value("general/hilight_orphans").toBool();
+    // FIXME: pull this from settings when font settings is implemented
+    int font_size = 15;
+    /// FIXME: this should be in user settings
+    double geom_tangents = 0.;
+    /// FIXME: this should be in user settings
+    int vector_type = 0;
 
     bool select = (this->view->render_mode == View::GMSH_SELECT && e->model() == GModel::current());
     if (select) {
@@ -117,24 +154,28 @@ View::DrawGEdge::operator()(GEdge * e)
     glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
     if (e->getSelection() == HIGHLIGHT) {
-        glLineWidth((float) ctx->geom.selectedCurveWidth);
-        glColor3f(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+        glLineWidth((float) sel_curve_width);
+        glColorQColor(HIGHLIGHT_CLR);
     }
     else if (e->getSelection() == SELECTED) {
-        glLineWidth((float) ctx->geom.selectedCurveWidth);
-        glColor4ubv((GLubyte *) &ctx->color.geom.selection);
+        glLineWidth((float) sel_curve_width);
+        glColorQColor(clr_selection);
     }
     else {
-        glLineWidth((float) ctx->geom.curveWidth);
-        unsigned int col = e->useColor() ? e->getColor() : ctx->color.geom.curve;
-        glColor4ubv((GLubyte *) &col);
+        glLineWidth((float) curve_width);
+        if (e->useColor()) {
+            unsigned int col = e->getColor();
+            glColor4ubv((GLubyte *) &col);
+        }
+        else
+            glColorQColor(clr_curve);
     }
 
-    if (ctx->geom.highlightOrphans) {
+    if (hilight_orphans) {
         if (e->isOrphan())
-            glColor4ubv((GLubyte *) &ctx->color.geom.highlight[0]);
+            glColorQColor(clr_hilight0);
         else if (e->numFaces() == 1)
-            glColor4ubv((GLubyte *) &ctx->color.geom.highlight[1]);
+            glColorQColor(clr_hilight1);
     }
 
     Range<double> t_bounds = e->parBounds(0);
@@ -143,7 +184,7 @@ View::DrawGEdge::operator()(GEdge * e)
 
     if (show_curves || e->getSelection() > 1) {
         int N = e->minimumDrawSegments() + 1;
-        if (ctx->geom.curveType > 0) {
+        if (curve_type > 0) {
             for (int i = 0; i < N - 1; i++) {
                 double t1 = t_min + (double) i / (double) (N - 1) * (t_max - t_min);
                 GPoint p1 = e->point(t1);
@@ -154,12 +195,11 @@ View::DrawGEdge::operator()(GEdge * e)
                 double z[2] = { p1.z(), p2.z() };
                 this->view->transform(x[0], y[0], z[0]);
                 this->view->transform(x[1], y[1], z[1]);
-                this->view->drawCylinder(e->getSelection() ? ctx->geom.selectedCurveWidth
-                                                           : ctx->geom.curveWidth,
+                this->view->drawCylinder(e->getSelection() ? sel_curve_width : curve_width,
                                          x,
                                          y,
                                          z,
-                                         ctx->geom.light);
+                                         enable_lighting);
             }
         }
         else {
@@ -177,27 +217,25 @@ View::DrawGEdge::operator()(GEdge * e)
 
     if (show_curve_labels || e->getSelection() > 1) {
         GPoint p = e->point(t_min + 0.5 * (t_max - t_min));
-        double offset =
-            (0.5 * ctx->geom.curveWidth + 0.1 * ctx->glFontSize) * this->view->pixel_equiv_x;
+        double offset = (0.5 * curve_width + 0.1 * font_size) * this->view->pixel_equiv_x;
         double x = p.x(), y = p.y(), z = p.z();
         this->view->transform(x, y, z);
-        glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
+        glColorQColor(clr_foregnd);
         this->view->drawEntityLabel(e, x, y, z, offset);
     }
 
-    if (ctx->geom.tangents) {
+    if (geom_tangents) {
         double t = t_min + 0.5 * (t_max - t_min);
         GPoint p = e->point(t);
         SVector3 der = e->firstDer(t);
         der.normalize();
         for (int i = 0; i < 3; i++)
-            der[i] *= ctx->geom.tangents * this->view->pixel_equiv_x / this->view->s[i];
-        glColor4ubv((GLubyte *) &CTX::instance()->color.geom.tangents);
+            der[i] *= geom_tangents * this->view->pixel_equiv_x / this->view->s[i];
+        glColorQColor(clr_tangents);
         double x = p.x(), y = p.y(), z = p.z();
         this->view->transform(x, y, z);
         this->view->transformOneForm(der[0], der[1], der[2]);
-        this->view
-            ->drawVector(ctx->vectorType, 0, x, y, z, der[0], der[1], der[2], ctx->geom.light);
+        this->view->drawVector(vector_type, 0, x, y, z, der[0], der[1], der[2], enable_lighting);
     }
 
     if (select) {
@@ -212,7 +250,7 @@ void
 View::DrawGFace::_drawVertexArray(VertexArray * va,
                                   bool useNormalArray,
                                   int forceColor,
-                                  unsigned int color)
+                                  const QColor & color)
 {
     if (!va || !va->getNumVertices())
         return;
@@ -228,16 +266,21 @@ View::DrawGFace::_drawVertexArray(VertexArray * va,
     }
     if (forceColor) {
         glDisableClientState(GL_COLOR_ARRAY);
-        glColor4ubv((GLubyte *) &color);
+        glColorQColor(color);
     }
     else {
         glColorPointer(4, GL_UNSIGNED_BYTE, 0, va->getColorArray());
         glEnableClientState(GL_COLOR_ARRAY);
     }
-    if (CTX::instance()->polygonOffset)
+    auto settings = MainWindow::getSettings();
+    // FIXME: is this somewhere in user seetings in gmsh?
+    int polygon_offset = 0;
+    auto surface_type = settings->value("appearance/geo/surface_display").toInt();
+    auto two_side_lighting = settings->value("appearance/geo/two_side_lighting").toBool();
+    if (polygon_offset)
         glEnable(GL_POLYGON_OFFSET_FILL);
-    if (CTX::instance()->geom.surfaceType > 1) {
-        if (CTX::instance()->geom.lightTwoSide)
+    if (surface_type > 1) {
+        if (two_side_lighting)
             glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
         else
             glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
@@ -268,11 +311,26 @@ View::DrawGFace::operator()(GFace * f)
     if (f->geomType() == GEntity::BoundaryLayerSurface)
         return;
 
-    auto ctx = CTX::instance();
     auto settings = MainWindow::getSettings();
     auto show_surfaces = settings->value("visibility/geo/surfaces").toBool();
     auto show_surface_labels = settings->value("visibility/geo/surface_labels").toBool();
-    auto surface_type = ctx->geom.surfaceType;
+    auto curve_width = settings->value("appearance/geo/curve_width").toInt();
+    auto sel_curve_width = settings->value("appearance/geo/selected_curve_width").toInt();
+    auto enable_lighting = settings->value("appearance/geo/enable_lighting").toBool();
+    auto surface_type = settings->value("appearance/geo/surface_display").toInt();
+    auto clr_foregnd = settings->value("appearance/clr_foregnd").value<QColor>();
+    auto clr_selection = settings->value("appearance/geo/clr_selection").value<QColor>();
+    auto clr_hilight0 = settings->value("appearance/geo/clr_hilight0").value<QColor>();
+    auto clr_hilight1 = settings->value("appearance/geo/clr_hilight1").value<QColor>();
+    auto clr_normals = settings->value("appearance/geo/clr_normals").value<QColor>();
+    auto clr_surfaces = settings->value("appearance/geo/clr_surfaces").value<QColor>();
+    auto hilight_orphans = settings->value("general/hilight_orphans").toBool();
+    auto two_side_lighting = settings->value("appearance/geo/two_side_lighting").toBool();
+    // FIXME: pull this from settings when font settings is implemented
+    int font_size = 15;
+    bool geom_normals = false;
+    // FIXME: this should be a user setting
+    int vector_type = 6;
 
     bool select = (this->view->render_mode == View::GMSH_SELECT && f->model() == GModel::current());
     if (select) {
@@ -281,27 +339,31 @@ View::DrawGFace::operator()(GFace * f)
     }
 
     if (f->getSelection() == HIGHLIGHT) {
-        glLineWidth((float) (ctx->geom.selectedCurveWidth / 2.));
-        glColor3f(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+        glLineWidth((float) (sel_curve_width / 2.));
+        glColorQColor(HIGHLIGHT_CLR);
     }
     else if (f->getSelection() == SELECTED) {
-        glLineWidth((float) (ctx->geom.selectedCurveWidth / 2.));
-        glColor4ubv((GLubyte *) &ctx->color.geom.selection);
+        glLineWidth((float) (sel_curve_width / 2.));
+        glColorQColor(clr_selection);
     }
     else {
-        glLineWidth((float) (ctx->geom.curveWidth / 2.));
-        unsigned int col = f->useColor() ? f->getColor() : ctx->color.geom.surface;
-        glColor4ubv((GLubyte *) &col);
+        glLineWidth((float) (curve_width / 2.));
+        if (f->useColor()) {
+            unsigned int clr = f->getColor();
+            glColor4ubv((GLubyte *) &clr);
+        }
+        else
+            glColorQColor(clr_surfaces);
     }
 
-    if (ctx->geom.highlightOrphans) {
+    if (hilight_orphans) {
         if (f->isOrphan())
-            glColor4ubv((GLubyte *) &ctx->color.geom.highlight[0]);
+            glColorQColor(clr_hilight0);
         else if (f->numRegions() == 1)
-            glColor4ubv((GLubyte *) &ctx->color.geom.highlight[1]);
+            glColorQColor(clr_hilight1);
     }
 
-    if (ctx->geom.lightTwoSide)
+    if (two_side_lighting)
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     else
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
@@ -310,7 +372,7 @@ View::DrawGFace::operator()(GFace * f)
         f->fillVertexArray();
 
     if (((show_surfaces || f->getSelection() > 1) && surface_type == 0) || show_surface_labels ||
-        ctx->geom.normals)
+        geom_normals)
         f->buildRepresentationCross();
 
     if (show_surfaces || f->getSelection() > 1) {
@@ -318,10 +380,7 @@ View::DrawGFace::operator()(GFace * f)
             bool selected = false;
             if (f->getSelection())
                 selected = true;
-            _drawVertexArray(f->va_geom_triangles,
-                             ctx->geom.light,
-                             selected,
-                             ctx->color.geom.selection);
+            _drawVertexArray(f->va_geom_triangles, enable_lighting, selected, clr_selection);
         }
         else {
             glEnable(GL_LINE_STIPPLE);
@@ -348,26 +407,26 @@ View::DrawGFace::operator()(GFace * f)
     if (f->cross[0].size() && f->cross[0][0].size()) {
         int idx = f->cross[0][0].size() / 2;
         if (show_surface_labels || f->getSelection() > 1) {
-            double offset = 0.1 * ctx->glFontSize * this->view->pixel_equiv_x;
+            double offset = 0.1 * font_size * this->view->pixel_equiv_x;
             double x = f->cross[0][0][idx].x();
             double y = f->cross[0][0][idx].y();
             double z = f->cross[0][0][idx].z();
             this->view->transform(x, y, z);
-            glColor4ubv((GLubyte *) &ctx->color.fg);
+            glColorQColor(clr_foregnd);
             this->view->drawEntityLabel(f, x, y, z, offset);
         }
 
-        if (ctx->geom.normals) {
+        if (geom_normals) {
             SPoint3 p(f->cross[0][0][idx].x(), f->cross[0][0][idx].y(), f->cross[0][0][idx].z());
             SPoint2 uv = f->parFromPoint(p);
             SVector3 n = f->normal(uv);
             for (int i = 0; i < 3; i++)
-                n[i] *= ctx->geom.normals * this->view->pixel_equiv_x / this->view->s[i];
-            glColor4ubv((GLubyte *) &ctx->color.geom.normals);
+                n[i] *= geom_normals * this->view->pixel_equiv_x / this->view->s[i];
+            glColorQColor(clr_normals);
             double x = p.x(), y = p.y(), z = p.z();
             this->view->transform(x, y, z);
             this->view->transformTwoForm(n[0], n[1], n[2]);
-            this->view->drawVector(ctx->vectorType, 0, x, y, z, n[0], n[1], n[2], ctx->geom.light);
+            this->view->drawVector(vector_type, 0, x, y, z, n[0], n[1], n[2], enable_lighting);
         }
     }
 
@@ -387,9 +446,17 @@ View::DrawGRegion::operator()(GRegion * rgn)
 
     auto ctx = CTX::instance();
     auto settings = MainWindow::getSettings();
+    auto curve_width = settings->value("appearance/geo/curve_width").toInt();
+    auto sel_curve_width = settings->value("appearance/geo/selected_curve_width").toInt();
     auto show_volumes = settings->value("visibility/geo/volumes").toBool();
     auto show_volume_labels = settings->value("visibility/geo/volume_labels").toBool();
+    auto enable_lighting = settings->value("appearance/geo/enable_lighting").toBool();
+    auto two_side_lighting = settings->value("appearance/geo/two_side_lighting").toBool();
+    auto clr_foregnd = settings->value("appearance/clr_foregnd").value<QColor>();
+    auto clr_selection = settings->value("appearance/geo/clr_selection").value<QColor>();
     auto volume_repr = ctx->geom.volumeType;
+    // FIXME: pull this from settings when font settings is implemented
+    int font_size = 15;
 
     bool select =
         (this->view->render_mode == View::GMSH_SELECT && rgn->model() == GModel::current());
@@ -398,21 +465,21 @@ View::DrawGRegion::operator()(GRegion * rgn)
         glPushName(rgn->tag());
     }
 
-    if (ctx->geom.lightTwoSide)
+    if (two_side_lighting)
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     else
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
     if (rgn->getSelection() == HIGHLIGHT) {
-        glLineWidth((float) ctx->geom.selectedCurveWidth);
-        glColor3f(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+        glLineWidth((float) sel_curve_width);
+        glColorQColor(HIGHLIGHT_CLR);
     }
     else if (rgn->getSelection() == SELECTED) {
-        glLineWidth((float) ctx->geom.selectedCurveWidth);
-        glColor4ubv((GLubyte *) &ctx->color.geom.selection);
+        glLineWidth((float) sel_curve_width);
+        glColorQColor(clr_selection);
     }
     else {
-        glLineWidth((float) ctx->geom.curveWidth);
+        glLineWidth((float) curve_width);
         unsigned int col = rgn->useColor() ? rgn->getColor() : ctx->color.geom.volume;
         glColor4ubv((GLubyte *) &col);
     }
@@ -432,7 +499,7 @@ View::DrawGRegion::operator()(GRegion * rgn)
 
     if (show_volumes || rgn->getSelection() > 1) {
         if (volume_repr == 0) {
-            this->view->drawSphere(size, x, y, z, ctx->geom.light);
+            this->view->drawSphere(size, x, y, z, enable_lighting);
         }
         else {
             glBegin(GL_LINE_LOOP);
@@ -457,8 +524,8 @@ View::DrawGRegion::operator()(GRegion * rgn)
     }
 
     if (show_volume_labels || rgn->getSelection() > 1) {
-        double offset = (1. * size + 0.1 * CTX::instance()->glFontSize) * this->view->pixel_equiv_x;
-        glColor4ubv((GLubyte *) &CTX::instance()->color.fg);
+        double offset = (1. * size + 0.1 * font_size) * this->view->pixel_equiv_x;
+        glColorQColor(clr_foregnd);
         this->view->drawEntityLabel(rgn, x, y, z, offset);
     }
 
