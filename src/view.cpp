@@ -1117,10 +1117,7 @@ View::draw2D()
     glLoadIdentity();
     drawGraph2D(false);
     drawText2D();
-    if (ctx->post.draw && !ctx->stereo)
-        drawScales();
-    if (ctx->smallAxes)
-        drawSmallAxes();
+    drawSmallAxes();
 }
 
 void
