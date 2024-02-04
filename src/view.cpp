@@ -1894,10 +1894,13 @@ View::zoomToPoint(const QPointF & pt, double zoomFactor)
 void
 View::wheelEvent(QWheelEvent * event)
 {
+    auto settings = MainWindow::getSettings();
+    auto mouse_invert_zoom = settings->value("general/invert_zoom_direction").toBool();
+
     double dy = event->pixelDelta().y();
     auto h = getHeightF();
     double fact = (5. * CTX::instance()->zoomFactor * fabs(dy) + h) / h;
-    bool direction = (CTX::instance()->mouseInvertZoom) ? (dy <= 0) : (dy > 0);
+    bool direction = (mouse_invert_zoom) ? (dy <= 0) : (dy > 0);
     fact = (direction ? fact : 1. / fact);
     if (CTX::instance()->camera) {
         this->camera.zoom(fact);
