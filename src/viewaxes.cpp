@@ -409,7 +409,7 @@ View::drawAxes()
         }
     }
 
-    if (ctx->drawRotationCenter) {
+    if (this->draw_rotation_center) {
         glColor4ubv((GLubyte *) &ctx->color.fg);
         if (ctx->rotationCenterCg)
             drawSphere(ctx->pointSize, ctx->cg[0], ctx->cg[1], ctx->cg[2], ctx->geom.light);

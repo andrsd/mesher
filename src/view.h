@@ -486,6 +486,7 @@ protected:
     // the modelview and projection matrix as they were  at the time of the last initPosition() call
     double model[16];
     double proj[16];
+    bool draw_rotation_center;
     // current rendering mode
     RenderMode render_mode;
     bool is_dragging;

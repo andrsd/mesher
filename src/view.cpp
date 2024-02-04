@@ -63,6 +63,7 @@ View::View(MainWindow * main_wnd) :
     width(0),
     height(0),
     _transform(nullptr),
+    draw_rotation_center(false),
     is_dragging(false),
     highlighted_entity(nullptr),
     selection_info(nullptr)
@@ -1632,8 +1633,6 @@ View::drawEntityLabel(GEntity * e, double x, double y, double z, double offset)
     double yy = y + offset / this->s[1];
     double zz = z + offset / this->s[2];
 
-    auto ctx = CTX::instance();
-
     auto settings = MainWindow::getSettings();
     auto label_type = settings->value("visibility/geo/label_type").toInt();
     if (label_type == 0) {
@@ -1931,7 +1930,7 @@ View::mousePressEvent(QMouseEvent * event)
     this->event_btn = event->button();
 
     if (event->buttons() & (Qt::RightButton | Qt::MiddleButton)) {
-        CTX::instance()->drawRotationCenter = 1;
+        this->draw_rotation_center = true;
         if (CTX::instance()->fastRedraw) {
             CTX::instance()->mesh.draw = 0;
             CTX::instance()->post.draw = 0;
@@ -2020,7 +2019,7 @@ View::mouseReleaseEvent(QMouseEvent * event)
             emit selectionChanged();
         }
     }
-    CTX::instance()->drawRotationCenter = 0;
+    this->draw_rotation_center = false;
     CTX::instance()->mesh.draw = 1;
     CTX::instance()->post.draw = 1;
     update();
