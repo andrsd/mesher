@@ -14,6 +14,8 @@
 #include <QShortcut>
 #include "selectioninfowidget.h"
 
+void glColorQColor(const QColor & clr);
+
 static int
 needPolygonOffset()
 {
@@ -983,9 +985,9 @@ View::drawGraph2D(bool in_model_coordinates)
 void
 View::drawBackground(const std::array<int, 4> & viewport, double clip_near, double clip_far)
 {
-    auto ctx = CTX::instance();
-    if ((ctx->bgGradient || ctx->bgImageFileName.size()) &&
-        (!ctx->printing || ctx->print.background)) {
+    auto settings = MainWindow::getSettings();
+    auto bg_gradient = settings->value("appearance/bkgnd_gradient").toInt();
+    if (bg_gradient) {
         glDisable(GL_DEPTH_TEST);
         glPushMatrix();
         glLoadIdentity();
@@ -1012,13 +1014,15 @@ View::drawBackground(const std::array<int, 4> & viewport, double clip_near, doub
 void
 View::drawBackgroundGradientVertical()
 {
-    auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto clr_bkgnd0 = settings->value("appearance/clr_bkgnd").value<QColor>();
+    auto clr_bkgnd1 = settings->value("appearance/clr_bkgnd2").value<QColor>();
     auto viewport = getViewport();
     glBegin(GL_QUADS);
-    glColor4ubv((GLubyte *) &ctx->color.bg);
+    glColorQColor(clr_bkgnd0);
     glVertex2i(viewport[0], viewport[1]);
     glVertex2i(viewport[2], viewport[1]);
-    glColor4ubv((GLubyte *) &ctx->color.bgGrad);
+    glColorQColor(clr_bkgnd1);
     glVertex2i(viewport[2], viewport[3]);
     glVertex2i(viewport[0], viewport[3]);
     glEnd();
@@ -1027,13 +1031,15 @@ View::drawBackgroundGradientVertical()
 void
 View::drawBackgroundGradientHorizontal()
 {
-    auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto clr_bkgnd0 = settings->value("appearance/clr_bkgnd").value<QColor>();
+    auto clr_bkgnd1 = settings->value("appearance/clr_bkgnd2").value<QColor>();
     auto viewport = getViewport();
     glBegin(GL_QUADS);
-    glColor4ubv((GLubyte *) &ctx->color.bg);
+    glColorQColor(clr_bkgnd0);
     glVertex2i(viewport[2], viewport[1]);
     glVertex2i(viewport[2], viewport[3]);
-    glColor4ubv((GLubyte *) &ctx->color.bgGrad);
+    glColorQColor(clr_bkgnd1);
     glVertex2i(viewport[0], viewport[3]);
     glVertex2i(viewport[0], viewport[1]);
     glEnd();
@@ -1042,15 +1048,17 @@ View::drawBackgroundGradientHorizontal()
 void
 View::drawBackgroundGradientRadial()
 {
-    auto ctx = CTX::instance();
+    auto settings = MainWindow::getSettings();
+    auto clr_bkgnd0 = settings->value("appearance/clr_bkgnd").value<QColor>();
+    auto clr_bkgnd1 = settings->value("appearance/clr_bkgnd2").value<QColor>();
     auto viewport = getViewport();
     double cx = 0.5 * (viewport[0] + viewport[2]);
     double cy = 0.5 * (viewport[1] + viewport[3]);
     double r = 0.5 * std::max(viewport[2] - viewport[0], viewport[3] - viewport[1]);
     glBegin(GL_TRIANGLE_FAN);
-    glColor4ubv((GLubyte *) &ctx->color.bgGrad);
+    glColorQColor(clr_bkgnd1);
     glVertex2d(cx, cy);
-    glColor4ubv((GLubyte *) &ctx->color.bg);
+    glColorQColor(clr_bkgnd0);
     glVertex2d(cx + r, cy);
     int ntheta = 36;
     for (int i = 1; i < ntheta + 1; i++) {
@@ -1063,14 +1071,15 @@ View::drawBackgroundGradientRadial()
 void
 View::drawBackgroundGradient()
 {
-    auto ctx = CTX::instance();
-    if (ctx->bgGradient == 0)
+    auto settings = MainWindow::getSettings();
+    auto bg_gradient = settings->value("appearance/bkgnd_gradient").toInt();
+    if (bg_gradient == 0)
         ;
-    else if (ctx->bgGradient == 1)
+    else if (bg_gradient == 1)
         drawBackgroundGradientVertical();
-    else if (ctx->bgGradient == 2)
+    else if (bg_gradient == 2)
         drawBackgroundGradientHorizontal();
-    else if (ctx->bgGradient == 3)
+    else if (bg_gradient == 3)
         drawBackgroundGradientRadial();
 }
 
