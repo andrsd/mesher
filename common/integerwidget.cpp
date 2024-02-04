@@ -49,4 +49,5 @@ void
 IntegerWidget::onTextChanged(const QString & text)
 {
     storeSetting(text);
+    emit changed();
 }
