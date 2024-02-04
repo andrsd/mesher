@@ -487,6 +487,7 @@ protected:
     double model[16];
     double proj[16];
     bool draw_rotation_center;
+    bool draw_mesh;
     // current rendering mode
     RenderMode render_mode;
     bool is_dragging;

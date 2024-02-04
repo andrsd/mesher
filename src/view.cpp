@@ -64,6 +64,7 @@ View::View(MainWindow * main_wnd) :
     height(0),
     _transform(nullptr),
     draw_rotation_center(false),
+    draw_mesh(false),
     is_dragging(false),
     highlighted_entity(nullptr),
     selection_info(nullptr)
@@ -922,7 +923,7 @@ View::drawMesh()
 {
     auto ctx = CTX::instance();
 
-    if (!ctx->mesh.draw)
+    if (!this->draw_mesh)
         return;
 
     /*
@@ -1929,7 +1930,7 @@ View::mousePressEvent(QMouseEvent * event)
     if (event->buttons() & (Qt::RightButton | Qt::MiddleButton)) {
         this->draw_rotation_center = true;
         if (CTX::instance()->fastRedraw) {
-            CTX::instance()->mesh.draw = 0;
+            this->draw_mesh = false;
             CTX::instance()->post.draw = 0;
         }
         update();
@@ -2017,7 +2018,7 @@ View::mouseReleaseEvent(QMouseEvent * event)
         }
     }
     this->draw_rotation_center = false;
-    CTX::instance()->mesh.draw = 1;
+    this->draw_mesh = true;
     CTX::instance()->post.draw = 1;
     update();
     this->_prev.set(this, event->pos());
