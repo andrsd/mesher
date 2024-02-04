@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget * parent) :
     splitter(nullptr),
     left(nullptr),
     view(nullptr),
-    prefs_dlg(nullptr),
+    prefs_dlg(new SettingsDialog(this)),
     progress(nullptr),
     doc(new Document()),
     logger(new LoggerDialog(this)),
@@ -231,6 +231,8 @@ MainWindow::connectSignals()
 
     connect(this->select_other_kbd, &QShortcut::activated, this->view, &View::onSelectOther);
     connect(this->deselect_all_kbd, &QShortcut::activated, this->view, &View::onDeselectAll);
+
+    connect(this->prefs_dlg, &SettingsDialog::changed, this, &MainWindow::onSettingsChanged);
 }
 
 void
@@ -453,8 +455,6 @@ MainWindow::onAbout()
 void
 MainWindow::onSettings()
 {
-    if (this->prefs_dlg == nullptr)
-        this->prefs_dlg = new SettingsDialog(this);
     this->prefs_dlg->show();
 }
 
@@ -552,5 +552,12 @@ MainWindow::onSet1to1()
 {
     this->view->setTranslation({ 0., 0., 0. });
     this->view->setScale({ 1., 1., 1. });
+    this->view->update();
+}
+
+void
+MainWindow::onSettingsChanged()
+{
+    qDebug() << "onSettingsChanged()";
     this->view->update();
 }

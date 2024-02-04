@@ -78,6 +78,7 @@ public slots:
     void onSetY();
     void onSetZ();
     void onSet1to1();
+    void onSettingsChanged();
 
 protected:
     static QSettings * settings;

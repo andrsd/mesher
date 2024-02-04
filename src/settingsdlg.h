@@ -12,12 +12,17 @@ class QTreeWidgetItem;
 class QLabel;
 
 class SettingsDialog : public QDialog {
+    Q_OBJECT
 public:
     explicit SettingsDialog(QWidget * parent = nullptr);
     ~SettingsDialog() override;
 
+signals:
+    void changed();
+
 protected slots:
     void onCategorySelected();
+    void onChanged();
 
 private:
     QTreeWidgetItem * addPane(QWidget * pane, const QString & name, QTreeWidgetItem * parent);
