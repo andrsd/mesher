@@ -541,37 +541,38 @@ View::createQuadricsAndDisplayLists()
     gluSphere(this->quadric, 1., quadric_subdivisions, quadric_subdivisions);
     glEndList();
 
+    auto ctx = CTX::instance();
     // display list 1 (arrow)
     glNewList(this->display_lists + 1, GL_COMPILE);
-    glTranslated(0., 0., CTX::instance()->arrowRelStemLength);
-    if (CTX::instance()->arrowRelHeadRadius > 0 && CTX::instance()->arrowRelStemLength < 1)
+    glTranslated(0., 0., ctx->arrowRelStemLength);
+    if (ctx->arrowRelHeadRadius > 0 && ctx->arrowRelStemLength < 1)
         gluCylinder(this->quadric,
-                    CTX::instance()->arrowRelHeadRadius,
+                    ctx->arrowRelHeadRadius,
                     0.,
-                    (1. - CTX::instance()->arrowRelStemLength),
+                    (1. - ctx->arrowRelStemLength),
                     quadric_subdivisions,
                     1);
-    if (CTX::instance()->arrowRelHeadRadius > CTX::instance()->arrowRelStemRadius)
+    if (ctx->arrowRelHeadRadius > ctx->arrowRelStemRadius)
         gluDisk(this->quadric,
-                CTX::instance()->arrowRelStemRadius,
-                CTX::instance()->arrowRelHeadRadius,
+                ctx->arrowRelStemRadius,
+                ctx->arrowRelHeadRadius,
                 quadric_subdivisions,
                 1);
     else
         gluDisk(this->quadric,
-                CTX::instance()->arrowRelHeadRadius,
-                CTX::instance()->arrowRelStemRadius,
+                ctx->arrowRelHeadRadius,
+                ctx->arrowRelStemRadius,
                 quadric_subdivisions,
                 1);
-    glTranslated(0., 0., -CTX::instance()->arrowRelStemLength);
-    if (CTX::instance()->arrowRelStemRadius > 0 && CTX::instance()->arrowRelStemLength > 0) {
+    glTranslated(0., 0., -ctx->arrowRelStemLength);
+    if (ctx->arrowRelStemRadius > 0 && ctx->arrowRelStemLength > 0) {
         gluCylinder(this->quadric,
-                    CTX::instance()->arrowRelStemRadius,
-                    CTX::instance()->arrowRelStemRadius,
-                    CTX::instance()->arrowRelStemLength,
+                    ctx->arrowRelStemRadius,
+                    ctx->arrowRelStemRadius,
+                    ctx->arrowRelStemLength,
                     quadric_subdivisions,
                     1);
-        gluDisk(this->quadric, 0, CTX::instance()->arrowRelStemRadius, quadric_subdivisions, 1);
+        gluDisk(this->quadric, 0, ctx->arrowRelStemRadius, quadric_subdivisions, 1);
     }
     glEndList();
 
