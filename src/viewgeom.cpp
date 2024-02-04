@@ -95,7 +95,7 @@ View::DrawGVertex::operator()(GVertex * v)
         }
     }
 
-    if (show_point_labels || v->getSelection() > 1) {
+    if (show_point_labels) {
         double offset = (0.5 * ps + 0.1 * font_size) * this->view->pixel_equiv_x;
         glColorQColor(clr_foregnd);
         this->view->drawEntityLabel(v, x, y, z, offset);
@@ -213,7 +213,7 @@ View::DrawGEdge::operator()(GEdge * e)
         }
     }
 
-    if (show_curve_labels || e->getSelection() > 1) {
+    if (show_curve_labels) {
         GPoint p = e->point(t_min + 0.5 * (t_max - t_min));
         double offset = (0.5 * curve_width + 0.1 * font_size) * this->view->pixel_equiv_x;
         double x = p.x(), y = p.y(), z = p.z();
@@ -403,7 +403,7 @@ View::DrawGFace::operator()(GFace * f)
 
     if (f->cross[0].size() && f->cross[0][0].size()) {
         int idx = f->cross[0][0].size() / 2;
-        if (show_surface_labels || f->getSelection() > 1) {
+        if (show_surface_labels) {
             double offset = 0.1 * font_size * this->view->pixel_equiv_x;
             double x = f->cross[0][0][idx].x();
             double y = f->cross[0][0][idx].y();
@@ -519,7 +519,7 @@ View::DrawGRegion::operator()(GRegion * rgn)
         }
     }
 
-    if (show_volume_labels || rgn->getSelection() > 1) {
+    if (show_volume_labels) {
         double offset = (1. * size + 0.1 * font_size) * this->view->pixel_equiv_x;
         glColorQColor(clr_foregnd);
         this->view->drawEntityLabel(rgn, x, y, z, offset);
