@@ -49,4 +49,5 @@ void
 FloatWidget::onTextChanged(const QString & text)
 {
     storeSetting(text);
+    emit changed();
 }
