@@ -21,6 +21,11 @@ SettingsDialog::SettingsDialog(QWidget * parent) : QDialog(parent)
     setWindowTitle("Settings");
     setMinimumSize(600, 700);
 
+    // TODO: make these hidden settings available to a user
+    auto settings = MainWindow::getSettings();
+    settings->setValue("general/font", "Helvetica");
+    settings->setValue("general/font_size", 15);
+
     this->layout = new QHBoxLayout();
 
     this->categories = new QTreeWidget();

@@ -40,8 +40,7 @@ View::DrawGVertex::operator()(GVertex * v)
     auto clr_foregnd = settings->value("appearance/clr_foregnd").value<QColor>();
     auto clr_point = settings->value("appearance/geo/clr_points").value<QColor>();
     auto enable_lighting = settings->value("appearance/geo/enable_lighting").toBool();
-    // FIXME: pull this from settings when font settings is implemented
-    int font_size = 15;
+    int font_size = settings->value("general/font_size").toInt();
 
     bool select = (this->view->render_mode == View::GMSH_SELECT && v->model() == GModel::current());
     if (select) {
@@ -138,8 +137,7 @@ View::DrawGEdge::operator()(GEdge * e)
     auto clr_tangents = settings->value("appearance/geo/clr_tangents").value<QColor>();
     auto enable_lighting = settings->value("appearance/geo/enable_lighting").toBool();
     auto hilight_orphans = settings->value("general/hilight_orphans").toBool();
-    // FIXME: pull this from settings when font settings is implemented
-    int font_size = 15;
+    int font_size = settings->value("general/font_size").toInt();
     /// FIXME: this should be in user settings
     double geom_tangents = 0.;
     /// FIXME: this should be in user settings
@@ -326,8 +324,7 @@ View::DrawGFace::operator()(GFace * f)
     auto clr_surfaces = settings->value("appearance/geo/clr_surfaces").value<QColor>();
     auto hilight_orphans = settings->value("general/hilight_orphans").toBool();
     auto two_side_lighting = settings->value("appearance/geo/two_side_lighting").toBool();
-    // FIXME: pull this from settings when font settings is implemented
-    int font_size = 15;
+    int font_size = settings->value("general/font_size").toInt();
     bool geom_normals = false;
     // FIXME: this should be a user setting
     int vector_type = 6;
@@ -455,8 +452,7 @@ View::DrawGRegion::operator()(GRegion * rgn)
     auto clr_foregnd = settings->value("appearance/clr_foregnd").value<QColor>();
     auto clr_selection = settings->value("appearance/geo/clr_selection").value<QColor>();
     auto volume_repr = ctx->geom.volumeType;
-    // FIXME: pull this from settings when font settings is implemented
-    int font_size = 15;
+    int font_size = settings->value("general/font_size").toInt();
 
     bool select =
         (this->view->render_mode == View::GMSH_SELECT && rgn->model() == GModel::current());
