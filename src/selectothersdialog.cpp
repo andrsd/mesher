@@ -63,14 +63,12 @@ void
 SelectOthersDialog::onItemEntered(QListWidgetItem * item)
 {
     auto e = item->data(Qt::UserRole).value<GEntity *>();
-    qDebug() << "entered = " << e->getTypeString().c_str() << e->tag();
 }
 
 void
 SelectOthersDialog::onItemClicked(QListWidgetItem * item)
 {
     auto e = item->data(Qt::UserRole).value<GEntity *>();
-    qDebug() << "clicked = " << e->getTypeString().c_str() << e->tag();
     this->view->selectEntity(e);
     this->hide();
 }
