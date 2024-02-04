@@ -52,6 +52,6 @@ LabelledColorWidget::bindToSettings(QSettings * settings,
 void
 LabelledColorWidget::onColorPicked(const QColor & qcolor)
 {
-    qDebug() << "color" << qcolor;
     storeSetting(qcolor);
+    emit changed();
 }
