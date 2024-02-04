@@ -352,6 +352,7 @@ ColorPicker::onRedChanged(const QString & text)
     }
     else
         this->qcolor.setRed(0);
+    emit colorChanged(this->qcolor);
 }
 
 void
@@ -366,6 +367,7 @@ ColorPicker::onGreenChanged(const QString & text)
     }
     else
         this->qcolor.setGreen(0);
+    emit colorChanged(this->qcolor);
 }
 
 void
@@ -380,4 +382,5 @@ ColorPicker::onBlueChanged(const QString & text)
     }
     else
         this->qcolor.setBlue(0);
+    emit colorChanged(this->qcolor);
 }
