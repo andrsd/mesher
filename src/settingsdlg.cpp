@@ -230,15 +230,6 @@ SettingsDialog::createAppearancePane()
     connect(line_width, &FloatWidget::changed, this, &SettingsDialog::onChanged);
     layout->addRow("Line width", line_width);
 
-    auto lbl2 = new SectionTitleWidget("");
-    layout->addRow(lbl2);
-
-    auto font_engine = new RadioOptionsWidget({ "Native", "Cairo", "String texture" });
-    font_engine->enableOption(1, false);
-    font_engine->bindToSettings(settings, "appearance/font_engine", 0);
-    connect(font_engine, &RadioOptionsWidget::changed, this, &SettingsDialog::onChanged);
-    layout->addRow("Font rending engine", font_engine);
-
     auto lbl3 = new SectionTitleWidget("");
     layout->addRow(lbl3);
 
