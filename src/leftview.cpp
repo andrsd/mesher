@@ -4,8 +4,9 @@
 
 LeftView::LeftView(QWidget * parent) : QTreeWidget(parent)
 {
-    this->setStyleSheet("QTreeView { border: none; }");
-    this->setHeaderHidden(true);
+    setMinimumWidth(150);
+    setStyleSheet("QTreeView { border: none; }");
+    setHeaderHidden(true);
 }
 
 void

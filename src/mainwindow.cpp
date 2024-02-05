@@ -107,8 +107,7 @@ MainWindow::setupWidgets()
     this->splitter->addWidget(this->left);
     this->splitter->addWidget(this->view);
     this->splitter->setHandleWidth(2);
-    this->splitter->setStretchFactor(0, 0.);
-    this->splitter->setStretchFactor(1, 1.);
+    this->splitter->setSizes(QList<int>({ 50, QWIDGETSIZE_MAX }));
     this->splitter->setStyleSheet(QString("QSplitter::handle {"
                                           "    image: none;"
                                           "}"));
