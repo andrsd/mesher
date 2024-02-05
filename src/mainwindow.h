@@ -80,7 +80,7 @@ public slots:
     void onSetZ();
     void onSet1to1();
     void onSettingsChanged();
-    void onPointTool();
+    void onAddPoint();
 
 protected:
     void moveToolToTopLeft(BaseTool * tool);

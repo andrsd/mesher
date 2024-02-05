@@ -9,4 +9,8 @@ public:
     LeftView(QWidget * parent = nullptr);
 
     void add(BaseTool * tool);
+    void remove(BaseTool * tool);
+
+private:
+    QMap<BaseTool *, QTreeWidgetItem *> tool2item;
 };

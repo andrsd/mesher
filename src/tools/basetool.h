@@ -13,6 +13,7 @@ public:
     explicit BaseTool(const QString & name, QWidget * parent);
 
     QString name() const;
+    void setName(const QString & new_name);
 
 protected:
     virtual void updateWidgets() = 0;
@@ -22,9 +23,14 @@ protected:
 
     QFormLayout * layout();
 
+protected slots:
+    void onOK();
+    void onCancel();
+
 private:
     QVBoxLayout * laot;
     QLineEdit * nm;
     QFormLayout * form_layout;
     QPushButton * ok;
+    QPushButton * cancel;
 };

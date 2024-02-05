@@ -197,7 +197,7 @@ MainWindow::setupToolBar()
     this->tool_bar->addSeparator();
 
     auto point_tool_action = new QAction("Pt");
-    connect(point_tool_action, &QAction::triggered, this, &MainWindow::onPointTool);
+    connect(point_tool_action, &QAction::triggered, this, &MainWindow::onAddPoint);
     this->tool_bar->addAction(point_tool_action);
 
     addToolBar(this->tool_bar);
@@ -582,12 +582,17 @@ MainWindow::moveToolToTopLeft(BaseTool * tool)
 }
 
 void
-MainWindow::onPointTool()
+MainWindow::onAddPoint()
 {
-    auto dlg = new PointTool("Point 1", this);
-
+    // FIXME: get the next number from gmsh
+    int tag = 1;
+    auto name = QString("Point %1").arg(tag);
+    auto dlg = new PointTool(name, this);
     this->left->add(dlg);
 
     moveToolToTopLeft(dlg);
     dlg->show();
+
+    connect(dlg, &QDialog::accepted, this, [dlg, this]() { ; });
+    connect(dlg, &QDialog::rejected, this, [dlg, this]() { this->left->remove(dlg); });
 }
