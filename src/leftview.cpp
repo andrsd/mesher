@@ -7,6 +7,8 @@ LeftView::LeftView(QWidget * parent) : QTreeWidget(parent)
     setMinimumWidth(150);
     setStyleSheet("QTreeView { border: none; }");
     setHeaderHidden(true);
+
+    connect(this, &QTreeWidget::itemDoubleClicked, this, &LeftView::onItemDoubleClicked);
 }
 
 void
@@ -29,5 +31,14 @@ LeftView::remove(BaseTool * tool)
         root->removeChild(tree_item);
         this->tool2item.remove(tool);
         tool->deleteLater();
+    }
+}
+
+void
+LeftView::onItemDoubleClicked(QTreeWidgetItem * item, int column)
+{
+    if (item != nullptr) {
+        auto * tool = item->data(0, Qt::UserRole).value<BaseTool *>();
+        tool->show();
     }
 }

@@ -592,6 +592,13 @@ MainWindow::onAddPoint()
     moveToolToTopLeft(dlg);
     dlg->show();
 
-    connect(dlg, &QDialog::accepted, this, [dlg, this]() { ; });
+    connect(dlg, &QDialog::accepted, this, [dlg, this]() {
+        // disconnect current signals
+        disconnect(dlg, &QDialog::accepted, this, nullptr);
+        disconnect(dlg, &QDialog::rejected, this, nullptr);
+        // TODO: connect new signals
+        // connect(dlg, &QDialog::accepted, this, [dlg, this]() { qDebug() << "accepted"; });
+        // connect(dlg, &QDialog::rejected, this, [dlg, this]() { qDebug() << "rejected"; });
+    });
     connect(dlg, &QDialog::rejected, this, [dlg, this]() { this->left->remove(dlg); });
 }
