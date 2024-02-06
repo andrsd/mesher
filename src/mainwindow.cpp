@@ -362,10 +362,11 @@ MainWindow::onOpenFile()
     QString file_name = QFileDialog::getOpenFileName(this,
                                                      "Open File",
                                                      "",
-                                                     "Supported files (*.msh *.geo);;"
+                                                     "Supported files (*.msh *.geo *.step);;"
                                                      "All files (*);;"
                                                      "GMSH mesh file (*.msh);;"
-                                                     "GMSH geometry files (*.geo)");
+                                                     "GMSH geometry files (*.geo);;"
+                                                     "STEP files (*.step)");
     if (!file_name.isNull())
         loadFile(file_name);
 }
