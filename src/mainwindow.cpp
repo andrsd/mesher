@@ -28,6 +28,7 @@
 #include "visibilitysettingsdialog.h"
 #include "GmshMessage.h"
 #include "tools/pointtool.h"
+#include "tools/physicalgrouptool.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -198,6 +199,10 @@ MainWindow::setupToolBar()
     auto point_tool_action = new QAction("Pt");
     connect(point_tool_action, &QAction::triggered, this, &MainWindow::onAddPoint);
     this->tool_bar->addAction(point_tool_action);
+
+    auto physical_group_pt_action = new QAction("PhysPt");
+    connect(physical_group_pt_action, &QAction::triggered, this, &MainWindow::onAddPhysicalPoint);
+    this->tool_bar->addAction(physical_group_pt_action);
 
     addToolBar(this->tool_bar);
 }
@@ -588,6 +593,29 @@ MainWindow::onAddPoint()
     int tag = 1;
     auto name = QString("Point %1").arg(tag);
     auto dlg = new PointTool(name, this);
+    this->left->add(dlg);
+
+    moveToolToTopLeft(dlg);
+    dlg->show();
+
+    connect(dlg, &QDialog::accepted, this, [dlg, this]() {
+        // disconnect current signals
+        disconnect(dlg, &QDialog::accepted, this, nullptr);
+        disconnect(dlg, &QDialog::rejected, this, nullptr);
+        // TODO: connect new signals
+        // connect(dlg, &QDialog::accepted, this, [dlg, this]() { qDebug() << "accepted"; });
+        // connect(dlg, &QDialog::rejected, this, [dlg, this]() { qDebug() << "rejected"; });
+    });
+    connect(dlg, &QDialog::rejected, this, [dlg, this]() { this->left->remove(dlg); });
+}
+
+void
+MainWindow::onAddPhysicalPoint()
+{
+    // FIXME: get the next number
+    int tag = 1;
+    auto name = QString("Physical Point %1").arg(tag);
+    auto dlg = new PhysicalGroupTool(PhysicalGroupTool::POINT, name, this);
     this->left->add(dlg);
 
     moveToolToTopLeft(dlg);

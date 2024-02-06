@@ -81,6 +81,7 @@ public slots:
     void onSet1to1();
     void onSettingsChanged();
     void onAddPoint();
+    void onAddPhysicalPoint();
 
 protected:
     void moveToolToTopLeft(BaseTool * tool);
