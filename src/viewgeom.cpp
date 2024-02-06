@@ -247,7 +247,7 @@ View::DrawGEdge::operator()(GEdge * e)
 void
 View::DrawGFace::_drawVertexArray(VertexArray * va,
                                   bool useNormalArray,
-                                  int forceColor,
+                                  int force_color,
                                   const QColor & color)
 {
     if (!va || !va->getNumVertices())
@@ -262,7 +262,7 @@ View::DrawGFace::_drawVertexArray(VertexArray * va,
     else {
         glDisableClientState(GL_NORMAL_ARRAY);
     }
-    if (forceColor) {
+    if (force_color) {
         glDisableClientState(GL_COLOR_ARRAY);
         glColorQColor(color);
     }
@@ -374,10 +374,12 @@ View::DrawGFace::operator()(GFace * f)
 
     if (show_surfaces || f->getSelection() > 1) {
         if (surface_type > 0 && f->va_geom_triangles) {
-            bool selected = false;
-            if (f->getSelection())
-                selected = true;
-            _drawVertexArray(f->va_geom_triangles, enable_lighting, selected, clr_selection);
+            if (f->getSelection() == HIGHLIGHT)
+                _drawVertexArray(f->va_geom_triangles, enable_lighting, true, HIGHLIGHT_CLR);
+            else if (f->getSelection() == SELECTED)
+                _drawVertexArray(f->va_geom_triangles, enable_lighting, true, clr_selection);
+            else
+                _drawVertexArray(f->va_geom_triangles, enable_lighting, true, clr_surfaces);
         }
         else {
             glEnable(GL_LINE_STIPPLE);

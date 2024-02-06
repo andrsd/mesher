@@ -95,7 +95,7 @@ protected:
         View * view;
         void _drawVertexArray(VertexArray * va,
                               bool useNormalArray,
-                              int forceColor = 0,
+                              int force_color = 0,
                               const QColor & color = QColor());
 
     public:
