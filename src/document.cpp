@@ -43,6 +43,8 @@ LoadThread::run()
         status = GModel::readGEO(fname);
     else if (this->file_name.endsWith(".msh"))
         status = gmodel->readMSH(fname);
+    else if (this->file_name.endsWith(".iges"))
+        status = gmodel->readOCCIGES(fname);
     else if (this->file_name.endsWith(".step"))
         status = gmodel->readOCCSTEP(fname);
     else {
