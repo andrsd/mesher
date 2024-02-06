@@ -566,7 +566,6 @@ MainWindow::onSet1to1()
 void
 MainWindow::onSettingsChanged()
 {
-    qDebug() << "onSettingsChanged()";
     this->view->update();
 }
 

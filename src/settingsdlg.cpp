@@ -763,6 +763,5 @@ SettingsDialog::onCategorySelected()
 void
 SettingsDialog::onChanged()
 {
-    qDebug() << "SettingsDialog::onChanged()";
     emit changed();
 }
