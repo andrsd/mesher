@@ -11,7 +11,7 @@ public:
     ListWidget(QWidget * parent = nullptr);
 
     void addItem(QListWidgetItem * item);
-    
+
 protected slots:
     void onDeletePressed();
 

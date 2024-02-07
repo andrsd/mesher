@@ -22,7 +22,7 @@ PhysicalGroupTool::PhysicalGroupTool(Type type, const QString & name, QWidget * 
     this->entities->setMinimumHeight(100);
     this->entities->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     l->addRow(this->entities);
-    
+
     connectSignals();
 
     this->name->setFocus();
