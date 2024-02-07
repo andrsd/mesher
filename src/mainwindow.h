@@ -3,6 +3,7 @@
 #include <QColor>
 #include <QMainWindow>
 #include <QTimer>
+#include "tools/physicalgrouptool.h"
 
 class QSettings;
 class QMenu;
@@ -82,9 +83,12 @@ public slots:
     void onSettingsChanged();
     void onAddPoint();
     void onAddPhysicalPoint();
+    void onAddPhysicalCurve();
+    void onAddPhysicalSurface();
 
 protected:
     void moveToolToTopLeft(BaseTool * tool);
+    void addPhysicalGroup(const QString & stype, int tag, PhysicalGroupTool::Type type);
 
     static QSettings * settings;
     QMenuBar * menu_bar;

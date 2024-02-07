@@ -200,9 +200,28 @@ MainWindow::setupToolBar()
     connect(point_tool_action, &QAction::triggered, this, &MainWindow::onAddPoint);
     this->tool_bar->addAction(point_tool_action);
 
+    this->tool_bar->addSeparator();
+
     auto physical_group_pt_action = new QAction("PhysPt");
+    physical_group_pt_action->setToolTip("Add physical point");
     connect(physical_group_pt_action, &QAction::triggered, this, &MainWindow::onAddPhysicalPoint);
     this->tool_bar->addAction(physical_group_pt_action);
+
+    auto physical_group_curve_action = new QAction("PhysCurve");
+    physical_group_curve_action->setToolTip("Add physical curve");
+    connect(physical_group_curve_action,
+            &QAction::triggered,
+            this,
+            &MainWindow::onAddPhysicalCurve);
+    this->tool_bar->addAction(physical_group_curve_action);
+
+    auto physical_group_surface_action = new QAction("PhysSurf");
+    physical_group_surface_action->setToolTip("Add physical surface");
+    connect(physical_group_surface_action,
+            &QAction::triggered,
+            this,
+            &MainWindow::onAddPhysicalSurface);
+    this->tool_bar->addAction(physical_group_surface_action);
 
     addToolBar(this->tool_bar);
 }
@@ -610,12 +629,10 @@ MainWindow::onAddPoint()
 }
 
 void
-MainWindow::onAddPhysicalPoint()
+MainWindow::addPhysicalGroup(const QString & stype, int tag, PhysicalGroupTool::Type type)
 {
-    // FIXME: get the next number
-    int tag = 1;
-    auto name = QString("Physical Point %1").arg(tag);
-    auto dlg = new PhysicalGroupTool(PhysicalGroupTool::POINT, name, this);
+    auto name = QString("Physical %1 %2").arg(stype, QString::number(tag));
+    auto dlg = new PhysicalGroupTool(type, name, this);
     this->left->add(dlg);
 
     moveToolToTopLeft(dlg);
@@ -630,4 +647,28 @@ MainWindow::onAddPhysicalPoint()
         // connect(dlg, &QDialog::rejected, this, [dlg, this]() { qDebug() << "rejected"; });
     });
     connect(dlg, &QDialog::rejected, this, [dlg, this]() { this->left->remove(dlg); });
+}
+
+void
+MainWindow::onAddPhysicalPoint()
+{
+    // FIXME: get the next number
+    int tag = 1;
+    addPhysicalGroup("Point", tag, PhysicalGroupTool::POINT);
+}
+
+void
+MainWindow::onAddPhysicalCurve()
+{
+    // FIXME: get the next number
+    int tag = 1;
+    addPhysicalGroup("Curve", tag, PhysicalGroupTool::CURVE);
+}
+
+void
+MainWindow::onAddPhysicalSurface()
+{
+    // FIXME: get the next number
+    int tag = 1;
+    addPhysicalGroup("Surface", tag, PhysicalGroupTool::SURFACE);
 }
