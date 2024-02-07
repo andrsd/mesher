@@ -38,7 +38,9 @@ PhysicalGroupTool::connectSignals()
 void
 PhysicalGroupTool::updateWidgets()
 {
-    if (!this->name->text().isEmpty() && !this->tag->text().isEmpty())
+    bool ok = !this->name->text().isEmpty() && !this->tag->text().isEmpty() &&
+              this->entities->count() > 0;
+    if (ok)
         enableOkButton();
     else
         enableOkButton(false);
