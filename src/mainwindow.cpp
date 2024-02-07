@@ -629,16 +629,24 @@ MainWindow::onAddPoint()
 }
 
 void
-MainWindow::addPhysicalGroup(const QString & stype, int tag, PhysicalGroupTool::Type type)
+MainWindow::addPhysicalGroup(PhysicalGroupTool::Type type, int tag)
 {
-    auto name = QString("Physical %1 %2").arg(stype, QString::number(tag));
-    auto dlg = new PhysicalGroupTool(type, name, this);
+    auto dlg = new PhysicalGroupTool(type, tag, this);
     this->left->add(dlg);
 
     moveToolToTopLeft(dlg);
     dlg->show();
 
-    connect(dlg, &QDialog::accepted, this, [dlg, this]() {
+    connect(dlg, &QDialog::accepted, this, [dlg, this, type, tag]() {
+        if (type == PhysicalGroupTool::POINT)
+            PhysicalGroupTool::N_POINTS = tag;
+        else if (type == PhysicalGroupTool::CURVE)
+            PhysicalGroupTool::N_CURVES = tag;
+        else if (type == PhysicalGroupTool::SURFACE)
+            PhysicalGroupTool::N_SURFACES = tag;
+        else if (type == PhysicalGroupTool::VOLUME)
+            PhysicalGroupTool::N_VOLUMES = tag;
+
         // disconnect current signals
         disconnect(dlg, &QDialog::accepted, this, nullptr);
         disconnect(dlg, &QDialog::rejected, this, nullptr);
@@ -652,23 +660,20 @@ MainWindow::addPhysicalGroup(const QString & stype, int tag, PhysicalGroupTool::
 void
 MainWindow::onAddPhysicalPoint()
 {
-    // FIXME: get the next number
-    int tag = 1;
-    addPhysicalGroup("Point", tag, PhysicalGroupTool::POINT);
+    int tag = PhysicalGroupTool::N_POINTS + 1;
+    addPhysicalGroup(PhysicalGroupTool::POINT, tag);
 }
 
 void
 MainWindow::onAddPhysicalCurve()
 {
-    // FIXME: get the next number
-    int tag = 1;
-    addPhysicalGroup("Curve", tag, PhysicalGroupTool::CURVE);
+    int tag = PhysicalGroupTool::N_CURVES + 1;
+    addPhysicalGroup(PhysicalGroupTool::CURVE, tag);
 }
 
 void
 MainWindow::onAddPhysicalSurface()
 {
-    // FIXME: get the next number
-    int tag = 1;
-    addPhysicalGroup("Surface", tag, PhysicalGroupTool::SURFACE);
+    int tag = PhysicalGroupTool::N_SURFACES + 1;
+    addPhysicalGroup(PhysicalGroupTool::SURFACE, tag);
 }

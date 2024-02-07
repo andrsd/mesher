@@ -88,7 +88,7 @@ public slots:
 
 protected:
     void moveToolToTopLeft(BaseTool * tool);
-    void addPhysicalGroup(const QString & stype, int tag, PhysicalGroupTool::Type type);
+    void addPhysicalGroup(PhysicalGroupTool::Type type, int tag);
 
     static QSettings * settings;
     QMenuBar * menu_bar;

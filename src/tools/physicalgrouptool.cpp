@@ -4,11 +4,31 @@
 #include <QFormLayout>
 #include <QLabel>
 
-PhysicalGroupTool::PhysicalGroupTool(Type type, const QString & name, QWidget * parent) :
-    BaseTool(name, parent),
+int PhysicalGroupTool::N_POINTS = 0;
+int PhysicalGroupTool::N_CURVES = 0;
+int PhysicalGroupTool::N_SURFACES = 0;
+int PhysicalGroupTool::N_VOLUMES = 0;
+
+QString
+PhysicalGroupTool::typeToName(Type type)
+{
+    if (type == POINT)
+        return "Point";
+    else if (type == CURVE)
+        return "Curve";
+    else if (type == SURFACE)
+        return "Surface";
+    else if (type == VOLUME)
+        return "Volume";
+    else
+        return "Unknown";
+}
+
+PhysicalGroupTool::PhysicalGroupTool(Type type, int tag, QWidget * parent) :
+    BaseTool(QString("Physical %1 %2").arg(typeToName(type), QString::number(tag)), parent),
     type(type)
 {
-    setWindowTitle("Physical Group");
+    setWindowTitle(QString("Physical %1").arg(typeToName(type)));
 
     auto l = layout();
 
