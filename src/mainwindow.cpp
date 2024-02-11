@@ -170,6 +170,7 @@ MainWindow::setupToolBar()
     this->tool_bar->setFloatable(false);
     this->tool_bar->setMovable(false);
     this->tool_bar->setAllowedAreas(Qt::TopToolBarArea);
+    this->tool_bar->setIconSize(QSize(24, 24));
 
     auto visible_action = new QAction("V");
     visible_action->setCheckable(true);
@@ -202,12 +203,16 @@ MainWindow::setupToolBar()
 
     this->tool_bar->addSeparator();
 
-    auto physical_group_pt_action = new QAction("PhysPt");
+    auto physical_group_pt_action = new QAction("Physical Point");
+    physical_group_pt_action->setIcon(QPixmap(":/i/physical-point"));
+    physical_group_pt_action->setIconVisibleInMenu(true);
     physical_group_pt_action->setToolTip("Add physical point");
     connect(physical_group_pt_action, &QAction::triggered, this, &MainWindow::onAddPhysicalPoint);
     this->tool_bar->addAction(physical_group_pt_action);
 
-    auto physical_group_curve_action = new QAction("PhysCurve");
+    auto physical_group_curve_action = new QAction("Physical Curve");
+    physical_group_curve_action->setIcon(QPixmap(":/i/physical-line"));
+    physical_group_curve_action->setIconVisibleInMenu(true);
     physical_group_curve_action->setToolTip("Add physical curve");
     connect(physical_group_curve_action,
             &QAction::triggered,
@@ -215,7 +220,9 @@ MainWindow::setupToolBar()
             &MainWindow::onAddPhysicalCurve);
     this->tool_bar->addAction(physical_group_curve_action);
 
-    auto physical_group_surface_action = new QAction("PhysSurf");
+    auto physical_group_surface_action = new QAction("Physical Surface");
+    physical_group_surface_action->setIcon(QPixmap(":/i/physical-surface"));
+    physical_group_surface_action->setIconVisibleInMenu(true);
     physical_group_surface_action->setToolTip("Add physical surface");
     connect(physical_group_surface_action,
             &QAction::triggered,

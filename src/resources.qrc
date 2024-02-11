@@ -12,4 +12,14 @@
     <qresource>
         <file alias="acknowledgements">../ACKNOWLEDGEMENTS</file>
     </qresource>
+
+    <qresource prefix="/i">
+        <file alias="physical-point">../resources/icons/physical-point.png</file>
+    </qresource>
+    <qresource prefix="/i">
+        <file alias="physical-line">../resources/icons/physical-line.png</file>
+    </qresource>
+    <qresource prefix="/i">
+        <file alias="physical-surface">../resources/icons/physical-surface.png</file>
+    </qresource>
 </RCC>
