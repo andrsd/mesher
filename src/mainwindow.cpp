@@ -197,12 +197,6 @@ MainWindow::setupToolBar()
 
     this->tool_bar->addSeparator();
 
-    auto point_tool_action = new QAction("Pt");
-    connect(point_tool_action, &QAction::triggered, this, &MainWindow::onAddPoint);
-    this->tool_bar->addAction(point_tool_action);
-
-    this->tool_bar->addSeparator();
-
     auto physical_group_pt_action = new QAction("Physical Point");
     physical_group_pt_action->setIcon(QPixmap(":/i/physical-point"));
     physical_group_pt_action->setIconVisibleInMenu(true);
