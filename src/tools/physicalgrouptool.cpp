@@ -1,6 +1,7 @@
 #include "physicalgrouptool.h"
 #include "common/floatwidget.h"
 #include "common/listwidget.h"
+#include "utils.h"
 #include <QFormLayout>
 #include <QLabel>
 #include "GEntity.h"
@@ -60,8 +61,7 @@ void
 PhysicalGroupTool::addEntity(GEntity * e)
 {
     auto item = new QListWidgetItem(this->entities);
-    auto name = QString("%1 %2").arg(e->getTypeString().c_str(), QString::number(e->tag()));
-    item->setText(name);
+    item->setText(getEntityName(e));
     item->setData(Qt::UserRole, QVariant::fromValue(e));
 }
 

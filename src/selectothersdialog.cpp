@@ -1,5 +1,6 @@
 #include "selectothersdialog.h"
 #include "view.h"
+#include "utils.h"
 #include "GEntity.h"
 #include <QVBoxLayout>
 #include <QListWidget>
@@ -50,8 +51,7 @@ SelectOthersDialog::setEntities(const std::vector<GEntity *> & ents)
 
     for (auto & e : ents) {
         QListWidgetItem * item = new QListWidgetItem(this->entities);
-        auto text = QString("%1 %2").arg(e->getTypeString().c_str(), QString::number(e->tag()));
-        item->setText(text);
+        item->setText(getEntityName(e));
         item->setData(Qt::UserRole, QVariant::fromValue(e));
         if (e == this->view->getHighlightedEntity())
             item->setFont(bold_fnt);

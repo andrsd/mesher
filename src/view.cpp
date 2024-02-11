@@ -13,6 +13,7 @@
 #include <QSettings>
 #include <QShortcut>
 #include "selectioninfowidget.h"
+#include "utils.h"
 
 void glColorQColor(const QColor & clr);
 
@@ -2359,7 +2360,7 @@ View::onSelectionChanged()
     }
     else if (this->selected_entities.size() == 1) {
         auto ent = *this->selected_entities.begin();
-        text = QString("%1 %2").arg(ent->getTypeString().c_str(), QString::number(ent->tag()));
+        text = getEntityName(ent);
     }
     else {
         text = QString("Selected entities: %1").arg(this->selected_entities.size());
