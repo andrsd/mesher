@@ -70,6 +70,7 @@ public:
     void selectEntity(GEntity * entity);
 
     GEntity * getHighlightedEntity() const;
+    const std::set<GEntity *> & getSelectedEntities() const;
 
 protected:
     class DrawGVertex {

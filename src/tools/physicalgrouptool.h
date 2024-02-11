@@ -4,6 +4,7 @@
 
 class FloatWidget;
 class ListWidget;
+class GEntity;
 
 class PhysicalGroupTool : public BaseTool {
     Q_OBJECT
@@ -12,12 +13,15 @@ public:
 
     PhysicalGroupTool(Type type, int tag, QWidget * parent);
 
+    void setEntities(const std::vector<GEntity *> & ents);
+
 public slots:
     void onSelectedGeomEntity();
 
 protected:
     void connectSignals();
     void updateWidgets() override;
+    void addEntity(GEntity * e);
 
     static QString typeToName(Type type);
 

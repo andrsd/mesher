@@ -27,6 +27,10 @@
 #include "common/toolbar.h"
 #include "visibilitysettingsdialog.h"
 #include "GmshMessage.h"
+#include "GVertex.h"
+#include "GEdge.h"
+#include "GFace.h"
+#include "GRegion.h"
 #include "tools/pointtool.h"
 #include "tools/physicalgrouptool.h"
 
@@ -670,7 +674,27 @@ MainWindow::onAddPoint()
 void
 MainWindow::addPhysicalGroup(PhysicalGroupTool::Type type, int tag)
 {
+    auto & sel_entities = this->view->getSelectedEntities();
+    // filter selected entied based on the type
+    std::vector<GEntity *> ents;
+    std::copy_if(sel_entities.begin(),
+                 sel_entities.end(),
+                 std::back_inserter(ents),
+                 [type](GEntity * value) {
+                     if (type == PhysicalGroupTool::POINT)
+                         return dynamic_cast<GVertex *>(value) != nullptr;
+                     else if (type == PhysicalGroupTool::CURVE)
+                         return dynamic_cast<GEdge *>(value) != nullptr;
+                     else if (type == PhysicalGroupTool::SURFACE)
+                         return dynamic_cast<GFace *>(value) != nullptr;
+                     else if (type == PhysicalGroupTool::VOLUME)
+                         return dynamic_cast<GRegion *>(value) != nullptr;
+                     else
+                         return false;
+                 });
+
     auto dlg = new PhysicalGroupTool(type, tag, this);
+    dlg->setEntities(ents);
     this->left->add(dlg);
 
     moveToolToTopLeft(dlg);

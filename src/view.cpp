@@ -2039,6 +2039,12 @@ View::getHighlightedEntity() const
     return this->highlighted_entity;
 }
 
+const std::set<GEntity *> &
+View::getSelectedEntities() const
+{
+    return this->selected_entities;
+}
+
 void
 View::onHighlight()
 {

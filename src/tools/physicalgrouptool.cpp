@@ -3,6 +3,7 @@
 #include "common/listwidget.h"
 #include <QFormLayout>
 #include <QLabel>
+#include "GEntity.h"
 
 int PhysicalGroupTool::N_POINTS = 0;
 int PhysicalGroupTool::N_CURVES = 0;
@@ -46,6 +47,22 @@ PhysicalGroupTool::PhysicalGroupTool(Type type, int tag, QWidget * parent) :
     connectSignals();
 
     this->name->setFocus();
+}
+
+void
+PhysicalGroupTool::setEntities(const std::vector<GEntity *> & ents)
+{
+    for (auto & e : ents)
+        addEntity(e);
+}
+
+void
+PhysicalGroupTool::addEntity(GEntity * e)
+{
+    auto item = new QListWidgetItem(this->entities);
+    auto name = QString("%1 %2").arg(e->getTypeString().c_str(), QString::number(e->tag()));
+    item->setText(name);
+    item->setData(Qt::UserRole, QVariant::fromValue(e));
 }
 
 void
