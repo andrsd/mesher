@@ -38,6 +38,7 @@ public:
     }
 
 protected:
+    void setToolIsActive(bool active);
     void setupWidgets();
     void setupMenuBar();
     void setupToolBar();
@@ -91,6 +92,7 @@ protected:
     void addPhysicalGroup(PhysicalGroupTool::Type type, int tag);
 
     static QSettings * settings;
+    bool tool_is_active;
     QMenuBar * menu_bar;
     QMenu * recent_menu;
     ToolBar * tool_bar;

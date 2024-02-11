@@ -36,6 +36,7 @@ QSettings * MainWindow::settings = nullptr;
 
 MainWindow::MainWindow(QWidget * parent) :
     QMainWindow(parent),
+    tool_is_active(false),
     menu_bar(new QMenuBar(nullptr)),
     recent_menu(nullptr),
     new_action(nullptr),
@@ -95,6 +96,14 @@ MainWindow::getSettings()
     if (settings == nullptr)
         settings = new QSettings("David Andrs", "Mesher");
     return settings;
+}
+
+void
+MainWindow::setToolIsActive(bool active)
+{
+    this->tool_is_active = active;
+    updateMenuBar();
+    this->tool_bar->setEnabled(!active);
 }
 
 void
@@ -258,7 +267,12 @@ MainWindow::updateMenuBar()
     this->show_main_window->setChecked(active_window == this);
 
     auto has_file = this->doc->hasFile();
-    this->save_action->setEnabled(has_file);
+    this->save_action->setEnabled(has_file && !this->tool_is_active);
+
+    this->new_action->setEnabled(!this->tool_is_active);
+    this->open_action->setEnabled(!this->tool_is_active);
+    this->save_as_action->setEnabled(!this->tool_is_active);
+    this->close_action->setEnabled(!this->tool_is_active);
 }
 
 void
@@ -661,8 +675,10 @@ MainWindow::addPhysicalGroup(PhysicalGroupTool::Type type, int tag)
 
     moveToolToTopLeft(dlg);
     dlg->show();
+    setToolIsActive(true);
 
     connect(dlg, &QDialog::accepted, this, [dlg, this, type, tag]() {
+        setToolIsActive(false);
         if (type == PhysicalGroupTool::POINT)
             PhysicalGroupTool::N_POINTS = tag;
         else if (type == PhysicalGroupTool::CURVE)
@@ -679,7 +695,10 @@ MainWindow::addPhysicalGroup(PhysicalGroupTool::Type type, int tag)
         // connect(dlg, &QDialog::accepted, this, [dlg, this]() { qDebug() << "accepted"; });
         // connect(dlg, &QDialog::rejected, this, [dlg, this]() { qDebug() << "rejected"; });
     });
-    connect(dlg, &QDialog::rejected, this, [dlg, this]() { this->left->remove(dlg); });
+    connect(dlg, &QDialog::rejected, this, [dlg, this]() {
+        setToolIsActive(false);
+        this->left->remove(dlg);
+    });
 }
 
 void
