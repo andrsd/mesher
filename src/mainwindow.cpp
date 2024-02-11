@@ -171,6 +171,30 @@ MainWindow::setupToolBar()
     this->tool_bar->setMovable(false);
     this->tool_bar->setAllowedAreas(Qt::TopToolBarArea);
     this->tool_bar->setIconSize(QSize(24, 24));
+    this->tool_bar->setContextMenuPolicy(Qt::PreventContextMenu);
+    this->tool_bar->setStyleSheet("QToolBar {"
+                                  "  background-color: #f0f0f0;"
+                                  "  border: none;"
+                                  "}"
+                                  "QToolButton {"
+                                  "  margin-top: 3;"
+                                  "  margin-bottom: 3;"
+                                  "  border-radius: 4;"
+                                  "  width: 28;"
+                                  "  height: 28;"
+                                  "}"
+                                  "QToolButton::hover {"
+                                  "  background-color: #e3e3e3;"
+                                  "  border-radius: 4;"
+                                  "  margin-top: 3;"
+                                  "  margin-bottom: 3;"
+                                  "}"
+                                  "QToolBar::separator {"
+                                  "  background-color: #dbdbdb;"
+                                  "  width: 2;"
+                                  "  margin-top: 6;"
+                                  "  margin-bottom: 6;"
+                                  "}");
 
     auto visible_action = new QAction("V");
     visible_action->setCheckable(true);
