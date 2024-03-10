@@ -1,4 +1,5 @@
 #include "basetool.h"
+#include "widgets/okbutton.h"
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QLineEdit>
@@ -35,8 +36,7 @@ BaseTool::BaseTool(const QString & name, QWidget * parent) : QDialog(parent)
     this->nm->setFocusPolicy(Qt::ClickFocus);
     btn_layout->addWidget(this->nm);
 
-    this->ok = new QPushButton("\u2713");
-    this->ok->setFixedWidth(25);
+    this->ok = new OkButton();
     btn_layout->addWidget(this->ok);
 
     this->cancel = new QPushButton("\u2A09");
