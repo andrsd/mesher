@@ -1,5 +1,7 @@
 #include "namewidget.h"
 #include <QKeyEvent>
+#include <QIcon>
+#include <QAction>
 
 NameWidget::NameWidget(QWidget * parent) : QLineEdit(parent)
 {
