@@ -228,10 +228,6 @@ MainWindow::setupToolBar()
     connect(set_z_action, &QAction::triggered, this, &MainWindow::onSetZ);
     this->tool_bar->addAction(set_z_action);
 
-    auto set_1to1_action = new QAction("1:1");
-    connect(set_1to1_action, &QAction::triggered, this, &MainWindow::onSet1to1);
-    this->tool_bar->addAction(set_1to1_action);
-
     this->tool_bar->addSeparator();
 
     auto physical_group_pt_action = new QAction("Physical Point");
@@ -620,14 +616,6 @@ MainWindow::onSetZ()
 {
     this->view->setEulerAngles({ 0, 0, 0 });
     this->view->setQuaternionFromEulerAngles();
-    this->view->update();
-}
-
-void
-MainWindow::onSet1to1()
-{
-    this->view->setTranslation({ 0., 0., 0. });
-    this->view->setScale({ 1., 1., 1. });
     this->view->update();
 }
 

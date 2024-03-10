@@ -80,7 +80,6 @@ public slots:
     void onSetX();
     void onSetY();
     void onSetZ();
-    void onSet1to1();
     void onSettingsChanged();
     void onAddPoint();
     void onAddPhysicalPoint();

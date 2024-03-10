@@ -63,6 +63,7 @@ public:
     void show(GModel * m);
     void showAll();
     bool isVisible(GModel * m) const;
+    void zoomToFit();
 
     void setTranslation(const std::array<double, 3> & trans);
     void setScale(const std::array<double, 3> & scale);
@@ -450,6 +451,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
     void mouseDragEvent(QMouseEvent * event);
     void mouseHoverEvent(QMouseEvent * event);
+    void contextMenuEvent(QContextMenuEvent * event) override;
 
 signals:
     void selectionChanged();
@@ -457,6 +459,7 @@ signals:
 protected slots:
     void onHighlight();
     void onSelectionChanged();
+    void onContextMenu(const QPoint & pos);
 
 public slots:
     void onSelectOther();

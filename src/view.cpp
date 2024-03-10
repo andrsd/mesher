@@ -12,6 +12,8 @@
 #include <QWheelEvent>
 #include <QSettings>
 #include <QShortcut>
+#include <QCoreApplication>
+#include <QMenu>
 #include "selectioninfowidget.h"
 #include "utils.h"
 
@@ -102,6 +104,7 @@ View::View(MainWindow * main_wnd) :
     this->selection_info->setText("");
 
     connect(this, &View::selectionChanged, this, &View::onSelectionChanged);
+    connect(this, &View::customContextMenuRequested, this, &View::onContextMenu);
 }
 
 View::~View()
@@ -204,6 +207,14 @@ bool
 View::isVisible(GModel * m) const
 {
     return (this->hidden_models.find(m) == this->hidden_models.end());
+}
+
+void
+View::zoomToFit()
+{
+    setTranslation({ 0., 0., 0. });
+    setScale({ 1., 1., 1. });
+    update();
 }
 
 void
@@ -2027,6 +2038,12 @@ View::mouseReleaseEvent(QMouseEvent * event)
             }
         }
     }
+    else if (this->event_btn == Qt::RightButton) {
+        if ((this->_curr.win[0] == this->_click.win[0]) &&
+            (this->_curr.win[1] == this->_click.win[1])) {
+            emit customContextMenuRequested(event->pos());
+        }
+    }
     this->draw_rotation_center = false;
     this->draw_mesh = true;
     CTX::instance()->post.draw = 1;
@@ -2380,4 +2397,34 @@ View::onSelectionChanged()
     this->selection_info->move(geom.width() - this->selection_info->width() - 10 - 80,
                                geom.height() - this->selection_info->height() - 5);
     this->update();
+}
+
+void
+View::contextMenuEvent(QContextMenuEvent * event)
+{
+    event->ignore();
+}
+
+void
+View::onContextMenu(const QPoint & pos)
+{
+    QMenu ctx;
+    ctx.setStyleSheet("QMenu {"
+                      "  margin: 0;"
+                      "  border-radius: 3;"
+                      "  background-color: rgb(255, 255, 255);"
+                      "}"
+                      "QMenu::item {"
+                      "  background-color: rgb(255, 255, 255);"
+                      "  color: rgb(51, 51, 51);"
+                      "  padding: 4px 20px 4px 20px;"
+                      "  font-size: 12pt;"
+                      "}"
+                      "QMenu::item:selected {"
+                      "  background-color: rgb(226, 240, 250);"
+                      "  color: rgb(51, 51, 51);"
+                      "}");
+
+    ctx.addAction("Zoom to fit", this, &View::zoomToFit);
+    ctx.exec(mapToGlobal(pos));
 }
