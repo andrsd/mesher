@@ -20,6 +20,7 @@ NameWidget::NameWidget(QWidget * parent) : QLineEdit(parent)
                   "  border: 1px solid rgb(40, 80, 170);"
                   "}");
     setAttribute(Qt::WA_MacShowFocusRect, 0);
+    setTextMargins(2, 2, 2, 2);
 
     QIcon icon(QPixmap(":/i/pencil"));
     this->edit_action = this->addAction(icon, QLineEdit::TrailingPosition);
