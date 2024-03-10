@@ -5,7 +5,22 @@
 LeftView::LeftView(QWidget * parent) : QTreeWidget(parent)
 {
     setMinimumWidth(150);
-    setStyleSheet("QTreeView { border: none; }");
+    setStyleSheet("QTreeView {"
+                  "  border: none;"
+                  "}"
+                  "QTreeView::item {"
+                  "  background-color: rgb(255, 255, 255);"
+                  "  color: rgb(51, 51, 51);"
+                  "}"
+                  "QTreeView::item:selected {"
+                  "  background-color: rgb(186, 219,243);"
+                  "}"
+                  "QTreeView::item:selected:hover {"
+                  "  background-color: rgb(186, 219,243);"
+                  "}"
+                  "QTreeView::item:hover {"
+                  "  background-color: rgb(226, 240, 250);"
+                  "}");
     setHeaderHidden(true);
 
     connect(this, &QTreeWidget::itemDoubleClicked, this, &LeftView::onItemDoubleClicked);
