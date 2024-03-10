@@ -2013,16 +2013,18 @@ View::mouseReleaseEvent(QMouseEvent * event)
 {
     this->is_dragging = false;
     this->_curr.set(this, event->pos());
-    if ((this->_curr.win[0] == this->_click.win[0]) &&
-        (this->_curr.win[1] == this->_click.win[1]) && this->highlighted_entity) {
-        if (this->selected_entities.find(this->highlighted_entity) ==
-            this->selected_entities.end()) {
-            selectEntity(this->highlighted_entity);
-        }
-        else {
-            this->highlighted_entity->setSelection(HIGHLIGHT);
-            this->selected_entities.erase(this->highlighted_entity);
-            emit selectionChanged();
+    if (this->event_btn == Qt::LeftButton) {
+        if ((this->_curr.win[0] == this->_click.win[0]) &&
+            (this->_curr.win[1] == this->_click.win[1]) && this->highlighted_entity) {
+            if (this->selected_entities.find(this->highlighted_entity) ==
+                this->selected_entities.end()) {
+                selectEntity(this->highlighted_entity);
+            }
+            else {
+                this->highlighted_entity->setSelection(HIGHLIGHT);
+                this->selected_entities.erase(this->highlighted_entity);
+                emit selectionChanged();
+            }
         }
     }
     this->draw_rotation_center = false;
