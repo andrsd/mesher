@@ -1,7 +1,5 @@
 #include "physicalgrouptool.h"
-#include "widgets/floatwidget.h"
 #include "widgets/listwidget.h"
-#include "widgets/listitemwidget.h"
 #include "widgets/lineedit.h"
 #include "utils.h"
 #include <QFormLayout>
@@ -41,6 +39,9 @@ PhysicalGroupTool::PhysicalGroupTool(Type type, int tag, QWidget * parent) :
     l->addRow("Name", this->name);
 
     this->tag = new LineEdit(this);
+    auto int_val = new QIntValidator();
+    int_val->setBottom(0);
+    this->tag->setValidator(int_val);
     l->addRow("Tag", this->tag);
 
     this->entities = new ListWidget(this);
