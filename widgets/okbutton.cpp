@@ -2,7 +2,7 @@
 
 OkButton::OkButton(QWidget * parent) : QPushButton("\u2713", parent)
 {
-    setFixedSize(22, 22);
+    setFixedSize(28, 28);
     setStyleSheet("QPushButton {"
                   "  background-color: rgb(65, 147, 41);"
                   "  color: rgb(255, 255, 255);"

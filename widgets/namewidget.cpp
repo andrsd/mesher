@@ -4,7 +4,7 @@
 NameWidget::NameWidget(QWidget * parent) : QLineEdit(parent)
 {
     setFocusPolicy(Qt::ClickFocus);
-    setFixedHeight(22);
+    setFixedHeight(28);
     setReadOnly(true);
     setStyleSheet("QLineEdit {"
                   "  border: 1px solid rgb(255, 255, 255);"
