@@ -15,7 +15,7 @@ void
 LeftView::add(BaseTool * tool)
 {
     auto ti = new QTreeWidgetItem(this);
-    ti->setText(0, tool->name());
+    ti->setText(0, tool->windowTitle());
     ti->setData(0, Qt::UserRole, QVariant::fromValue(tool));
     this->tool2item.insert(tool, ti);
 }

@@ -8,40 +8,16 @@
 #include <QListWidget>
 #include <QVariant>
 
-SelectOthersDialog::SelectOthersDialog(View * view) : QDialog(view), view(view)
+SelectOthersDialog::SelectOthersDialog(View * view) : ToolWindow(view), view(view)
 {
     setWindowTitle("Select other");
-    setWindowFlag(Qt::Tool);
-    setWindowFlag(Qt::FramelessWindowHint);
-    setStyleSheet("QDialog {"
-                  "  background-color: rgb(255, 255, 255);"
-                  "}");
-
     setFixedWidth(150);
 
     this->setStyleSheet("QWidget { font-size: 12pt; }");
 
     this->layout = new QVBoxLayout();
-    this->layout->setContentsMargins(0, 0, 0, 0);
-    this->layout->setSpacing(0);
+    this->layout->setContentsMargins(4, 4, 4, 4);
     setLayout(this->layout);
-
-    auto btn_layout = new QHBoxLayout();
-    btn_layout->setContentsMargins(0, 0, 0, 0);
-    btn_layout->setSpacing(0);
-
-    this->title = new ToolTitleWidget(this);
-    this->title->setText("Select other");
-    btn_layout->addWidget(this->title);
-
-    this->cancel = new CancelButton();
-    btn_layout->addWidget(this->cancel);
-
-    this->layout->addLayout(btn_layout);
-
-    this->body_layout = new QVBoxLayout();
-    this->body_layout->setContentsMargins(4, 4, 4, 4);
-    this->layout->addLayout(this->body_layout);
 
     this->entities = new QListWidget();
     this->entities->setStyleSheet("QListWidget {"
@@ -51,21 +27,16 @@ SelectOthersDialog::SelectOthersDialog(View * view) : QDialog(view), view(view)
                                   "  border: 1px solid rgb(40, 80, 170);"
                                   "}");
 
-    this->body_layout->addWidget(this->entities);
+    this->layout->addWidget(this->entities);
 
     std::vector<GEntity *> ents;
     setEntities(ents);
-
-    connect(this->cancel, &QPushButton::clicked, this, &SelectOthersDialog::onCancel);
 
     connect(this->entities, &QListWidget::itemEntered, this, &SelectOthersDialog::onItemEntered);
     connect(this->entities, &QListWidget::itemClicked, this, &SelectOthersDialog::onItemClicked);
 }
 
-SelectOthersDialog::~SelectOthersDialog()
-{
-    delete this->layout;
-}
+SelectOthersDialog::~SelectOthersDialog() {}
 
 void
 SelectOthersDialog::setEntities(const std::vector<GEntity *> & ents)
@@ -97,10 +68,4 @@ SelectOthersDialog::onItemClicked(QListWidgetItem * item)
     auto e = item->data(Qt::UserRole).value<GEntity *>();
     this->view->selectEntity(e);
     this->hide();
-}
-
-void
-SelectOthersDialog::onCancel()
-{
-    reject();
 }

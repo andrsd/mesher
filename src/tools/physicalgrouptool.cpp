@@ -30,8 +30,6 @@ PhysicalGroupTool::PhysicalGroupTool(Type type, int tag, QWidget * parent) :
     BaseTool(QString("Physical %1 %2").arg(typeToName(type), QString::number(tag)), parent),
     type(type)
 {
-    setWindowTitle(QString("Physical %1").arg(typeToName(type)));
-
     auto l = layout();
     l->setSpacing(6);
 
