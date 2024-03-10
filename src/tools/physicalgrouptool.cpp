@@ -1,6 +1,7 @@
 #include "physicalgrouptool.h"
 #include "widgets/floatwidget.h"
 #include "widgets/listwidget.h"
+#include "widgets/listitemwidget.h"
 #include "widgets/lineedit.h"
 #include "utils.h"
 #include <QFormLayout>
@@ -65,6 +66,7 @@ PhysicalGroupTool::addEntity(GEntity * e)
     auto item = new QListWidgetItem(this->entities);
     item->setText(getEntityName(e));
     item->setData(Qt::UserRole, QVariant::fromValue(e));
+    this->entities->addItem(item);
 }
 
 void

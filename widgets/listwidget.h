@@ -14,6 +14,7 @@ public:
 
 protected slots:
     void onDeletePressed();
+    void onDeleteItem(QListWidgetItem * item);
 
 protected:
     QSignalMapper * signal_mapper;

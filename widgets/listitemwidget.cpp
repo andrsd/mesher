@@ -1,11 +1,11 @@
-#include "listitem.h"
+#include "listitemwidget.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QPalette>
 #include <QApplication>
 
-ListItem::ListItem(QListWidgetItem * list_item) : list_item(list_item)
+ListItemWidget::ListItemWidget(QListWidgetItem * list_item) : list_item(list_item)
 {
     auto l = new QHBoxLayout();
     l->setContentsMargins(4, 0, 4, 0);
@@ -16,16 +16,23 @@ ListItem::ListItem(QListWidgetItem * list_item) : list_item(list_item)
     this->btn = new QPushButton("\u2A09");
     this->btn->setContentsMargins(0, 0, 0, 0);
     this->btn->setFixedSize(12, 12);
-    setSelected(false);
+    this->btn->setStyleSheet("QPushButton {"
+                             "  border: none;"
+                             "  font-weight: bold;"
+                             "  color: rgb(176, 186, 191);"
+                             "}"
+                             "QPushButton:hover {"
+                             "  color: rgb(174, 60, 62);"
+                             "}");
     l->addWidget(this->btn);
 
     setLayout(l);
 
-    connect(this->btn, &QPushButton::clicked, this, &ListItem::onItemDeleted);
+    connect(this->btn, &QPushButton::clicked, this, &ListItemWidget::onItemDeleted);
 }
 
 void
-ListItem::setSelected(bool state)
+ListItemWidget::setSelected(bool state)
 {
     QColor clr;
     // FIXME: this should be populated from palette
@@ -38,17 +45,17 @@ ListItem::setSelected(bool state)
                           "color: %1;"
                           "font-weight: bold;")
                       .arg(clr.name());
-    this->btn->setStyleSheet(qss);
+    //    this->btn->setStyleSheet(qss);
 }
 
 QListWidgetItem *
-ListItem::listWidgetItem() const
+ListItemWidget::listWidgetItem() const
 {
     return this->list_item;
 }
 
 void
-ListItem::onItemDeleted()
+ListItemWidget::onItemDeleted()
 {
     emit itemDeleted(this->list_item);
 }

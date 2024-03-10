@@ -1,4 +1,5 @@
 #include "listwidget.h"
+#include "listitemwidget.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -33,6 +34,10 @@ void
 ListWidget::addItem(QListWidgetItem * item)
 {
     QListWidget::addItem(item);
+
+    auto widget = new ListItemWidget(item);
+    this->setItemWidget(item, widget);
+    connect(widget, &ListItemWidget::itemDeleted, this, &ListWidget::onDeleteItem);
 }
 
 void
@@ -44,4 +49,11 @@ ListWidget::onDeletePressed()
         auto * lwi = takeItem(r);
         delete lwi;
     }
+}
+
+void
+ListWidget::onDeleteItem(QListWidgetItem * item)
+{
+    removeItemWidget(item);
+    takeItem(row(item));
 }

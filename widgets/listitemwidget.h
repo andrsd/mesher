@@ -5,10 +5,10 @@
 
 class QPushButton;
 
-class ListItem : public QWidget {
+class ListItemWidget : public QWidget {
     Q_OBJECT
 public:
-    ListItem(QListWidgetItem * list_item);
+    ListItemWidget(QListWidgetItem * list_item);
 
     QListWidgetItem * listWidgetItem() const;
     void setSelected(bool state);
