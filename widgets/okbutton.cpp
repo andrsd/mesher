@@ -9,6 +9,7 @@ OkButton::OkButton(QWidget * parent) : QPushButton("\u2713", parent)
                   "  font-weight: bold;"
                   "  font-size: 15pt;"
                   "  border: none;"
+                  "  border-bottom: 1px solid rgb(221, 221, 221);"
                   "}"
                   "QPushButton:hover {"
                   "  background-color: rgb(97, 185, 75);"
