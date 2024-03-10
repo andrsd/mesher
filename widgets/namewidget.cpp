@@ -59,8 +59,39 @@ NameWidget::keyPressEvent(QKeyEvent * event)
 }
 
 void
-NameWidget::setText(const QString & txt)
+NameWidget::mouseMoveEvent(QMouseEvent * event)
 {
-    this->previous_text = text();
-    QLineEdit::setText(txt);
+    if (isReadOnly()) {
+        if (this->dragging) {
+            auto glob_pos = mapToGlobal(event->pos());
+            auto parent = parentWidget();
+            parent->move(glob_pos - this->drag_rel_pos);
+        }
+        event->accept();
+    }
+    else
+        QLineEdit::mouseMoveEvent(event);
+}
+
+void
+NameWidget::mousePressEvent(QMouseEvent * event)
+{
+    if (isReadOnly()) {
+        this->dragging = true;
+        this->drag_rel_pos = event->pos();
+        event->accept();
+    }
+    else
+        QLineEdit::mousePressEvent(event);
+}
+
+void
+NameWidget::mouseReleaseEvent(QMouseEvent * event)
+{
+    if (isReadOnly()) {
+        this->dragging = false;
+        event->accept();
+    }
+    else
+        QLineEdit::mouseReleaseEvent(event);
 }

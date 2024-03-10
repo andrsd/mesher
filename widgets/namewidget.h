@@ -10,6 +10,9 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent * event) override;
+    void mouseMoveEvent(QMouseEvent * event) override;
+    void mousePressEvent(QMouseEvent * event) override;
+    void mouseReleaseEvent(QMouseEvent * event) override;
 
 protected slots:
     void onEdit();
@@ -19,4 +22,6 @@ private:
     QAction * edit_action;
 
     QString previous_text;
+    bool dragging;
+    QPoint drag_rel_pos;
 };
