@@ -6,6 +6,7 @@ class QVBoxLayout;
 class QLineEdit;
 class QFormLayout;
 class QPushButton;
+class NameWidget;
 
 class BaseTool : public QDialog {
     Q_OBJECT
@@ -29,7 +30,7 @@ protected slots:
 
 private:
     QVBoxLayout * laot;
-    QLineEdit * nm;
+    NameWidget * nm;
     QFormLayout * form_layout;
     QPushButton * ok;
     QPushButton * cancel;

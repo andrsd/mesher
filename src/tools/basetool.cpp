@@ -1,6 +1,7 @@
 #include "basetool.h"
 #include "widgets/okbutton.h"
 #include "widgets/cancelbutton.h"
+#include "widgets/namewidget.h"
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QLineEdit>
@@ -31,10 +32,9 @@ BaseTool::BaseTool(const QString & name, QWidget * parent) : QDialog(parent)
     btn_layout->setContentsMargins(0, 0, 0, 0);
     btn_layout->setSpacing(0);
 
-    this->nm = new QLineEdit(this);
+    this->nm = new NameWidget(this);
     this->nm->setReadOnly(true);
     this->nm->setText(name);
-    this->nm->setFocusPolicy(Qt::ClickFocus);
     btn_layout->addWidget(this->nm);
 
     this->ok = new OkButton();
