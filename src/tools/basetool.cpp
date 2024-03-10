@@ -9,10 +9,8 @@
 
 BaseTool::BaseTool(const QString & name, QWidget * parent) : QDialog(parent)
 {
+    setWindowFlag(Qt::FramelessWindowHint);
     setWindowFlag(Qt::Tool);
-    setWindowFlag(Qt::CustomizeWindowHint);
-    setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
-
     setStyleSheet("QDialog {"
                   "  background-color: rgb(255, 255, 255);"
                   "}"
@@ -24,7 +22,7 @@ BaseTool::BaseTool(const QString & name, QWidget * parent) : QDialog(parent)
     setFixedWidth(200);
 
     this->laot = new QVBoxLayout();
-    this->laot->setContentsMargins(8, 8, 8, 8);
+    this->laot->setContentsMargins(0, 0, 0, 0);
     this->laot->setSpacing(0);
     setLayout(this->laot);
 
@@ -48,7 +46,7 @@ BaseTool::BaseTool(const QString & name, QWidget * parent) : QDialog(parent)
     this->form_layout = new QFormLayout();
     this->form_layout->setSizeConstraint(QLayout::SetMaximumSize);
     this->form_layout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-    this->form_layout->setContentsMargins(0, 0, 0, 0);
+    this->form_layout->setContentsMargins(4, 4, 4, 4);
     this->form_layout->setSpacing(2);
     this->form_layout->setLabelAlignment(Qt::AlignLeft);
     this->laot->addLayout(this->form_layout);
