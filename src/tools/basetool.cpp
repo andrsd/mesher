@@ -10,6 +10,14 @@ BaseTool::BaseTool(const QString & name, QWidget * parent) : QDialog(parent)
     setWindowFlag(Qt::CustomizeWindowHint);
     setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
 
+    setStyleSheet("QDialog {"
+                  "  background-color: rgb(255, 255, 255);"
+                  "}"
+                  "QLabel {"
+                  "  color: rgb(128, 128, 128);"
+                  "  font-size: 12pt;"
+                  "}");
+
     setFixedWidth(200);
 
     this->laot = new QVBoxLayout();

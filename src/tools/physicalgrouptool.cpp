@@ -1,6 +1,7 @@
 #include "physicalgrouptool.h"
 #include "widgets/floatwidget.h"
 #include "widgets/listwidget.h"
+#include "widgets/lineedit.h"
 #include "utils.h"
 #include <QFormLayout>
 #include <QLabel>
@@ -33,11 +34,12 @@ PhysicalGroupTool::PhysicalGroupTool(Type type, int tag, QWidget * parent) :
     setWindowTitle(QString("Physical %1").arg(typeToName(type)));
 
     auto l = layout();
+    l->setSpacing(6);
 
-    this->name = new QLineEdit(this);
+    this->name = new LineEdit(this);
     l->addRow("Name", this->name);
 
-    this->tag = new QLineEdit(this);
+    this->tag = new LineEdit(this);
     l->addRow("Tag", this->tag);
 
     this->entities = new ListWidget(this);
