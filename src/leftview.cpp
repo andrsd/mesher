@@ -18,6 +18,7 @@ LeftView::add(BaseTool * tool)
     ti->setText(0, tool->windowTitle());
     ti->setData(0, Qt::UserRole, QVariant::fromValue(tool));
     this->tool2item.insert(tool, ti);
+    connect(tool, &ToolWindow::titleChanged, this, &LeftView::onToolTitleChanged);
 }
 
 void
@@ -40,5 +41,18 @@ LeftView::onItemDoubleClicked(QTreeWidgetItem * item, int column)
     if (item != nullptr) {
         auto * tool = item->data(0, Qt::UserRole).value<BaseTool *>();
         tool->show();
+    }
+}
+
+void
+LeftView::onToolTitleChanged(ToolWindow * tool_wnd)
+{
+    auto tool = dynamic_cast<BaseTool *>(tool_wnd);
+    if (tool) {
+        auto it = this->tool2item.find(tool);
+        if (it != this->tool2item.end()) {
+            auto item = it.value();
+            item->setText(0, tool->windowTitle());
+        }
     }
 }

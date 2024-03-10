@@ -102,4 +102,5 @@ void
 ToolWindow::onTitleChanged()
 {
     QDialog::setWindowTitle(this->editable_title->text());
+    emit titleChanged(this);
 }

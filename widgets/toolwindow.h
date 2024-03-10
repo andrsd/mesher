@@ -17,6 +17,9 @@ public:
     void setWindowTitle(const QString title);
     void setLayout(QLayout * layout);
 
+signals:
+    void titleChanged(ToolWindow * tool);
+
 protected:
     void enableOkButton(bool state = true);
 

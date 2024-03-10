@@ -3,6 +3,7 @@
 #include <QTreeWidget>
 
 class BaseTool;
+class ToolWindow;
 
 class LeftView : public QTreeWidget {
 public:
@@ -13,6 +14,7 @@ public:
 
 protected slots:
     void onItemDoubleClicked(QTreeWidgetItem * item, int column);
+    void onToolTitleChanged(ToolWindow * tool);
 
 private:
     QMap<BaseTool *, QTreeWidgetItem *> tool2item;
