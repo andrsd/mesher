@@ -73,6 +73,10 @@ PhysicalGroupTool::connectSignals()
 {
     connect(this->name, &QLineEdit::textChanged, this, &PhysicalGroupTool::updateWidgets);
     connect(this->tag, &QLineEdit::textChanged, this, &PhysicalGroupTool::updateWidgets);
+
+    auto ent_model = this->entities->model();
+    connect(ent_model, &QAbstractListModel::rowsInserted, this, &PhysicalGroupTool::updateWidgets);
+    connect(ent_model, &QAbstractListModel::rowsRemoved, this, &PhysicalGroupTool::updateWidgets);
 }
 
 void
