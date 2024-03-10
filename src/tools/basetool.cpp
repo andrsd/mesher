@@ -24,7 +24,7 @@ BaseTool::BaseTool(const QString & name, QWidget * parent) : QDialog(parent)
     this->nm = new QLineEdit(this);
     this->nm->setReadOnly(true);
     this->nm->setText(name);
-    this->nm->setFocusPolicy(Qt::NoFocus);
+    this->nm->setFocusPolicy(Qt::ClickFocus);
     btn_layout->addWidget(this->nm);
 
     this->ok = new QPushButton("\u2713");
