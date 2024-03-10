@@ -117,6 +117,12 @@ View::renderMode() const
 }
 
 void
+View::clear()
+{
+    this->highlighted_entity = nullptr;
+}
+
+void
 View::hide(GModel * m)
 {
     this->hidden_models.insert(m);

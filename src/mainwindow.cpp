@@ -311,6 +311,7 @@ MainWindow::connectSignals()
 void
 MainWindow::clear()
 {
+    this->view->clear();
     this->doc->destroy();
 }
 

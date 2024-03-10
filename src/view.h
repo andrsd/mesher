@@ -58,6 +58,7 @@ public:
 
     RenderMode renderMode() const;
 
+    void clear();
     void hide(GModel * m);
     void show(GModel * m);
     void showAll();
