@@ -1,5 +1,5 @@
 #include "pointtool.h"
-#include "common/floatwidget.h"
+#include "widgets/floatwidget.h"
 #include <QFormLayout>
 #include <QLabel>
 

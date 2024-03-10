@@ -2,9 +2,9 @@
 #include <QVBoxLayout>
 #include <QTabWidget>
 #include <QVariant>
-#include "common/booleanwidget.h"
-#include "common/radiooptionswidget.h"
-#include "common/sectiontitlewidget.h"
+#include "widgets/booleanwidget.h"
+#include "widgets/radiooptionswidget.h"
+#include "widgets/sectiontitlewidget.h"
 #include "mainwindow.h"
 
 VisibilitySettingsDialog::VisibilitySettingsDialog(QWidget * parent) : QDialog(parent)

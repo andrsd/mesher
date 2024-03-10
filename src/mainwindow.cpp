@@ -24,7 +24,7 @@
 #include "settingsdlg.h"
 #include "document.h"
 #include "loggerdialog.h"
-#include "common/toolbar.h"
+#include "widgets/toolbar.h"
 #include "visibilitysettingsdialog.h"
 #include "GmshMessage.h"
 #include "GVertex.h"

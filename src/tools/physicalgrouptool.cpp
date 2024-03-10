@@ -1,6 +1,6 @@
 #include "physicalgrouptool.h"
-#include "common/floatwidget.h"
-#include "common/listwidget.h"
+#include "widgets/floatwidget.h"
+#include "widgets/listwidget.h"
 #include "utils.h"
 #include <QFormLayout>
 #include <QLabel>

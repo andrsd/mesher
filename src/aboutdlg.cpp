@@ -7,7 +7,7 @@
 #include <QSvgWidget>
 #include <QPushButton>
 #include <QFile>
-#include "common/clickablelabel.h"
+#include "widgets/clickablelabel.h"
 #include "mesherconfig.h"
 #include "textboxdlg.h"
 

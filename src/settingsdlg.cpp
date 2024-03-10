@@ -6,13 +6,13 @@
 #include <QSettings>
 #include <QScrollArea>
 #include <QFormLayout>
-#include "common/radiooptionswidget.h"
-#include "common/floatwidget.h"
-#include "common/integerwidget.h"
-#include "common/booleanwidget.h"
-#include "common/labelledcolorwidget.h"
-#include "common/sectiontitlewidget.h"
-#include "common/pointwidget.h"
+#include "widgets/radiooptionswidget.h"
+#include "widgets/floatwidget.h"
+#include "widgets/integerwidget.h"
+#include "widgets/booleanwidget.h"
+#include "widgets/labelledcolorwidget.h"
+#include "widgets/sectiontitlewidget.h"
+#include "widgets/pointwidget.h"
 #include "mainwindow.h"
 
 SettingsDialog::SettingsDialog(QWidget * parent) : QDialog(parent)

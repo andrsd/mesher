@@ -22,7 +22,7 @@ target_include_directories(
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
-        common
+        widgets
         libgmsh
     PRIVATE
         Qt6::Core
