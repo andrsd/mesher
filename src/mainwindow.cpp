@@ -135,18 +135,18 @@ MainWindow::setupMenuBar()
     setMenuBar(this->menu_bar);
     QMenu * file_menu = this->menu_bar->addMenu("File");
     this->new_action =
-        file_menu->addAction("New", QKeySequence("Ctrl+N"), this, &MainWindow::onNewFile);
+        file_menu->addAction("New", this, &MainWindow::onNewFile, QKeySequence("Ctrl+N"));
     this->open_action =
-        file_menu->addAction("Open", QKeySequence("Ctrl+O"), this, &MainWindow::onOpenFile);
+        file_menu->addAction("Open", this, &MainWindow::onOpenFile, QKeySequence("Ctrl+O"));
     this->recent_menu = file_menu->addMenu("Open Recent");
     buildRecentFilesMenu();
     file_menu->addSeparator();
     this->save_action =
-        file_menu->addAction("Save", QKeySequence("Ctrl+S"), this, &MainWindow::onFileSave);
+        file_menu->addAction("Save", this, &MainWindow::onFileSave, QKeySequence("Ctrl+S"));
     this->save_as_action = file_menu->addAction("Save as...", this, &MainWindow::onFileSaveAs);
     file_menu->addSeparator();
     this->close_action =
-        file_menu->addAction("Close", QKeySequence("Ctrl+W"), this, &MainWindow::onClose);
+        file_menu->addAction("Close", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
 
     // The "About" item is fine here, since we assume Mac and that will
     // place the item into different submenu but this will need to be fixed
@@ -155,13 +155,13 @@ MainWindow::setupMenuBar()
     file_menu->addAction("About", this, &MainWindow::onAbout);
 
     file_menu->addSeparator();
-    file_menu->addAction("Settings...", QKeySequence("Ctrl+,"), this, &MainWindow::onSettings);
+    file_menu->addAction("Settings...", this, &MainWindow::onSettings, QKeySequence("Ctrl+,"));
 
-    file_menu->addAction("Quit", QKeySequence("Ctrl+Q"), this, &QCoreApplication::quit);
+    file_menu->addAction("Quit", this, &QCoreApplication::quit, QKeySequence("Ctrl+Q"));
 
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
-        window_menu->addAction("Minimize", QKeySequence("Ctrl+M"), this, &MainWindow::onMinimize);
+        window_menu->addAction("Minimize", this, &MainWindow::onMinimize, QKeySequence("Ctrl+M"));
     window_menu->addSeparator();
     this->bring_all_to_front =
         window_menu->addAction("Bring All to Front", this, &MainWindow::onBringAllToFront);

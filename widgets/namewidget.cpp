@@ -11,7 +11,7 @@ NameWidget::NameWidget(QWidget * parent) : QLineEdit(parent)
     setStyleSheet("QLineEdit {"
                   "  border: 1px solid rgb(255, 255, 255);"
                   "  border-bottom: 1px solid rgb(221, 221, 221);"
-                  "  font-weight: 500;"
+                  "  font-weight: 600;"
                   "}"
                   "QLineEdit:read-only:focus {"
                   "  border: 1px solid rgb(255, 255, 255);"

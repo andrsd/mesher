@@ -10,7 +10,6 @@ ToolWindow::ToolWindow(QWidget * parent) : QDialog(parent)
     setUpStyle();
 
     this->title = new ToolTitleWidget(this);
-    //    this->title->setText("Select other");
     this->title_layout->addWidget(this->title);
 
     this->cancel = new CancelButton();

@@ -9,7 +9,7 @@ ToolTitleWidget::ToolTitleWidget(QWidget * parent) : QLabel(parent)
                   "  background-color: rgb(255, 255, 255);"
                   "  border: 1px solid rgb(255, 255, 255);"
                   "  border-bottom: 1px solid rgb(221, 221, 221);"
-                  "  font-weight: 500;"
+                  "  font-weight: 600;"
                   "}");
 }
 
